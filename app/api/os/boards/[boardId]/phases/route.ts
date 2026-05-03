@@ -2,20 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireTenantScope } from '@/lib/data/tenant-scope'
 
-type Ctx = { params: Promise<{ id: string }> }
+type Ctx = { params: Promise<{ boardId: string }> }
 
 const VALID_STATUS_MAPPINGS = [
   'not_started', 'in_progress', 'blocked', 'overdue', 'done', 'cancelled',
 ] as const
 
-// ─── GET /api/os/boards/[id]/phases ──────────────────────────────────────────
+// ─── GET /api/os/boards/[boardId]/phases ──────────────────────────────────────
 export async function GET(_req: NextRequest, { params }: Ctx) {
   try {
-    const { id: boardId } = await params
-    const { tenantIds } = await requireTenantScope()
+    const { boardId } = await params
+    const scope = await requireTenantScope()
+    const tenantIds = [scope.tenantId]
     const supabase = await createClient()
 
-    // Scope check: board must belong to one of the user's tenants
     const { data: board } = await supabase
       .from('os_boards')
       .select('tenant_id')
@@ -39,11 +39,12 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   }
 }
 
-// ─── POST /api/os/boards/[id]/phases ─────────────────────────────────────────
+// ─── POST /api/os/boards/[boardId]/phases ─────────────────────────────────────
 export async function POST(req: NextRequest, { params }: Ctx) {
   try {
-    const { id: boardId } = await params
-    const { tenantIds } = await requireTenantScope()
+    const { boardId } = await params
+    const scope = await requireTenantScope()
+    const tenantIds = [scope.tenantId]
     const supabase = await createClient()
 
     const { data: board } = await supabase
@@ -70,7 +71,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: 'invalid status_mapping' }, { status: 400 })
     }
 
-    // Next order_index = current max + 1
     const { data: maxRow } = await supabase
       .from('os_phases')
       .select('order_index')
@@ -81,8 +81,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
     const nextOrder = ((maxRow?.order_index as number | null) ?? -1) + 1
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase.from('os_phases') as any)
+    const { data, error } = await supabase
+      .from('os_phases')
       .insert({
         board_id: boardId,
         name: body.name.trim(),
@@ -94,7 +94,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       .single()
 
     if (error) {
-      // Unique constraint on (board_id, status_mapping) violation
       if (error.code === '23505') {
         return NextResponse.json(
           { error: `A phase already maps to "${body.status_mapping}" on this board` },
