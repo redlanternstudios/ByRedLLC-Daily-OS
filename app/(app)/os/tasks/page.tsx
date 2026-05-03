@@ -266,7 +266,7 @@ export default function OSTasksPage() {
                         <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />
                       )}
                       {task.blocked_by_task_id && (
-                        <GitMerge className="w-3.5 h-3.5 text-amber-500 shrink-0" strokeWidth={2} title="Has dependency" />
+                        <GitMerge className="w-3.5 h-3.5 text-amber-500 shrink-0" strokeWidth={2} aria-label="Has dependency" />
                       )}
                       <Link
                         href={`/os/tasks/${task.id}`}
