@@ -2,10 +2,10 @@ import subprocess
 import sys
 import os
 
-os.chdir("/vercel/share/v0-project")
+PROJECT_DIR = "/vercel/path0"
 
 def run(cmd):
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=PROJECT_DIR)
     print(f"CMD: {cmd}")
     print(f"STDOUT: {result.stdout.strip()}")
     if result.stderr.strip():
@@ -13,6 +13,10 @@ def run(cmd):
     print(f"RC: {result.returncode}")
     print("---")
     return result
+
+# Confirm the directory exists
+print(f"PROJECT_DIR exists: {os.path.isdir(PROJECT_DIR)}")
+print(f"Contents: {os.listdir(PROJECT_DIR)[:10] if os.path.isdir(PROJECT_DIR) else 'N/A'}")
 
 # Show current branch
 run("git branch --show-current")
