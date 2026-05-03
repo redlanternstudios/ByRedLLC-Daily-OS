@@ -5,8 +5,22 @@ import { mapTaskFromDb } from "@/types/db"
 
 export async function GET() {
   try {
-    const { tenantIds, profileId } = await requireTenantScope()
+    const scope = await requireTenantScope()
+    // TenantScope returns { tenantId (singular), tenant } — no tenantIds/profileId
+    const tenantIds = [scope.tenantId]
+
+    // Resolve caller's byred_users.id for owner scoping
     const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    let profileId: string | null = null
+    if (user) {
+      const { data: byredUser } = await supabase
+        .from("byred_users")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle()
+      profileId = (byredUser as { id: string } | null)?.id ?? null
+    }
 
     let q = supabase
       .from("byred_tasks")

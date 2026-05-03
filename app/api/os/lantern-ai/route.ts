@@ -19,19 +19,18 @@ export async function POST(req: NextRequest) {
     let profileId: string | null = null
     try {
       const scope = await requireTenantScope()
-      // v0 branch: TenantScope has tenantId (singular); wrap in array for query compatibility
+      // TenantScope returns { tenantId (singular), tenant } — wrap in array
       tenantIds = [scope.tenantId]
-      // Resolve caller's byred_users.id from auth session
+      // Resolve caller's byred_users.id from auth_user_id
       const supabaseAuth = await createClient()
       const { data: { user } } = await supabaseAuth.auth.getUser()
       if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: byredUser } = (await (supabaseAuth as any)
+        const { data: byredUser } = await supabaseAuth
           .from('byred_users')
           .select('id')
           .eq('auth_user_id', user.id)
-          .maybeSingle()) as { data: { id: string } | null }
-        profileId = byredUser?.id ?? null
+          .maybeSingle()
+        profileId = (byredUser as { id: string } | null)?.id ?? null
       }
     } catch {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -70,13 +69,12 @@ export async function POST(req: NextRequest) {
         .neq('status', 'done')
         .neq('status', 'cancelled'),
       // Team: blocked tasks
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase as any)
+      supabase
         .from('byred_tasks')
         .select('title, status, priority')
         .in('tenant_id', tenantIds)
         .eq('status', 'blocked')
-        .limit(5) as Promise<{ data: { title: string; status: string; priority: string }[] | null }>,
+        .limit(5),
       // Caller: name from byred_users
       profileId
         ? supabase.from('byred_users').select('name').eq('id', profileId).maybeSingle()
@@ -93,8 +91,7 @@ export async function POST(req: NextRequest) {
         : Promise.resolve({ count: null }),
       // Caller: critical tasks due today or overdue
       profileId
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? (supabase as any)
+        ? supabase
             .from('byred_tasks')
             .select('title, priority, due_date')
             .in('tenant_id', tenantIds)
@@ -103,11 +100,11 @@ export async function POST(req: NextRequest) {
             .lte('due_date', today)
             .neq('status', 'done')
             .neq('status', 'cancelled')
-            .limit(5) as Promise<{ data: { title: string; priority: string; due_date: string }[] | null }>
+            .limit(5)
         : Promise.resolve({ data: null }),
     ])
 
-    const callerName = (callerUser as { name?: string } | null)?.name ?? 'You'
+    const callerName = (callerUser?.data as { name?: string } | null)?.name ?? 'You'
 
     const contextBlock = [
       `Requesting user: ${callerName}`,
