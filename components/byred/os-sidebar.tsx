@@ -48,7 +48,7 @@ const SECTIONS: { section: string; items: NavEntry[] }[] = [
     section: "Team",
     items: [
       { kind: "link", label: "Team", href: "/os/team", icon: Users },
-      { kind: "soon", label: "Comms", icon: MessageSquare },
+      { kind: "link", label: "Comms", href: "/os/comms", icon: MessageSquare },
     ],
   },
   {
