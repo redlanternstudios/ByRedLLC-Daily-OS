@@ -28,7 +28,7 @@ export function Field({
   rightLabel,
 }: FieldProps) {
   return (
-    <div className={topGap ? "mt-4" : ""}>
+    <div suppressHydrationWarning className={topGap ? "mt-4" : ""}>
       <div className="flex items-center justify-between mb-1.5">
         <label
           htmlFor={id}
@@ -38,19 +38,17 @@ export function Field({
         </label>
         {rightLabel}
       </div>
-      <div suppressHydrationWarning>
-        <input
-          suppressHydrationWarning
-          id={id}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          autoComplete={autoComplete}
-          placeholder={placeholder}
-          required={required}
-          className="h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-[#c8102e]/60 focus:ring-1 focus:ring-[#c8102e]/30"
-        />
-      </div>
+      <input
+        suppressHydrationWarning
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        required={required}
+        className="h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-[#c8102e]/60 focus:ring-1 focus:ring-[#c8102e]/30"
+      />
     </div>
   )
 }
