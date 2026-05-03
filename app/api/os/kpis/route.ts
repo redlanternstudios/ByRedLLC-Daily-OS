@@ -45,6 +45,13 @@ export type KPIPayload = {
     done_this_week: number
     has_blocker: boolean
     has_critical: boolean
+    tenant_breakdown: Array<{
+      tenant_id: string
+      tenant_name: string
+      tenant_color: string
+      task_count: number
+      has_blocker: boolean
+    }>
   }>
   pipeline: Array<{
     stage: string
@@ -155,6 +162,19 @@ export async function GET() {
   const team: KPIPayload["team"] = teamMembers.map((u) => {
     const memberActive = activeTasks.filter((t) => t.owner_user_id === u.id)
     const memberDone = doneTasks.filter((t) => t.owner_user_id === u.id && (t.updated_at ?? t.created_at ?? "") >= weekAgo)
+
+    const tenantCounts = new Map<string, { count: number; hasBlocker: boolean }>()
+    for (const task of memberActive) {
+      const ex = tenantCounts.get(task.tenant_id) ?? { count: 0, hasBlocker: false }
+      tenantCounts.set(task.tenant_id, { count: ex.count + 1, hasBlocker: ex.hasBlocker || (task.blocker_flag ?? false) })
+    }
+    const tenant_breakdown = Array.from(tenantCounts.entries())
+      .map(([tid, { count, hasBlocker }]) => {
+        const t = tenantMap.get(tid)
+        return { tenant_id: tid, tenant_name: t?.name ?? tid, tenant_color: t?.color ?? "#D7261E", task_count: count, has_blocker: hasBlocker }
+      })
+      .sort((a, b) => b.task_count - a.task_count)
+
     return {
       user_id: u.id,
       name: u.name,
@@ -163,6 +183,7 @@ export async function GET() {
       done_this_week: memberDone.length,
       has_blocker: memberActive.some((t) => t.blocker_flag),
       has_critical: memberActive.some((t) => t.priority === "critical"),
+      tenant_breakdown,
     }
   }).filter((u) => u.total_active > 0 || u.done_this_week > 0)
     .sort((a, b) => b.total_active - a.total_active)

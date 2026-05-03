@@ -1,13 +1,15 @@
 "use client"
 
+import { useState } from "react"
 import useSWR from "swr"
 import Link from "next/link"
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie,
 } from "recharts"
 import {
   AlertTriangle, Clock, CheckCircle2, Zap, TrendingUp,
-  Loader2, AlertCircle, RefreshCw, Users, Layers,
+  Loader2, AlertCircle, RefreshCw, Users, Layers, ArrowLeft,
 } from "lucide-react"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSPriorityBadge } from "@/components/byred/os/os-badge"
@@ -62,6 +64,160 @@ function VelocityTooltip({ active, payload, label }: { active?: boolean; payload
     <div className="px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-zinc-200 shadow-xl">
       <p className="font-medium">{label}</p>
       <p className="text-emerald-400">{payload[0].value} completed</p>
+    </div>
+  )
+}
+
+// ── Team Load Pie ──────────────────────────────────────────────────────────
+const MEMBER_COLORS = ["#D7261E", "#0EA5E9", "#10B981", "#F59E0B", "#8B5CF6", "#F43F5E", "#14B8A6", "#F97316"]
+
+function TeamPieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="px-2.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs shadow-xl">
+      <p className="font-medium text-white">{payload[0].name}</p>
+      <p className="text-zinc-400">{payload[0].value} active tasks</p>
+    </div>
+  )
+}
+
+type TeamMember = KPIPayload["team"][number]
+
+function TeamLoadPanel({ team }: { team: TeamMember[] }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selected = team.find((m) => m.user_id === selectedId) ?? null
+  const active = team.filter((m) => m.total_active > 0)
+
+  const pieData = active.map((m, i) => ({
+    name: m.name,
+    value: m.total_active,
+    color: MEMBER_COLORS[i % MEMBER_COLORS.length],
+    userId: m.user_id,
+  }))
+
+  if (team.length === 0) return <p className="text-sm text-zinc-600">No team data yet.</p>
+
+  if (active.length === 0) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-emerald-500">
+        <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
+        No active workload — everyone clear.
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex gap-3 items-start min-h-[130px]">
+      {/* Donut pie */}
+      <div className="shrink-0 w-[130px] h-[130px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              cx="50%"
+              cy="50%"
+              innerRadius={34}
+              outerRadius={56}
+              paddingAngle={3}
+              dataKey="value"
+              onClick={(entry: { userId: string }) => setSelectedId(selectedId === entry.userId ? null : entry.userId)}
+              style={{ cursor: "pointer" }}
+              strokeWidth={0}
+            >
+              {pieData.map((entry) => (
+                <Cell
+                  key={entry.userId}
+                  fill={entry.color}
+                  opacity={selectedId === null || selectedId === entry.userId ? 1 : 0.2}
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<TeamPieTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Detail panel */}
+      <div className="flex-1 min-w-0 pt-1">
+        {selected ? (
+          <div className="space-y-2.5">
+            {/* Member header */}
+            <div className="flex items-center gap-2">
+              <OSAvatar userId={selected.user_id} size="xs" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-white truncate">{selected.name}</span>
+                  <span className={cn(
+                    "w-1.5 h-1.5 rounded-full shrink-0",
+                    selected.has_blocker ? "bg-red-500" : selected.has_critical ? "bg-amber-500" : "bg-emerald-500"
+                  )} />
+                </div>
+                <p className="text-[10px] text-zinc-600">{selected.done_this_week} done this week</p>
+              </div>
+            </div>
+
+            {/* Tenant breakdown */}
+            <div className="space-y-1.5">
+              {selected.tenant_breakdown.map((t) => (
+                <div key={t.tenant_id}>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] font-medium truncate max-w-[110px]" style={{ color: t.tenant_color }}>
+                      {t.tenant_name.replace(/^[^\w\s]*\s*/, "").split(" — ")[0].split(" - ")[0]}
+                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {t.has_blocker && <AlertTriangle className="w-2.5 h-2.5 text-red-400" strokeWidth={2} />}
+                      <span className="text-[10px] text-zinc-500">{t.task_count}</span>
+                    </div>
+                  </div>
+                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${Math.round((t.task_count / selected.total_active) * 100)}%`,
+                        backgroundColor: t.tenant_color,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedId(null)}
+              className="flex items-center gap-1 text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+            >
+              <ArrowLeft className="w-2.5 h-2.5" strokeWidth={2} />
+              All members
+            </button>
+          </div>
+        ) : (
+          /* Legend */
+          <div className="space-y-1.5">
+            {pieData.map((entry) => {
+              const member = team.find((m) => m.user_id === entry.userId)!
+              return (
+                <button
+                  key={entry.userId}
+                  type="button"
+                  onClick={() => setSelectedId(entry.userId)}
+                  className="w-full flex items-center gap-2 text-left group/leg"
+                >
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                  <span className="text-[11px] text-zinc-400 group-hover/leg:text-zinc-200 transition-colors truncate flex-1">
+                    {member.name.split(" ")[0]}
+                  </span>
+                  <span className={cn(
+                    "w-1.5 h-1.5 rounded-full shrink-0",
+                    member.has_blocker ? "bg-red-500" : member.has_critical ? "bg-amber-500" : "bg-emerald-500"
+                  )} />
+                  <span className="text-[10px] text-zinc-600 shrink-0 tabular-nums">{entry.value}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -187,28 +343,7 @@ export default function OSKPIsPage() {
             <Users className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
             <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Team Load</span>
           </div>
-          {data.team.length === 0 ? (
-            <p className="text-sm text-zinc-600">No team data yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {data.team.map((m) => {
-                const statusColor = m.has_blocker ? "bg-red-500" : m.has_critical ? "bg-amber-500" : "bg-emerald-500"
-                const statusLabel = m.has_blocker ? "Blocked" : m.has_critical ? "Critical" : "On track"
-                return (
-                  <div key={m.user_id} className="flex items-center gap-3">
-                    <OSAvatar userId={m.user_id} size="xs" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-zinc-300 font-medium truncate">{m.name}</span>
-                        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColor)} title={statusLabel} />
-                      </div>
-                      <p className="text-[10px] text-zinc-600">{m.total_active} active · {m.done_this_week} done this week</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <TeamLoadPanel team={data.team} />
         </div>
       </div>
 
