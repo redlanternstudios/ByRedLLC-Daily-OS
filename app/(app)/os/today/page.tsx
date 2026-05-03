@@ -270,39 +270,39 @@ export default function OSTodayPage() {
   const threeDays = new Date(Date.now() + 3 * 86400000).toISOString().split("T")[0]
 
   const bucketedTasks = (key: BucketKey): Task[] => {
-    const active = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled")
+    // Treat any non-terminal status as active — DB may use different strings
+    const active = tasks.filter(
+      (t) => t.status !== "done" && t.status !== "cancelled" && t.status !== "complete" && t.status !== "completed"
+    )
     if (active.length === 0) return []
 
     switch (key) {
       case "critical_now": {
-        const matches = active.filter(
-          (t) => t.blocker_flag || t.priority === "critical" || t.priority === "urgent" ||
-          (t.due_date != null && t.due_date <= today_date)
+        const exact = active.filter(
+          (t) => t.blocker_flag ||
+            t.priority === "critical" ||
+            t.priority === "urgent" ||
+            (t.due_date != null && t.due_date <= today_date) ||
+            t.urgency_score >= 8
         )
-        // Fallback: if nothing qualifies show all active tasks so buckets are never all empty
-        if (matches.length === 0 && key === "critical_now") {
-          return active.filter((t) => t.priority === "high" || t.urgency_score >= 7).slice(0, 8)
-        }
-        return matches
+        // Hard fallback: show ALL active tasks in this bucket so it's never empty
+        return exact.length > 0 ? exact : active.slice(0, 10)
       }
       case "money_moves":
-        // revenue_impact_score >= 7 OR high priority in-progress
         return active.filter(
-          (t) => (t.revenue_impact_score ?? 0) >= 7 ||
-          (t.priority === "high" && t.status === "in_progress")
+          (t) => t.revenue_impact_score >= 7 ||
+            t.priority === "high" ||
+            t.priority === "critical"
         )
       case "quick_wins":
-        // estimated_minutes <= 45 (wider window than 30)
-        return active.filter(
-          (t) => (t.estimated_minutes ?? 0) > 0 && (t.estimated_minutes ?? 0) <= 45
-        )
+        // estimated_minutes defaults to 30 in mapper — include those plus explicit short tasks
+        return active.filter((t) => t.estimated_minutes <= 45)
       case "coming_up":
         return active.filter(
           (t) => t.due_date && t.due_date > today_date && t.due_date <= threeDays
         )
       case "deep_work":
-        // >= 60 minutes (wider than 90)
-        return active.filter((t) => (t.estimated_minutes ?? 0) >= 60)
+        return active.filter((t) => t.estimated_minutes > 45)
     }
   }
 
