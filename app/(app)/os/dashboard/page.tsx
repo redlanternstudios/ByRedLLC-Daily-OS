@@ -116,11 +116,11 @@ export default async function OSDashboardPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         <StatCard
-          label="Active Tenants"
+          label="Active Projects"
           value={tenantGroups.length}
           icon={FolderKanban}
           accent="bg-violet-900/50 text-violet-300"
-          href="/os/tasks"
+          href="/os/projects"
         />
         <StatCard
           label="In Progress"
