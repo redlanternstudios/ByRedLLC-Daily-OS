@@ -8,6 +8,7 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+    // Fetch ALL active users — do NOT exclude the current user so Keymon appears
     const [usersRes, tasksRes] = await Promise.all([
       supabase.from("byred_users").select("id, name, role, avatar_url").eq("active", true).order("name"),
       supabase.from("byred_tasks").select("*").not("status", "in", "(done,cancelled)"),

@@ -271,24 +271,38 @@ export default function OSTodayPage() {
 
   const bucketedTasks = (key: BucketKey): Task[] => {
     const active = tasks.filter((t) => t.status !== "done" && t.status !== "cancelled")
+    if (active.length === 0) return []
+
     switch (key) {
-      case "critical_now":
-        return active.filter(
-          (t) => t.blocker_flag || t.priority === "critical" ||
+      case "critical_now": {
+        const matches = active.filter(
+          (t) => t.blocker_flag || t.priority === "critical" || t.priority === "urgent" ||
           (t.due_date != null && t.due_date <= today_date)
         )
+        // Fallback: if nothing qualifies show all active tasks so buckets are never all empty
+        if (matches.length === 0 && key === "critical_now") {
+          return active.filter((t) => t.priority === "high" || t.urgency_score >= 7).slice(0, 8)
+        }
+        return matches
+      }
       case "money_moves":
-        return active.filter((t) => (t.revenue_impact_score ?? 0) >= 7)
-      case "quick_wins":
+        // revenue_impact_score >= 7 OR high priority in-progress
         return active.filter(
-          (t) => (t.estimated_minutes ?? 0) > 0 && (t.estimated_minutes ?? 0) <= 30
+          (t) => (t.revenue_impact_score ?? 0) >= 7 ||
+          (t.priority === "high" && t.status === "in_progress")
+        )
+      case "quick_wins":
+        // estimated_minutes <= 45 (wider window than 30)
+        return active.filter(
+          (t) => (t.estimated_minutes ?? 0) > 0 && (t.estimated_minutes ?? 0) <= 45
         )
       case "coming_up":
         return active.filter(
           (t) => t.due_date && t.due_date > today_date && t.due_date <= threeDays
         )
       case "deep_work":
-        return active.filter((t) => (t.estimated_minutes ?? 0) >= 90)
+        // >= 60 minutes (wider than 90)
+        return active.filter((t) => (t.estimated_minutes ?? 0) >= 60)
     }
   }
 
