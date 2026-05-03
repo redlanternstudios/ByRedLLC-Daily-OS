@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import useSWR from "swr"
 import {
   ArrowRight, Loader2, AlertCircle, Layers,
@@ -20,10 +21,13 @@ const COLUMN_CONFIG = [
 ] as const
 
 export default function OSBoardsPage() {
+  const searchParams = useSearchParams()
+  const tenantFilter = searchParams.get("tenant")
+
   const { data: boards, isLoading, error, mutate } = useSWR<DerivedBoard[]>("/api/os/boards", fetcher)
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
-  const visible = (boards ?? []).filter((b) => !dismissed.has(b.id))
+  const visible = (boards ?? []).filter((b) => !dismissed.has(b.id) && (!tenantFilter || b.tenant_id === tenantFilter))
 
   return (
     <div className="space-y-6 max-w-5xl">

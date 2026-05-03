@@ -29,14 +29,28 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  // Fetch all active tenants
-  const { data: tenants, error: tenantError } = await supabase
-    .from("byred_tenants")
-    .select("id, name, color")
-    .eq("active", true)
-    .order("name")
+  // Resolve byred_users.id for this auth user
+  const { data: byredUserRaw } = await supabase
+    .from("byred_users")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle()
+  const byredUserId = (byredUserRaw as { id: string } | null)?.id
 
-  if (tenantError) return NextResponse.json({ error: tenantError.message }, { status: 500 })
+  if (!byredUserId) return NextResponse.json([])
+
+  // Fetch only tenants this user belongs to
+  const { data: memberRows, error: memberError } = await supabase
+    .from("byred_user_tenants")
+    .select("tenant_id, byred_tenants(id, name, color)")
+    .eq("user_id", byredUserId)
+
+  if (memberError) return NextResponse.json({ error: memberError.message }, { status: 500 })
+
+  const tenants = (memberRows ?? []).map((row) => {
+    const t = row.byred_tenants as { id: string; name: string; color: string | null } | null
+    return { id: t?.id ?? row.tenant_id, name: t?.name ?? row.tenant_id, color: t?.color ?? "#D7261E" }
+  }).sort((a, b) => a.name.localeCompare(b.name))
 
   // Fetch all non-cancelled tasks with just the fields we need
   const { data: tasks, error: taskError } = await supabase
