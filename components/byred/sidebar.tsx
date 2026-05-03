@@ -13,7 +13,6 @@ import {
   Users,
   Upload,
   FileText,
-  BarChart2,
   Settings,
   MessageSquare,
   ChevronLeft,
@@ -80,7 +79,6 @@ const NAV_GROUPS = [
     items: [
       { label: "Docs",    href: "/os/docs",          icon: FileText },
       { label: "Files",   href: "/os/files",         icon: Folder },
-      { label: "Reports", href: "/os/reports",       icon: BarChart2 },
       { label: "Import",  href: "/os/import/monday", icon: Upload },
       { label: "Comms",   href: "/os/comms",         icon: MessageSquare },
     ],

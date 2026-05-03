@@ -8,11 +8,22 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { searchParams } = req.nextUrl
-  const tenant_id = searchParams.get("tenant_id")
   const from = searchParams.get("from")
   const to   = searchParams.get("to")
 
-  if (!tenant_id) return NextResponse.json({ error: "tenant_id required" }, { status: 400 })
+  // Resolve byred user
+  const { data: byredUserRaw } = await supabase.from("byred_users").select("id").eq("auth_user_id", user.id).maybeSingle()
+  const byredUserId = (byredUserRaw as { id: string } | null)?.id
+  if (!byredUserId) return NextResponse.json({ events: [], taskEvents: [] })
+
+  // Get tenant IDs the user belongs to
+  const { data: memberRows } = await supabase.from("byred_user_tenants").select("tenant_id").eq("user_id", byredUserId)
+  const allTenantIds = (memberRows ?? []).map((r: { tenant_id: string }) => r.tenant_id)
+
+  // If tenant_id param provided AND user has access, scope to that one; else use all
+  const tenantIdParam = searchParams.get("tenant_id")
+  const tenantIds = tenantIdParam && allTenantIds.includes(tenantIdParam) ? [tenantIdParam] : allTenantIds
+  if (tenantIds.length === 0) return NextResponse.json({ events: [], taskEvents: [] })
 
   // Fetch calendar events in range (match actual DB columns: start_at, end_at)
   let eventsQuery = supabase
@@ -24,7 +35,7 @@ export async function GET(req: NextRequest) {
       task_id, tenant_id, owner_user_id,
       os_calendar_event_attendees ( user_id, rsvp )
     `)
-    .eq("tenant_id", tenant_id)
+    .in("tenant_id", tenantIds)
     .neq("status", "cancelled")
     .order("start_at", { ascending: true })
 
@@ -41,7 +52,7 @@ export async function GET(req: NextRequest) {
   let tasksQuery = supabase
     .from("byred_tasks")
     .select("id, title, status, priority, due_date, blocker_flag, tenant_id, owner_user_id")
-    .eq("tenant_id", tenant_id)
+    .in("tenant_id", tenantIds)
     .not("due_date", "is", null)
     .not("status", "in", "(done,cancelled)")
     .order("due_date", { ascending: true })

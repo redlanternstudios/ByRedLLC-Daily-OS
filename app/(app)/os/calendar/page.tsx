@@ -883,7 +883,7 @@ export default function OSCalendarPage() {
 
   const apiUrl = activeTenantId
     ? `/api/os/calendar?tenant_id=${activeTenantId}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
-    : null
+    : `/api/os/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
 
   const { data, isLoading, error, mutate } = useSWR<CalendarResponse>(apiUrl, fetcher, {
     keepPreviousData: true,
