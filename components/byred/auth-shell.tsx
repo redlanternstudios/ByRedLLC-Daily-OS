@@ -28,8 +28,8 @@ export function Field({
   rightLabel,
 }: FieldProps) {
   return (
-    <div suppressHydrationWarning className={topGap ? "mt-4" : ""}>
-      <div suppressHydrationWarning className="flex items-center justify-between mb-1.5">
+    <div className={topGap ? "mt-4" : ""}>
+      <div className="flex items-center justify-between mb-1.5">
         <label
           htmlFor={id}
           className="block text-xs font-medium text-white/50 uppercase tracking-widest"
