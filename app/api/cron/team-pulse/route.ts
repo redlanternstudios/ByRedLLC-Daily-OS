@@ -62,18 +62,21 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
     })
 
     // Store the generated pulse in byred_daily_briefs
+    // summary is jsonb — store all data there; user_id is null for team-wide briefs
     const today = new Date().toISOString().split("T")[0]
     await supabase.from("byred_daily_briefs").upsert({
+      user_id: null,
       date: today,
-      summary: text,
-      time_of_day: timeOfDay,
-      task_count: tasks.length,
-      blocker_count: blockers.length,
-      generated_at: new Date().toISOString(),
-      generated_by: "cron",
-    }, { onConflict: "date" })
-
-    console.log(`[v0] Team pulse generated at ${timeOfDay}: ${text.slice(0, 80)}...`)
+      summary: {
+        text,
+        time_of_day: timeOfDay,
+        task_count: tasks.length,
+        blocker_count: blockers.length,
+        generated_at: new Date().toISOString(),
+        generated_by: "cron",
+        team,
+      },
+    }, { onConflict: "user_id,date" })
 
     return NextResponse.json({
       ok: true,

@@ -96,6 +96,14 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createAdminClient()
 
+    // Create a batch record to track this sync run
+    const { data: batch } = await supabase
+      .from("byred_import_batches")
+      .insert({ source: "monday", status: "processing", total_rows: 0, imported_rows: 0, failed_rows: 0 })
+      .select("id")
+      .single()
+    const batchId = batch?.id ?? null
+
     // 1. Get all active board IDs from Monday
     const boardsData = await mondayQuery<{ boards: Array<{ id: string; name: string }> }>(
       BOARDS_QUERY
@@ -244,6 +252,18 @@ export async function POST(req: NextRequest) {
       } catch (boardErr) {
         errors.push(`Board ${boardId}: ${String(boardErr)}`)
       }
+    }
+
+    // Update batch record with final counts
+    if (batchId) {
+      await supabase.from("byred_import_batches").update({
+        status: errors.length === 0 ? "completed" : "failed",
+        total_rows: totalSynced + errors.length,
+        imported_rows: totalSynced,
+        failed_rows: errors.length,
+        error_message: errors.length > 0 ? errors.slice(0, 3).join("; ") : null,
+        completed_at: new Date().toISOString(),
+      }).eq("id", batchId)
     }
 
     return NextResponse.json({

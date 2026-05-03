@@ -4,9 +4,9 @@ import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import useSWR, { mutate as globalMutate } from "swr"
 import {
   ChevronLeft, ChevronRight, Calendar, List, Table2,
-  Clock, X, MapPin, Link2, Plus, Loader2, AlertCircle,
-  Trash2, Edit3, Save, Filter, Tag, Users, FolderKanban,
-  CheckSquare, RefreshCw, ChevronDown,
+  Clock, X, Plus, Loader2, AlertCircle,
+  Trash2, Edit3, Save, Filter, Tag,
+  CheckSquare, ChevronDown,
 } from "lucide-react"
 import { useRequiredUser } from "@/lib/context/user-context"
 import { cn } from "@/lib/utils"
@@ -16,36 +16,29 @@ import { cn } from "@/lib/utils"
 type Attendee = {
   user_id: string
   rsvp: "accepted" | "declined" | "pending"
-  byred_users: { name: string; email: string; avatar_url: string | null } | null
 }
 
 type CalendarEventRow = {
   id: string
   title: string
   description: string | null
-  event_type: "meeting" | "deadline" | "milestone" | "task" | "reminder" | "block"
-  status: "confirmed" | "tentative" | "cancelled"
-  starts_at: string
-  ends_at: string
+  event_type: "meeting" | "deadline" | "milestone" | "task_due" | "reminder" | "block"
+  status: "upcoming" | "in_progress" | "done" | "cancelled"
+  start_at: string
+  end_at: string | null
   all_day: boolean
-  location: string | null
-  meeting_url: string | null
-  color: string | null
-  project_id: string | null
+  calendar_color: string | null
+  calendar_label: string | null
   task_id: string | null
   tenant_id: string
-  created_by_user_id: string | null
+  owner_user_id: string | null
   os_calendar_event_attendees: Attendee[]
-  // recurrence fields (from API)
-  recurrence_rule: string | null
-  recurrence_end: string | null
   // task-derived
   _source?: "task"
   _task?: {
     status: string
     priority: string
     blocker_flag: boolean
-    owner: { name: string; avatar_url: string | null } | null
   }
 }
 
@@ -89,18 +82,10 @@ const COLOR_PRESETS = [
   "#14b8a6", "#374151",
 ]
 
-const RECURRENCE_OPTIONS = [
-  { value: "",       label: "No recurrence" },
-  { value: "daily",  label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "biweekly", label: "Every 2 weeks" },
-  { value: "monthly", label: "Monthly" },
-]
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getEventColor(evt: CalendarEventRow): string {
-  if (evt.color) return evt.color
+  if (evt.calendar_color) return evt.calendar_color
   if (evt._source === "task" && evt._task) {
     if (evt._task.blocker_flag) return "#D7261E"
     if (evt._task.priority === "critical" || evt._task.priority === "high") return "#f97316"
@@ -149,44 +134,9 @@ function toLocalInputDate(iso: string): string {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 // Expand a recurring event into all occurrences within [rangeFrom, rangeTo]
-function expandRecurring(evt: CalendarEventRow, rangeFrom: Date, rangeTo: Date): CalendarEventRow[] {
-  if (!evt.recurrence_rule) return [evt]
-
-  const results: CalendarEventRow[] = []
-  const durationMs = new Date(evt.ends_at).getTime() - new Date(evt.starts_at).getTime()
-  const recEnd = evt.recurrence_end ? new Date(evt.recurrence_end) : rangeTo
-
-  let cursor = new Date(evt.starts_at)
-
-  // Step function by recurrence rule
-  function advance(d: Date): Date {
-    const next = new Date(d)
-    switch (evt.recurrence_rule) {
-      case "daily":    next.setDate(next.getDate() + 1); break
-      case "weekly":   next.setDate(next.getDate() + 7); break
-      case "biweekly": next.setDate(next.getDate() + 14); break
-      case "monthly":  next.setMonth(next.getMonth() + 1); break
-    }
-    return next
-  }
-
-  while (cursor <= recEnd && cursor <= rangeTo) {
-    if (cursor >= rangeFrom) {
-      const occStart = cursor.toISOString()
-      const occEnd = new Date(cursor.getTime() + durationMs).toISOString()
-      results.push({
-        ...evt,
-        // Give each occurrence a stable unique ID based on the base ID + date
-        id: `${evt.id}::${cursor.toISOString().split("T")[0]}`,
-        starts_at: occStart,
-        ends_at: occEnd,
-      })
-    }
-    cursor = advance(cursor)
-  }
-
-  // Always include original if it fell before rangeFrom
-  return results.length === 0 ? [] : results
+function expandRecurring(evt: CalendarEventRow, _rangeFrom: Date, _rangeTo: Date): CalendarEventRow[] {
+  // No recurrence support in current schema — pass through as-is
+  return [evt]
 }
 
 // ─── EventPill ────────────────────────────────────────────────────────────────
@@ -238,16 +188,11 @@ type EventFormData = {
   title: string
   description: string
   event_type: string
-  starts_at: string
-  ends_at: string
+  start_at: string
+  end_at: string
   all_day: boolean
-  location: string
-  meeting_url: string
-  color: string
-  project_id: string
+  calendar_color: string
   task_id: string
-  recurrence_rule: string
-  recurrence_end: string
   attendee_ids: string[]
 }
 
@@ -280,28 +225,15 @@ function EventFormModal({
     title: editEvent?.title ?? "",
     description: editEvent?.description ?? "",
     event_type: editEvent?.event_type ?? "meeting",
-    starts_at: editEvent ? (editEvent.all_day ? `${toLocalInputDate(editEvent.starts_at)}T09:00` : toLocalInputDatetime(editEvent.starts_at)) : defaultStart,
-    ends_at: editEvent ? (editEvent.all_day ? `${toLocalInputDate(editEvent.ends_at)}T10:00` : toLocalInputDatetime(editEvent.ends_at)) : defaultEnd,
+    start_at: editEvent ? (editEvent.all_day ? `${toLocalInputDate(editEvent.start_at)}T09:00` : toLocalInputDatetime(editEvent.start_at)) : defaultStart,
+    end_at: editEvent ? (editEvent.all_day ? `${toLocalInputDate(editEvent.start_at)}T10:00` : toLocalInputDatetime(editEvent.end_at ?? editEvent.start_at)) : defaultEnd,
     all_day: editEvent?.all_day ?? false,
-    location: editEvent?.location ?? "",
-    meeting_url: editEvent?.meeting_url ?? "",
-    color: editEvent?.color ?? EVENT_TYPE_COLORS["meeting"],
-    project_id: editEvent?.project_id ?? "",
+    calendar_color: editEvent?.calendar_color ?? EVENT_TYPE_COLORS["meeting"],
     task_id: editEvent?.task_id ?? "",
-    recurrence_rule: editEvent?.recurrence_rule ?? "",
-    recurrence_end: editEvent?.recurrence_end ?? "",
     attendee_ids: editEvent?.os_calendar_event_attendees?.map((a) => a.user_id) ?? [],
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Fetch live projects for entity linking
-  const { data: projectsData } = useSWR<{ data: { id: string; name: string }[] }>(
-    tenantId ? `/api/os/calendar/projects?tenant_id=${tenantId}` : null,
-    fetcher,
-    { revalidateOnFocus: false }
-  )
-  const projects = projectsData?.data ?? []
 
   const set = (k: keyof EventFormData, v: unknown) =>
     setForm((f) => ({ ...f, [k]: v }))
@@ -309,7 +241,7 @@ function EventFormModal({
   // Auto-set color when type changes (if user hasn't customized)
   useEffect(() => {
     if (!editEvent) {
-      set("color", EVENT_TYPE_COLORS[form.event_type] ?? "#3b82f6")
+      set("calendar_color", EVENT_TYPE_COLORS[form.event_type] ?? "#3b82f6")
     }
   }, [form.event_type])
 
@@ -318,14 +250,14 @@ function EventFormModal({
     setError(null)
     if (!form.title.trim()) { setError("Title is required"); return }
 
-    const startsAt = form.all_day
-      ? new Date(form.starts_at.split("T")[0] + "T00:00:00Z").toISOString()
-      : new Date(form.starts_at).toISOString()
-    const endsAt = form.all_day
-      ? new Date(form.starts_at.split("T")[0] + "T23:59:59Z").toISOString()
-      : new Date(form.ends_at).toISOString()
+    const startAt = form.all_day
+      ? new Date(form.start_at.split("T")[0] + "T00:00:00Z").toISOString()
+      : new Date(form.start_at).toISOString()
+    const endAt = form.all_day
+      ? new Date(form.start_at.split("T")[0] + "T23:59:59Z").toISOString()
+      : new Date(form.end_at).toISOString()
 
-    if (endsAt <= startsAt && !form.all_day) {
+    if (endAt <= startAt && !form.all_day) {
       setError("End time must be after start time")
       return
     }
@@ -337,16 +269,11 @@ function EventFormModal({
         title: form.title.trim(),
         description: form.description || null,
         event_type: form.event_type,
-        starts_at: startsAt,
-        ends_at: endsAt,
+        start_at: startAt,
+        end_at: endAt,
         all_day: form.all_day,
-        location: form.location || null,
-        meeting_url: form.meeting_url || null,
-        color: form.color || null,
-        project_id: form.project_id || null,
+        calendar_color: form.calendar_color || null,
         task_id: form.task_id || null,
-        recurrence_rule: form.recurrence_rule || null,
-        recurrence_end: form.recurrence_end || null,
         attendee_ids: form.attendee_ids,
       }
 
@@ -425,7 +352,7 @@ function EventFormModal({
               </div>
               <div>
                 <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Color</label>
-                <ColorPicker value={form.color} onChange={(c) => set("color", c)} />
+                <ColorPicker value={form.calendar_color} onChange={(c) => set("calendar_color", c)} />
               </div>
             </div>
 
@@ -455,8 +382,8 @@ function EventFormModal({
                 </label>
                 <input
                   type={form.all_day ? "date" : "datetime-local"}
-                  value={form.all_day ? form.starts_at.split("T")[0] : form.starts_at}
-                  onChange={(e) => set("starts_at", form.all_day ? e.target.value : e.target.value)}
+                  value={form.all_day ? form.start_at.split("T")[0] : form.start_at}
+                  onChange={(e) => set("start_at", e.target.value)}
                   className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
                 />
               </div>
@@ -465,80 +392,15 @@ function EventFormModal({
                   <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">End</label>
                   <input
                     type="datetime-local"
-                    value={form.ends_at}
-                    onChange={(e) => set("ends_at", e.target.value)}
+                    value={form.end_at}
+                    onChange={(e) => set("end_at", e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
                   />
                 </div>
               )}
             </div>
 
-            {/* Recurrence */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Recurrence</label>
-                <select
-                  value={form.recurrence_rule}
-                  onChange={(e) => set("recurrence_rule", e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
-                >
-                  {RECURRENCE_OPTIONS.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-              </div>
-              {form.recurrence_rule && (
-                <div>
-                  <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Ends on</label>
-                  <input
-                    type="date"
-                    value={form.recurrence_end}
-                    onChange={(e) => set("recurrence_end", e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
-                  />
-                </div>
-              )}
-            </div>
 
-            {/* Location + Meeting URL */}
-            <div>
-              <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Location</label>
-              <input
-                value={form.location}
-                onChange={(e) => set("location", e.target.value)}
-                placeholder="In-person location or leave blank"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Meeting URL</label>
-              <input
-                value={form.meeting_url}
-                onChange={(e) => set("meeting_url", e.target.value)}
-                placeholder="https://meet.google.com/..."
-                type="url"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
-              />
-            </div>
-
-            {/* Entity linking */}
-            {projects.length > 0 && (
-              <div>
-                <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">
-                  Link to Project
-                </label>
-                <select
-                  value={form.project_id}
-                  onChange={(e) => set("project_id", e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
-                >
-                  <option value="">No project</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             {/* Description */}
             <div>
@@ -623,13 +485,12 @@ function EventDetailPanel({
   canEdit: boolean
 }) {
   const color = getEventColor(event)
-  const startDate = new Date(event.starts_at)
-  const endDate = new Date(event.ends_at)
+  const startDate = new Date(event.start_at)
   const [deleting, setDeleting] = useState(false)
 
   const dateLabel = event.all_day
     ? startDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
-    : `${startDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · ${fmtTime(event.starts_at)} – ${fmtTime(event.ends_at)}`
+    : `${startDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · ${fmtTime(event.start_at)}${event.end_at ? ` – ${fmtTime(event.end_at)}` : ""}`
 
   async function handleDelete() {
     setDeleting(true)
@@ -695,42 +556,16 @@ function EventDetailPanel({
             <Clock className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
             <span className="text-zinc-400">{dateLabel}</span>
           </div>
-          {event.recurrence_rule && (
+          {event.calendar_label && (
             <div className="flex items-start gap-2 text-xs">
-              <RefreshCw className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
-              <span className="text-zinc-400 capitalize">
-                Repeats {event.recurrence_rule}
-                {event.recurrence_end ? ` until ${fmtDate(event.recurrence_end)}` : ""}
-              </span>
+              <Tag className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
+              <span className="text-zinc-400">{event.calendar_label}</span>
             </div>
           )}
-          {event.location && (
+          {event.task_id && (
             <div className="flex items-start gap-2 text-xs">
-              <MapPin className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
-              <span className="text-zinc-400">{event.location}</span>
-            </div>
-          )}
-          {event.meeting_url && (
-            <div className="flex items-start gap-2 text-xs">
-              <Link2 className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
-              <a
-                href={event.meeting_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline truncate"
-              >
-                Join Meeting
-              </a>
-            </div>
-          )}
-          {(event.project_id || event.task_id) && (
-            <div className="flex items-start gap-2 text-xs">
-              <FolderKanban className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
-              <span className="text-zinc-500">
-                {event.project_id && <span>Linked to project</span>}
-                {event.project_id && event.task_id && " · "}
-                {event.task_id && <span>Linked to task</span>}
-              </span>
+              <CheckSquare className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
+              <span className="text-zinc-500">Linked to task</span>
             </div>
           )}
         </div>
@@ -764,21 +599,20 @@ function EventDetailPanel({
                 </span>
               )}
             </div>
-            {event._task.owner && (
-              <p className="text-xs text-zinc-500">Owner: {event._task.owner.name}</p>
-            )}
           </div>
         )}
 
-        {event.os_calendar_event_attendees?.length > 0 && (
+          {event.os_calendar_event_attendees?.length > 0 && (
           <div className="space-y-2">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Attendees</p>
+            <p className="text-[10px] text-zinc-600 uppercase tracking-widest">
+              Attendees ({event.os_calendar_event_attendees.length})
+            </p>
             {event.os_calendar_event_attendees.map((a) => (
               <div key={a.user_id} className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-[9px] text-zinc-400 font-semibold shrink-0">
-                  {a.byred_users?.name?.charAt(0) ?? "?"}
+                  ?
                 </div>
-                <span className="text-xs text-zinc-400 flex-1">{a.byred_users?.name ?? a.user_id}</span>
+                <span className="text-xs text-zinc-400 flex-1 font-mono text-[10px]">{a.user_id.slice(0, 8)}…</span>
                 <span className={cn(
                   "text-[10px] px-1.5 py-0.5 rounded",
                   a.rsvp === "accepted" ? "bg-emerald-950/60 text-emerald-400" :
@@ -985,10 +819,10 @@ function TableView({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-zinc-400 whitespace-nowrap">
-                      {fmtDate(evt.starts_at)}
+                      {fmtDate(evt.start_at)}
                     </td>
                     <td className="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">
-                      {evt.all_day ? "All day" : fmtTime(evt.starts_at)}
+                      {evt.all_day ? "All day" : fmtTime(evt.start_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex -space-x-1">
@@ -996,9 +830,8 @@ function TableView({
                           <div
                             key={a.user_id}
                             className="w-5 h-5 rounded-full bg-zinc-700 border border-zinc-900 flex items-center justify-center text-[9px] text-zinc-300"
-                            title={a.byred_users?.name}
                           >
-                            {a.byred_users?.name?.charAt(0) ?? "?"}
+                            ?
                           </div>
                         ))}
                         {evt.os_calendar_event_attendees.length > 3 && (
@@ -1009,11 +842,11 @@ function TableView({
                     <td className="px-4 py-3">
                       <span className={cn(
                         "text-[10px] px-1.5 py-0.5 rounded border font-medium",
-                        evt.status === "confirmed"  ? "bg-emerald-950 text-emerald-300 border-emerald-800" :
-                        evt.status === "tentative"  ? "bg-amber-950 text-amber-300 border-amber-800" :
-                                                      "bg-zinc-800 text-zinc-500 border-zinc-700"
+                        evt.status === "upcoming"     ? "bg-emerald-950 text-emerald-300 border-emerald-800" :
+                        evt.status === "in_progress"  ? "bg-sky-950 text-sky-300 border-sky-800" :
+                                                        "bg-zinc-800 text-zinc-500 border-zinc-700"
                       )}>
-                        {evt.status}
+                        {evt.status.replace("_", " ")}
                       </span>
                     </td>
                   </tr>
@@ -1065,7 +898,7 @@ export default function OSCalendarPage() {
       e.recurrence_rule ? expandRecurring(e, rangeFrom, rangeTo) : [e]
     )
     return [...expanded, ...(data.taskEvents ?? [])].sort(
-      (a, b) => a.starts_at.localeCompare(b.starts_at)
+      (a, b) => a.start_at.localeCompare(b.start_at)
     )
   }, [data, from, to])
 
@@ -1076,7 +909,7 @@ export default function OSCalendarPage() {
       items = items.filter((e) => filters.eventTypes.includes(e.event_type))
     if (filters.userIds.length > 0)
       items = items.filter((e) =>
-        e.created_by_user_id && filters.userIds.includes(e.created_by_user_id) ||
+        (e.owner_user_id && filters.userIds.includes(e.owner_user_id)) ||
         e.os_calendar_event_attendees?.some((a) => filters.userIds.includes(a.user_id))
       )
     if (filters.search)
@@ -1093,7 +926,7 @@ export default function OSCalendarPage() {
 
   function eventsForDay(iso: string) {
     return filteredItems.filter((e) => {
-      const eventDate = e.starts_at.split("T")[0]
+      const eventDate = e.start_at.split("T")[0]
       return eventDate === iso
     })
   }
@@ -1108,7 +941,7 @@ export default function OSCalendarPage() {
   }
 
   const upcomingItems = useMemo(
-    () => filteredItems.filter((e) => e.starts_at >= now.toISOString()).slice(0, 30),
+    () => filteredItems.filter((e) => e.start_at >= now.toISOString()).slice(0, 30),
     [filteredItems]
   )
 
@@ -1366,13 +1199,12 @@ export default function OSCalendarPage() {
                           <p className="text-[10px] text-zinc-600 mt-0.5">
                             {EVENT_TYPES.find((t) => t.value === evt.event_type)?.label ?? evt.event_type}
                             {evt._source === "task" && evt._task && <> · {evt._task.priority} priority</>}
-                            {evt.recurrence_rule && <> · Repeats {evt.recurrence_rule}</>}
                           </p>
                         </div>
                         <div className="shrink-0 text-right">
-                          <p className="text-xs text-zinc-400">{fmtDate(evt.starts_at)}</p>
+                          <p className="text-xs text-zinc-400">{fmtDate(evt.start_at)}</p>
                           {!evt.all_day && (
-                            <p className="text-[10px] text-zinc-600">{fmtTime(evt.starts_at)}</p>
+                            <p className="text-[10px] text-zinc-600">{fmtTime(evt.start_at)}</p>
                           )}
                         </div>
                       </button>
