@@ -4,14 +4,18 @@ import { useState } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import { FolderKanban, Plus, ArrowRight, Search, Loader2, AlertCircle } from "lucide-react"
-import { OSStatusBadge, OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSEmpty } from "@/components/byred/os/os-empty"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
-// Projects are derived from byred_tasks grouped by tenant until a dedicated
-// os_projects table exists. Each tenant is treated as a "project group".
+type Tenant = {
+  id: string
+  name: string
+  type: string
+  color: string | null
+}
+
 type TenantGroup = {
   tenant_id: string
   total: number
@@ -22,36 +26,36 @@ type TenantGroup = {
   latest_due: string | null
 }
 
-const TENANT_COLORS: Record<string, string> = {
-  hirewire: "bg-[#3355bb]/20 text-[#6688ee] border border-[#3355bb]/30",
-  byred:    "bg-red-950/60 text-red-300 border border-red-800/40",
-  paradise: "bg-emerald-950/60 text-emerald-300 border border-emerald-800/40",
-  hadith:   "bg-amber-950/60 text-amber-300 border border-amber-800/40",
-}
-
 const fetcher = (url: string) =>
   fetch(url).then((r) => {
     if (!r.ok) throw new Error("Failed to load")
     return r.json()
   })
 
+function tenantColor(color: string | null): string {
+  if (!color || color === "amber") return "#F59E0B"
+  if (color === "blue") return "#0EA5E9"
+  if (color === "violet") return "#8B5CF6"
+  return color
+}
+
 export default function OSProjectsPage() {
   const [search, setSearch] = useState("")
   const [creating, setCreating] = useState(false)
 
-  const { data, error, isLoading } = useSWR<{ tasks: Array<{
-    tenant_id: string
-    status: string
-    owner_user_id: string | null
-    due_date: string | null
-    blocker_flag: boolean
-  }> }>("/api/os/projects/tasks", fetcher)
+  const { data: taskData, error: taskError, isLoading: taskLoading } = useSWR<{
+    tasks: Array<{ tenant_id: string; status: string; owner_user_id: string | null; due_date: string | null; blocker_flag: boolean }>
+  }>("/api/os/projects/tasks", fetcher)
 
-  // Group tasks by tenant to form project-like summaries
+  const { data: tenantData } = useSWR<{ tenants: Tenant[] }>("/api/os/tenants", fetcher)
+
+  const tenantMap = new Map<string, Tenant>((tenantData?.tenants ?? []).map((t) => [t.id, t]))
+
+  // Group tasks by tenant
   const groups: TenantGroup[] = []
-  if (data?.tasks) {
+  if (taskData?.tasks) {
     const map = new Map<string, TenantGroup>()
-    for (const t of data.tasks) {
+    for (const t of taskData.tasks) {
       const tid = t.tenant_id
       if (!map.has(tid)) {
         map.set(tid, { tenant_id: tid, total: 0, done: 0, blocked: 0, in_progress: 0, members: [], latest_due: null })
@@ -67,22 +71,23 @@ export default function OSProjectsPage() {
     groups.push(...map.values())
   }
 
-  const filtered = groups.filter((g) =>
-    g.tenant_id.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = groups.filter((g) => {
+    const tenant = tenantMap.get(g.tenant_id)
+    const name = tenant?.name ?? g.tenant_id
+    return name.toLowerCase().includes(search.toLowerCase())
+  })
 
   async function handleNewProject() {
     setCreating(true)
     try {
-      // Placeholder — will wire to create endpoint once os_projects table exists
-      await new Promise((r) => setTimeout(r, 600))
-      toast.info("Project creation coming soon. Manage projects via Monday.com import for now.")
-    } catch {
-      toast.error("Failed to create project. Please try again.")
+      await new Promise((r) => setTimeout(r, 400))
+      toast.info("Create projects from the Boards page — click '+ New Board'.")
     } finally {
       setCreating(false)
     }
   }
+
+  const isLoading = taskLoading
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -91,7 +96,7 @@ export default function OSProjectsPage() {
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Projects</h1>
           <p className="text-sm text-zinc-500 mt-1">
-            {isLoading ? "Loading..." : `${groups.length} active tenant workspaces`}
+            {isLoading ? "Loading..." : `${groups.length} active workspaces`}
           </p>
         </div>
         <button
@@ -119,23 +124,20 @@ export default function OSProjectsPage() {
         />
       </div>
 
-      {/* State: loading */}
       {isLoading && (
         <div className="flex items-center justify-center h-40">
           <Loader2 className="w-5 h-5 animate-spin text-zinc-600" strokeWidth={1.75} />
         </div>
       )}
 
-      {/* State: error */}
-      {error && !isLoading && (
+      {taskError && !isLoading && (
         <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-red-950/40 border border-red-900/50 text-red-400 text-sm">
           <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
           Failed to load projects. Check your connection and try again.
         </div>
       )}
 
-      {/* State: empty */}
-      {!isLoading && !error && filtered.length === 0 && (
+      {!isLoading && !taskError && filtered.length === 0 && (
         <OSEmpty
           icon={FolderKanban}
           title="No projects found"
@@ -144,12 +146,13 @@ export default function OSProjectsPage() {
       )}
 
       {/* Project cards */}
-      {!isLoading && !error && filtered.length > 0 && (
+      {!isLoading && !taskError && filtered.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {filtered.map((group) => {
+            const tenant = tenantMap.get(group.tenant_id)
+            const name = tenant?.name ?? group.tenant_id
+            const color = tenantColor(tenant?.color ?? null)
             const pct = group.total > 0 ? Math.round((group.done / group.total) * 100) : 0
-            const tenantClass = TENANT_COLORS[group.tenant_id] ?? "bg-zinc-800 text-zinc-400 border border-zinc-700"
-            const label = group.tenant_id.charAt(0).toUpperCase() + group.tenant_id.slice(1)
 
             return (
               <div
@@ -160,8 +163,11 @@ export default function OSProjectsPage() {
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <span className={cn("inline-flex px-2 py-0.5 rounded text-[10px] font-medium", tenantClass)}>
-                          {label}
+                        <span
+                          className="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide"
+                          style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}
+                        >
+                          {tenant?.type ?? "workspace"}
                         </span>
                         {group.blocked > 0 && (
                           <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-red-950/60 text-red-400 border border-red-800/40">
@@ -169,14 +175,13 @@ export default function OSProjectsPage() {
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-semibold text-white">{label} Workspace</h3>
-                      <p className="text-xs text-zinc-500 mt-1">
+                      <h3 className="text-sm font-semibold text-white truncate">{name}</h3>
+                      <p className="text-xs text-zinc-500 mt-0.5">
                         {group.in_progress} in progress &middot; {group.total - group.done} remaining
                       </p>
                     </div>
                   </div>
 
-                  {/* Progress bar */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] text-zinc-600">Completion</span>
@@ -186,27 +191,26 @@ export default function OSProjectsPage() {
                     </div>
                     <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#D7261E] rounded-full transition-all"
-                        style={{ width: `${pct}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pct}%`, background: color }}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-800 bg-black/20">
-                  <div className="flex items-center gap-4 text-xs text-zinc-600">
-                    {group.members.slice(0, 3).map((m) => (
-                      <OSAvatar key={m} name={m} size="xs" />
+                  <div className="flex items-center gap-3">
+                    {group.members.slice(0, 4).map((m) => (
+                      <OSAvatar key={m} userId={m} size="xs" />
                     ))}
                     {group.latest_due && (
-                      <span>
-                        Latest due {new Date(group.latest_due).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      <span className="text-xs text-zinc-600">
+                        Latest due {new Date(group.latest_due + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
                     )}
                   </div>
                   <Link
-                    href="/os/boards"
+                    href={`/os/boards?tenant=${group.tenant_id}`}
                     className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200 transition-colors"
                   >
                     View boards <ArrowRight className="w-3 h-3" />

@@ -74,16 +74,8 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: "Automations",
-    items: [
-      { label: "Workflows", href: "/os/workflows", icon: GitBranch },
-      { label: "Triggers",  href: "/os/triggers",  icon: Zap },
-    ],
-  },
-  {
     label: "Intel",
     items: [
-      { label: "CRM",        href: "/os/crm",     icon: Database },
       { label: "Lantern AI", href: "/os/ai",      icon: Cpu },
       { label: "Signals",    href: "/os/signals", icon: Radio },
     ],

@@ -1,54 +1,176 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Link from "next/link"
-import useSWR from "swr"
-import { ListTodo, Search, MessageSquare, Clock, AlertTriangle, Loader2 } from "lucide-react"
+import useSWR, { mutate } from "swr"
+import {
+  ListTodo, Search, Clock, AlertTriangle, Loader2, Pencil, X, Check,
+  GitMerge, ChevronDown, ChevronRight,
+} from "lucide-react"
 import { OSStatusBadge, OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSEmpty } from "@/components/byred/os/os-empty"
 import { cn } from "@/lib/utils"
-import type { ByredTask } from "@/types/database"
+import { toast } from "sonner"
 
 const STATUS_OPTIONS = ["all", "not_started", "in_progress", "blocked", "done"]
 const PRIORITY_OPTIONS = ["all", "critical", "high", "medium", "low"]
 
+type Task = {
+  id: string
+  title: string
+  description: string | null
+  status: string
+  priority: string
+  tenant_id: string
+  owner_user_id: string | null
+  support_user_ids: string[]
+  due_date: string | null
+  start_date: string | null
+  blocker_flag: boolean
+  blocked_by_task_id: string | null
+  estimated_minutes: number
+  created_at: string
+}
+
+type Tenant = { id: string; name: string; color: string | null }
+
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+async function patchTask(id: string, patch: Partial<Pick<Task, "description" | "status" | "priority">>) {
+  const res = await fetch(`/api/tasks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  })
+  if (!res.ok) throw new Error("Failed to save")
+}
+
+function tenantColor(color: string | null): string {
+  if (!color || color === "amber") return "#F59E0B"
+  if (color === "blue") return "#0EA5E9"
+  if (color === "violet") return "#8B5CF6"
+  return color
+}
+
+// Inline notes editor — expands below the row
+function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState(task.description ?? "")
+  const [saving, setSaving] = useState(false)
+  const textRef = useRef<HTMLTextAreaElement>(null)
+
+  async function save() {
+    if (value === (task.description ?? "")) { setOpen(false); return }
+    setSaving(true)
+    try {
+      await patchTask(task.id, { description: value || null })
+      onSaved()
+      toast.success("Notes saved")
+    } catch {
+      toast.error("Failed to save notes")
+    } finally {
+      setSaving(false)
+      setOpen(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); setOpen(true); setTimeout(() => textRef.current?.focus(), 50) }}
+        className="group/notes flex items-center gap-1.5 max-w-[160px] text-left"
+      >
+        {task.description ? (
+          <span className="text-xs text-zinc-400 truncate group-hover/notes:text-zinc-200 transition-colors">
+            {task.description.slice(0, 40)}{task.description.length > 40 ? "…" : ""}
+          </span>
+        ) : (
+          <span className="text-xs text-zinc-700 group-hover/notes:text-zinc-500 transition-colors flex items-center gap-1">
+            <Pencil className="w-3 h-3" strokeWidth={1.5} /> Add notes
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-start gap-1.5" onClick={(e) => e.preventDefault()}>
+      <textarea
+        ref={textRef}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        rows={2}
+        className="flex-1 min-w-[180px] text-xs bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 resize-none outline-none focus:border-zinc-400"
+        placeholder="Add notes…"
+        onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); setValue(task.description ?? "") } }}
+      />
+      <button type="button" onClick={save} disabled={saving} className="text-emerald-400 hover:text-emerald-300 mt-0.5 shrink-0" title="Save">
+        {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2} />}
+      </button>
+      <button type="button" onClick={() => { setOpen(false); setValue(task.description ?? "") }} className="text-zinc-500 hover:text-zinc-300 mt-0.5 shrink-0" title="Cancel">
+        <X className="w-3.5 h-3.5" strokeWidth={2} />
+      </button>
+    </div>
+  )
+}
 
 export default function OSTasksPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [priorityFilter, setPriorityFilter] = useState("all")
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const { data: tasks, isLoading, error } = useSWR<ByredTask[]>("/api/tasks", fetcher)
+  const { data: tasks, isLoading, error, mutate: mutateTasks } = useSWR<Task[]>("/api/tasks", fetcher)
+  const { data: tenantData } = useSWR<{ tenants: Tenant[] }>("/api/os/tenants", fetcher)
+
+  const tenantMap = new Map<string, Tenant>((tenantData?.tenants ?? []).map((t) => [t.id, t]))
 
   const today = new Date().toISOString().split("T")[0]
 
   const filtered = (tasks ?? []).filter((t) => {
-    const matchesSearch = t.title.toLowerCase().includes(search.toLowerCase())
+    const tenant = tenantMap.get(t.tenant_id)
+    const tenantName = tenant?.name ?? ""
+    const matchesSearch =
+      t.title.toLowerCase().includes(search.toLowerCase()) ||
+      tenantName.toLowerCase().includes(search.toLowerCase())
     const matchesStatus = statusFilter === "all" || t.status === statusFilter
-    const matchesPriority = priorityFilter === "all" || t.priority === priorityFilter
+    const matchesPriority = priorityFilter === "all" || t.priority?.toLowerCase() === priorityFilter
     return matchesSearch && matchesStatus && matchesPriority
   })
 
+  function fmtDate(d: string | null) {
+    if (!d) return null
+    const dateStr = d.includes("T") ? d : d + "T00:00:00"
+    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  }
+
   return (
-    <div className="space-y-5 max-w-5xl">
+    <div className="space-y-5 max-w-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Tasks</h1>
           <p className="text-sm text-zinc-500 mt-1">
-            {isLoading ? "Loading..." : `${tasks?.length ?? 0} total tasks`}
+            {isLoading ? "Loading…" : `${tasks?.length ?? 0} total · ${filtered.length} shown`}
           </p>
         </div>
+        <Link
+          href="/os/tasks/new"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#D7261E] text-white text-sm font-medium hover:bg-[#B51E18] transition-colors"
+        >
+          + New Task
+        </Link>
       </div>
 
+      {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48 max-w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tasks..."
+            placeholder="Search tasks or project…"
             className="w-full pl-8 pr-3 py-2 text-sm bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
           />
         </div>
@@ -56,6 +178,7 @@ export default function OSTasksPage() {
           {STATUS_OPTIONS.map((s) => (
             <button
               key={s}
+              type="button"
               onClick={() => setStatusFilter(s)}
               className={cn(
                 "px-2.5 py-1.5 rounded-lg text-[11px] font-medium capitalize transition-colors",
@@ -64,7 +187,7 @@ export default function OSTasksPage() {
                   : "text-zinc-500 hover:text-zinc-300"
               )}
             >
-              {s === "all" ? "All" : s.replace("_", " ")}
+              {s === "all" ? "All Status" : s.replace("_", " ")}
             </button>
           ))}
         </div>
@@ -72,6 +195,7 @@ export default function OSTasksPage() {
           {PRIORITY_OPTIONS.map((p) => (
             <button
               key={p}
+              type="button"
               onClick={() => setPriorityFilter(p)}
               className={cn(
                 "px-2.5 py-1.5 rounded-lg text-[11px] font-medium capitalize transition-colors",
@@ -80,7 +204,7 @@ export default function OSTasksPage() {
                   : "text-zinc-500 hover:text-zinc-300"
               )}
             >
-              {p === "all" ? "Priority" : p}
+              {p === "all" ? "All Priority" : p}
             </button>
           ))}
         </div>
@@ -97,58 +221,153 @@ export default function OSTasksPage() {
       ) : filtered.length === 0 ? (
         <OSEmpty icon={ListTodo} title="No tasks found" description="Adjust your filters or create your first task." />
       ) : (
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-          <div className="hidden md:grid grid-cols-[1fr_120px_100px_80px_80px] gap-4 px-5 py-2.5 border-b border-zinc-800 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">
-            <span>Task</span>
+        <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
+          {/* Header */}
+          <div className="grid grid-cols-[28px_1fr_130px_100px_90px_100px_80px_80px_180px] gap-0 px-4 py-2.5 border-b border-zinc-800 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest min-w-[1100px]">
+            <span />
+            <span className="pl-2">Task</span>
+            <span>Project</span>
             <span>Status</span>
             <span>Priority</span>
-            <span>Owner</span>
+            <span>Owner / Support</span>
+            <span>Start</span>
             <span>Due</span>
+            <span>Notes</span>
           </div>
-          <div className="divide-y divide-zinc-800/60">
+
+          <div className="divide-y divide-zinc-800/60 min-w-[1100px]">
             {filtered.map((task) => {
               const isOverdue = task.due_date && task.due_date < today && task.status !== "done"
+              const tenant = tenantMap.get(task.tenant_id)
+              const color = tenantColor(tenant?.color ?? null)
+              const isExpanded = expandedId === task.id
+
               return (
-                <Link
-                  key={task.id}
-                  href={`/os/tasks/${task.id}`}
-                  className="flex md:grid md:grid-cols-[1fr_120px_100px_80px_80px] gap-2 md:gap-4 items-center px-5 py-3.5 hover:bg-white/[0.03] transition-colors group"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {task.blocker_flag && (
-                      <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />
+                <div key={task.id}>
+                  <div
+                    className={cn(
+                      "grid grid-cols-[28px_1fr_130px_100px_90px_100px_80px_80px_180px] gap-0 items-center px-4 py-3 hover:bg-white/[0.02] transition-colors group",
                     )}
-                    <span className="text-sm text-zinc-200 group-hover:text-white truncate">
-                      {task.title}
-                    </span>
+                  >
+                    {/* Expand toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(isExpanded ? null : task.id)}
+                      className="text-zinc-700 hover:text-zinc-400 transition-colors"
+                    >
+                      {isExpanded
+                        ? <ChevronDown className="w-3.5 h-3.5" strokeWidth={2} />
+                        : <ChevronRight className="w-3.5 h-3.5" strokeWidth={2} />}
+                    </button>
+
+                    {/* Title */}
+                    <div className="flex items-center gap-2 min-w-0 pl-2">
+                      {task.blocker_flag && (
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />
+                      )}
+                      {task.blocked_by_task_id && (
+                        <GitMerge className="w-3.5 h-3.5 text-amber-500 shrink-0" strokeWidth={2} title="Has dependency" />
+                      )}
+                      <Link
+                        href={`/os/tasks/${task.id}`}
+                        className="text-sm text-zinc-200 group-hover:text-white truncate hover:underline"
+                      >
+                        {task.title}
+                      </Link>
+                    </div>
+
+                    {/* Project */}
+                    <div className="min-w-0 pr-2">
+                      {tenant ? (
+                        <span
+                          className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded truncate max-w-full"
+                          style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}
+                          title={tenant.name}
+                        >
+                          {tenant.name.replace(/^[^\w\s]*\s*/, "").split(" — ")[0].split(" - ")[0]}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-700 text-xs">—</span>
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                      <OSStatusBadge status={task.status} />
+                    </div>
+
+                    {/* Priority */}
+                    <div>
+                      <OSPriorityBadge priority={task.priority} />
+                    </div>
+
+                    {/* Owner + Support */}
+                    <div className="flex items-center gap-1">
+                      {task.owner_user_id ? (
+                        <OSAvatar userId={task.owner_user_id} size="xs" />
+                      ) : (
+                        <span className="text-zinc-700 text-xs">—</span>
+                      )}
+                      {(task.support_user_ids ?? []).slice(0, 2).map((uid) => (
+                        <OSAvatar key={uid} userId={uid} size="xs" />
+                      ))}
+                    </div>
+
+                    {/* Start date */}
+                    <div>
+                      {task.start_date ? (
+                        <span className="text-xs text-zinc-500">
+                          {fmtDate(task.start_date)}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-700 text-xs">—</span>
+                      )}
+                    </div>
+
+                    {/* Due date */}
+                    <div>
+                      {task.due_date ? (
+                        <span className={cn("text-xs flex items-center gap-1", isOverdue ? "text-red-400" : "text-zinc-500")}>
+                          {isOverdue && <Clock className="w-3 h-3" strokeWidth={2} />}
+                          {fmtDate(task.due_date)}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-700 text-xs">—</span>
+                      )}
+                    </div>
+
+                    {/* Notes (inline editable) */}
+                    <div onClick={(e) => e.preventDefault()}>
+                      <NotesCell task={task} onSaved={() => mutateTasks()} />
+                    </div>
                   </div>
-                  <div className="hidden md:block">
-                    <OSStatusBadge status={task.status} />
-                  </div>
-                  <div className="hidden md:block">
-                    <OSPriorityBadge priority={task.priority} />
-                  </div>
-                  <div className="hidden md:flex items-center">
-                    {task.owner_user_id ? (
-                      <OSAvatar userId={task.owner_user_id} size="xs" />
-                    ) : (
-                      <span className="text-zinc-700 text-xs">—</span>
-                    )}
-                  </div>
-                  <div className="hidden md:flex items-center gap-1">
-                    {task.due_date ? (
-                      <span className={cn("text-xs flex items-center gap-1", isOverdue ? "text-red-400" : "text-zinc-600")}>
-                        {isOverdue && <Clock className="w-3 h-3" strokeWidth={2} />}
-                        {new Date(task.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-700 text-xs">—</span>
-                    )}
-                  </div>
-                  <div className="md:hidden flex items-center gap-1.5 ml-auto">
-                    <OSPriorityBadge priority={task.priority} />
-                  </div>
-                </Link>
+
+                  {/* Expanded row — full description editing */}
+                  {isExpanded && (
+                    <div className="px-10 py-3 bg-zinc-950/60 border-t border-zinc-800/60">
+                      <div className="grid grid-cols-3 gap-6 text-xs text-zinc-400">
+                        <div>
+                          <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Description / Notes</p>
+                          <p className="whitespace-pre-wrap leading-relaxed">{task.description || <span className="text-zinc-700 italic">No description yet.</span>}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Details</p>
+                          <div className="space-y-1 text-zinc-500">
+                            <p>Est. time: {task.estimated_minutes}m</p>
+                            {task.blocked_by_task_id && <p className="text-amber-500">Blocked by: {task.blocked_by_task_id.slice(0, 8)}…</p>}
+                            {task.blocker_flag && <p className="text-red-400">⚠ This is a blocker</p>}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Actions</p>
+                          <Link href={`/os/tasks/${task.id}`} className="text-[#D7261E] hover:text-red-300 text-xs">
+                            Open full detail →
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
