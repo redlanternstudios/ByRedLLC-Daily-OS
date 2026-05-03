@@ -11,9 +11,9 @@ export async function GET() {
     const { data, error } = await supabase
       .from("byred_tasks")
       .select("*")
-      .not("status", "in", '("done","cancelled")')
+      .not("status", "in", "(done,cancelled)")
       .order("priority", { ascending: true })
-      .order("due_date", { ascending: true, nullsFirst: false })
+      .order("due_date", { ascending: true })
 
     if (error) return NextResponse.json({ tasks: [], blockers: [] })
 

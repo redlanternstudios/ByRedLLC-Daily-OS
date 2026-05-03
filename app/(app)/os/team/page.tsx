@@ -32,7 +32,7 @@ export default async function OSTeamPage() {
   const { data: taskCounts } = await supabase
     .from("byred_tasks")
     .select("owner_user_id")
-    .not("status", "in", '("done","cancelled")')
+    .not("status", "in", "(done,cancelled)")
     .not("owner_user_id", "is", null)
 
   // Get tenant counts per user

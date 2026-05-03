@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     .select("id, title, status, priority, due_date, blocker_flag, tenant_id, owner_user_id, byred_users!owner_user_id ( name, avatar_url )")
     .eq("tenant_id", tenant_id)
     .not("due_date", "is", null)
-    .not("status", "in", '("done","cancelled")')
+    .not("status", "in", "(done,cancelled)")
     .order("due_date", { ascending: true })
 
   if (from) tasksQuery = tasksQuery.gte("due_date", from.split("T")[0])

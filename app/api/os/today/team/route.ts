@@ -10,7 +10,7 @@ export async function GET() {
 
     const [usersRes, tasksRes] = await Promise.all([
       supabase.from("byred_users").select("id, name, role, avatar_url").eq("active", true).order("name"),
-      supabase.from("byred_tasks").select("*").not("status", "in", '("done","cancelled")'),
+      supabase.from("byred_tasks").select("*").not("status", "in", "(done,cancelled)"),
     ])
 
     const users = usersRes.data ?? []
