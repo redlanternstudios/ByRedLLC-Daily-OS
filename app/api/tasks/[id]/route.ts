@@ -6,18 +6,39 @@ interface RouteParams {
   params: Promise<{ id: string }>
 }
 
+/** Resolve the byred_users.id for the current auth user and their tenant IDs */
+async function getCallerProfile(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: byredUserRaw } = await supabase
+    .from("byred_users")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle()
+  const byredUser = byredUserRaw as { id: string } | null
+  if (!byredUser) return null
+
+  const { data: userTenants } = await supabase
+    .from("byred_user_tenants")
+    .select("tenant_id")
+    .eq("user_id", byredUser.id)
+
+  const tenantIds = (userTenants ?? []).map((ut: { tenant_id: string }) => ut.tenant_id)
+  return { id: byredUser.id, tenantIds }
+}
+
 export async function GET(_req: Request, { params }: RouteParams) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const caller = await getCallerProfile(supabase)
+  if (!caller) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
     .eq("id", id)
+    .in("tenant_id", caller.tenantIds)
     .single()
 
   if (error || !data)
@@ -27,12 +48,23 @@ export async function GET(_req: Request, { params }: RouteParams) {
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const caller = await getCallerProfile(supabase)
+  if (!caller) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
+
+  // Verify this task belongs to one of the caller's tenants
+  const { data: existing } = await supabase
+    .from("byred_tasks")
+    .select("id, tenant_id")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (!caller.tenantIds.includes(existing.tenant_id)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
   const body = (await request.json()) as Partial<{
     title: string
     description: string | null
@@ -63,12 +95,23 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
 export async function DELETE(_req: Request, { params }: RouteParams) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const caller = await getCallerProfile(supabase)
+  if (!caller) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
+
+  // Verify this task belongs to one of the caller's tenants before deleting
+  const { data: existing } = await supabase
+    .from("byred_tasks")
+    .select("id, tenant_id")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (!caller.tenantIds.includes(existing.tenant_id)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
   const { error } = await supabase.from("byred_tasks").delete().eq("id", id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

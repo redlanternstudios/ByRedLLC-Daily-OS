@@ -1,12 +1,39 @@
 import { createClient } from "@/lib/supabase/server"
 import { mapTaskFromDb, type Task } from "@/types/db"
 
+/**
+ * Resolve the list of tenant IDs the currently authenticated user belongs to.
+ * Returns [] if the user has no profile or no tenant memberships.
+ */
+async function getUserTenantIds(supabase: Awaited<ReturnType<typeof createClient>>): Promise<string[]> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data: byredUserRaw } = await supabase
+    .from("byred_users")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle()
+  const byredUser = byredUserRaw as { id: string } | null
+  if (!byredUser) return []
+
+  const { data: userTenants } = await supabase
+    .from("byred_user_tenants")
+    .select("tenant_id")
+    .eq("user_id", byredUser.id)
+
+  return (userTenants ?? []).map((ut: { tenant_id: string }) => ut.tenant_id)
+}
+
 export async function getTasks(): Promise<Task[]> {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  if (tenantIds.length === 0) return []
 
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
+    .in("tenant_id", tenantIds)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -19,11 +46,14 @@ export async function getTasks(): Promise<Task[]> {
 
 export async function getTaskById(id: string): Promise<Task | null> {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  if (tenantIds.length === 0) return null
 
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
     .eq("id", id)
+    .in("tenant_id", tenantIds)
     .single()
 
   if (error || !data) {
@@ -36,6 +66,9 @@ export async function getTaskById(id: string): Promise<Task | null> {
 
 export async function getTasksByTenant(tenantId: string): Promise<Task[]> {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  // Verify the caller actually has access to the requested tenant
+  if (!tenantIds.includes(tenantId)) return []
 
   const { data, error } = await supabase
     .from("byred_tasks")
@@ -53,10 +86,13 @@ export async function getTasksByTenant(tenantId: string): Promise<Task[]> {
 
 export async function getTasksByStatus(status: string): Promise<Task[]> {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  if (tenantIds.length === 0) return []
 
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
+    .in("tenant_id", tenantIds)
     .eq("status", status)
     .order("created_at", { ascending: false })
 
@@ -70,14 +106,15 @@ export async function getTasksByStatus(status: string): Promise<Task[]> {
 
 export async function getTasksForToday(): Promise<Task[]> {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  if (tenantIds.length === 0) return []
+
   const today = new Date().toISOString().split("T")[0]
 
-  // Fetch all active (non-done, non-cancelled) tasks then filter client-side.
-  // PostgREST .or() cannot mix range filters (lte) with eq on the same column
-  // in a single expression without using separate .or() groups.
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
+    .in("tenant_id", tenantIds)
     .not("status", "in", "(done,cancelled)")
     .order("priority", { ascending: true })
     .order("due_date", { ascending: true })
@@ -87,7 +124,6 @@ export async function getTasksForToday(): Promise<Task[]> {
     return []
   }
 
-  // Keep tasks that are: due today/overdue, in_progress, or not_started
   const relevant = data.filter(
     (t) =>
       t.status === "in_progress" ||
@@ -100,10 +136,13 @@ export async function getTasksForToday(): Promise<Task[]> {
 
 export async function getBlockedTasks(): Promise<Task[]> {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  if (tenantIds.length === 0) return []
 
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
+    .in("tenant_id", tenantIds)
     .eq("blocker_flag", true)
     .neq("status", "done")
     .neq("status", "cancelled")
@@ -115,10 +154,13 @@ export async function getBlockedTasks(): Promise<Task[]> {
 
 export async function getRecentTasks(limit = 10): Promise<Task[]> {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  if (tenantIds.length === 0) return []
 
   const { data, error } = await supabase
     .from("byred_tasks")
     .select("*")
+    .in("tenant_id", tenantIds)
     .order("created_at", { ascending: false })
     .limit(limit)
 
@@ -128,11 +170,15 @@ export async function getRecentTasks(limit = 10): Promise<Task[]> {
 
 export async function getTaskStats() {
   const supabase = await createClient()
+  const tenantIds = await getUserTenantIds(supabase)
+  if (tenantIds.length === 0) return { criticalNow: 0, moneyMoves: 0, quickWins: 0, comingUp: 0 }
+
   const today = new Date().toISOString().split("T")[0]
 
   const { data: tasks, error } = await supabase
     .from("byred_tasks")
     .select("id, priority, due_date, estimated_minutes, revenue_impact_score, status")
+    .in("tenant_id", tenantIds)
     .neq("status", "done")
     .neq("status", "cancelled")
 
@@ -146,9 +192,7 @@ export async function getTaskStats() {
   ).length
 
   const moneyMoves = tasks.filter((t) => (t.revenue_impact_score ?? 0) >= 7).length
-
   const quickWins = tasks.filter((t) => (t.estimated_minutes ?? 30) <= 30).length
-
   const comingUp = tasks.filter((t) => t.due_date && t.due_date > today).length
 
   return { criticalNow, moneyMoves, quickWins, comingUp }

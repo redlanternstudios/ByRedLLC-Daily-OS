@@ -87,10 +87,17 @@ const BOARDS_QUERY = `
 `
 
 export async function POST(req: NextRequest) {
-  // Auth: accept cron secret header or require admin
+  // Auth: accept cron secret header OR require an authenticated session
   const secret = req.headers.get("x-cron-secret")
-  if (secret !== process.env.CRON_SECRET && process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const hasCronSecret = !!process.env.CRON_SECRET && secret === process.env.CRON_SECRET
+
+  if (!hasCronSecret) {
+    const { createClient } = await import("@/lib/supabase/server")
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
   }
 
   try {
