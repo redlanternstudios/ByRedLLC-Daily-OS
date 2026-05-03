@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport, isTextUIPart } from "ai"
+import { useChat, DefaultChatTransport, isTextUIPart } from "ai"
 import { Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 
