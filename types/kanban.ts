@@ -14,6 +14,10 @@ export interface OsPhase {
   name: string
   order_index: number
   color: string | null
+  /** Binds this column to a task status. When a task's status is set to this value
+   *  it auto-moves here; dragging a card here sets the task's status to this value.
+   *  NULL = manual-only column (drag moves phase_id, status unchanged). */
+  status_mapping: string | null
 }
 
 export interface ByredUser {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { useUser } from '@/lib/context/user-context'
 import { EditableField } from '@/components/os/EditableField'
 import { Plus, Trash2 } from 'lucide-react'
@@ -45,6 +46,7 @@ export default function OsBoardsPage() {
   const [newBoardName, setNewBoardName] = useState('')
   const [newBoardProject, setNewBoardProject] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!activeTenantId) return
@@ -75,9 +77,11 @@ export default function OsBoardsPage() {
     if (res.ok) {
       const { board } = (await res.json()) as { board: Board }
       setBoards((prev) => [board, ...prev])
+      setNewBoardName('')
+      setCreating(false)
+    } else {
+      toast.error('Failed to create board')
     }
-    setNewBoardName('')
-    setCreating(false)
   }
 
   async function handlePatch(id: string, patch: Partial<Board>) {
@@ -89,15 +93,21 @@ export default function OsBoardsPage() {
     if (res.ok) {
       const { board } = (await res.json()) as { board: Board }
       setBoards((prev) => prev.map((b) => (b.id === id ? { ...b, ...board } : b)))
+    } else {
+      toast.error('Failed to save changes')
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this board? This cannot be undone.')) return
     setDeletingId(id)
     const res = await fetch(`/api/os/boards/${id}`, { method: 'DELETE' })
-    if (res.ok) setBoards((prev) => prev.filter((b) => b.id !== id))
+    if (res.ok) {
+      setBoards((prev) => prev.filter((b) => b.id !== id))
+    } else {
+      toast.error('Failed to delete board')
+    }
     setDeletingId(null)
+    setConfirmDeleteId(null)
   }
 
   function toggleKpi(boardId: string, kpi: string) {
@@ -242,17 +252,36 @@ export default function OsBoardsPage() {
                             {board.status ?? 'Active'}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => void handleDelete(board.id)}
-                          disabled={deletingId === board.id}
-                          title="Delete board"
-                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#3F3F46', padding: 2 }}
-                          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = '#D7261E')}
-                          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = '#3F3F46')}
-                        >
-                          <Trash2 size={12} strokeWidth={1.75} />
-                        </button>
+                        {confirmDeleteId === board.id ? (
+                          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => void handleDelete(board.id)}
+                              disabled={deletingId === board.id}
+                              style={{ fontSize: 9, fontWeight: 700, color: '#D7261E', background: 'rgba(215,38,30,0.12)', border: '1px solid rgba(215,38,30,0.3)', borderRadius: 3, padding: '2px 7px', cursor: 'pointer' }}
+                            >
+                              {deletingId === board.id ? '...' : 'Delete'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(null)}
+                              style={{ fontSize: 9, color: '#71717A', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(board.id)}
+                            title="Delete board"
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#3F3F46', padding: 2 }}
+                            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = '#D7261E')}
+                            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = '#3F3F46')}
+                          >
+                            <Trash2 size={12} strokeWidth={1.75} />
+                          </button>
+                        )}
                       </div>
 
                       {/* Name */}

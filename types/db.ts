@@ -87,6 +87,7 @@ export type Task = {
   blocker_reason: string | null
   blocked_by_task_id: string | null
   owner_user_id: string | null
+  support_user_ids: string[]
   revenue_impact_score: number
   urgency_score: number
   created_at: string
@@ -108,6 +109,7 @@ export function mapTaskFromDb(row: {
   blocker_reason: string | null
   blocked_by_task_id: string | null
   owner_user_id: string | null
+  support_user_ids?: string[] | null
   revenue_impact_score: number | null
   urgency_score: number | null
   created_at: string | null
@@ -127,6 +129,7 @@ export function mapTaskFromDb(row: {
     blocker_reason: row.blocker_reason,
     blocked_by_task_id: row.blocked_by_task_id,
     owner_user_id: row.owner_user_id,
+    support_user_ids: row.support_user_ids ?? [],
     revenue_impact_score: row.revenue_impact_score ?? 5,
     urgency_score: row.urgency_score ?? 5,
     created_at: row.created_at ?? new Date().toISOString(),

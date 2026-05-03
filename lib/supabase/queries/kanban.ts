@@ -48,7 +48,7 @@ export async function getBoardWithData(boardId: string, userId: string): Promise
       t.due_date && t.due_date < today && !['done', 'cancelled'].includes(t.status),
   }))
 
-  const phases = (phasesResult.data ?? []) as OsPhase[]
+  const phases = (phasesResult.data ?? []) as unknown as OsPhase[]
   const tasksByPhase: Record<string, TaskWithMeta[]> = {}
   for (const phase of phases) tasksByPhase[phase.id] = []
   for (const task of tasksWithMeta) {

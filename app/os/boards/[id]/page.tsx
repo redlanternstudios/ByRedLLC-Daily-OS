@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { requireTenantScope } from '@/lib/data/tenant-scope'
 import KanbanBoard from '@/components/kanban/KanbanBoard'
-import Link from 'next/link'
+import BoardHeader from '@/components/kanban/BoardHeader'
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -26,48 +26,13 @@ export default async function OsBoardDetailPage({ params }: Ctx) {
 
   return (
     <div>
-      {/* Board header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '20px 28px 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <Link
-          href="/os/boards"
-          style={{ fontSize: 11, color: '#52525B', textDecoration: 'none' }}
-        >
-          Boards
-        </Link>
-        <span style={{ color: '#3F3F46', fontSize: 11 }}>/</span>
-        {projectName && (
-          <>
-            <span style={{ fontSize: 11, color: '#52525B' }}>{projectName}</span>
-            <span style={{ color: '#3F3F46', fontSize: 11 }}>/</span>
-          </>
-        )}
-        <span style={{ fontSize: 11, color: '#FAFAFA', fontWeight: 600 }}>{board.name}</span>
-
-        <span
-          style={{
-            marginLeft: 8,
-            fontSize: 9,
-            fontWeight: 700,
-            letterSpacing: 1.5,
-            textTransform: 'uppercase',
-            color: board.status === 'active' ? '#22C55E' : '#52525B',
-            background:
-              board.status === 'active' ? 'rgba(34,197,94,0.10)' : 'rgba(255,255,255,0.04)',
-            padding: '2px 6px',
-            borderRadius: 3,
-          }}
-        >
-          {board.status ?? 'active'}
-        </span>
-      </div>
+      {/* Board header + phase manager (client component handles the toggle) */}
+      <BoardHeader
+        boardId={id}
+        boardName={board.name}
+        boardStatus={board.status ?? 'active'}
+        projectName={projectName}
+      />
 
       {/* Kanban board (client component with DnD + real-time) */}
       <div style={{ paddingTop: 16 }}>

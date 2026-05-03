@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const supabase = await createClient()
     let q = supabase
       .from('byred_tasks')
-      .select('id,tenant_id,title,description,status,priority,due_date,estimated_minutes,order_index,assigned_user_id,revenue_impact_score,project_id,board_id')
+      .select('id,tenant_id,title,description,status,priority,due_date,estimated_minutes,order_index,owner_user_id,revenue_impact_score,project_id,board_id')
       .in('tenant_id', scopedIds)
       .is('archived_at', null)
       .order('order_index', { ascending: true })
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { tenantIds } = await requireTenantScope()
+    const { tenantIds, profileId } = await requireTenantScope()
     const body = (await req.json()) as {
       tenant_id?: string
       tasks?: Array<Record<string, unknown>>
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
       status?: string
       priority?: string
       due_date?: string
+      estimated_minutes?: number
       project_id?: string
       board_id?: string
     }
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
           status: (t.status as string | undefined) ?? 'not_started',
           priority: (t.priority as string | undefined) ?? 'medium',
           due_date: (t.due_date as string | undefined) ?? null,
-          estimated_minutes: 30,
+          estimated_minutes: typeof t.estimated_minutes === 'number' ? t.estimated_minutes : 30,
           revenue_impact_score: 0,
           urgency_score: 0,
         })))
@@ -98,7 +99,8 @@ export async function POST(req: NextRequest) {
         due_date: body.due_date ?? null,
         project_id: body.project_id ?? null,
         board_id: body.board_id ?? null,
-        estimated_minutes: 30,
+        owner_user_id: profileId ?? null,
+        estimated_minutes: body.estimated_minutes ?? 30,
         revenue_impact_score: 0,
         urgency_score: 0,
       })

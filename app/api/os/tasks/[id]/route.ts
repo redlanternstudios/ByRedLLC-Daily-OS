@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
     const { data: existing } = await supabase
       .from('byred_tasks')
-      .select('id')
+      .select('id,board_id')
       .eq('id', id)
       .in('tenant_id', tenantIds)
       .maybeSingle()
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
     const allowed = [
       'title', 'description', 'status', 'priority', 'due_date', 'order_index',
-      'owner_user_id', 'project_id', 'board_id', 'phase_id',
+      'owner_user_id', 'support_user_ids', 'project_id', 'board_id', 'phase_id',
       'blocker_flag', 'blocker_reason',
       'is_low_hanging_fruit', 'is_ready_for_ai', 'is_ready_for_human',
       'needs_decision', 'waiting_on_external',
@@ -35,6 +35,24 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
     for (const key of allowed) {
       if (key in body) patch[key] = body[key]
+    }
+
+    // Auto-move kanban phase when status changes.
+    // If the task belongs to a board and the patch changes `status`, find the phase on
+    // that board whose status_mapping matches the new status and include it in this write.
+    // The caller may still override by explicitly providing phase_id in the same patch.
+    const boardId = (existing as { board_id?: string | null }).board_id ?? null
+    if ('status' in patch && boardId && !('phase_id' in body)) {
+      const { data: targetPhase } = await supabase
+        .from('os_phases')
+        .select('id')
+        .eq('board_id', boardId)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .eq('status_mapping' as any, patch.status as string)
+        .maybeSingle()
+      if (targetPhase) {
+        patch.phase_id = targetPhase.id
+      }
     }
 
     const { data, error } = await supabase

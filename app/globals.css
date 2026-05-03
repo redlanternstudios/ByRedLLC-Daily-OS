@@ -314,4 +314,16 @@
     background-size: 200% 100%;
     animation: byred-shimmer 1.6s ease-in-out infinite;
   }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+}
+
+/* ============================================================================
+ * OS task row — CSS hover (server-component safe, no JS event handlers)
+ * ============================================================================ */
+.os-task-row:hover {
+  background: rgba(255, 255, 255, 0.03);
 }

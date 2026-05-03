@@ -10,7 +10,7 @@ import {
 import { useBoard } from '@/hooks/useBoard'
 import { useBoardStore } from '@/hooks/useBoardStore'
 import KanbanColumn from './KanbanColumn'
-import type { BoardWithData } from '@/types/kanban'
+import type { BoardWithData, TaskWithMeta } from '@/types/kanban'
 
 async function patchTask(taskId: string, patch: Record<string, unknown>) {
   await fetch(`/api/os/tasks/${taskId}`, {
@@ -60,9 +60,25 @@ export default function KanbanBoard({ boardId }: { boardId: string }) {
     const fromPhaseId = findTaskPhase(taskId, data)
     if (fromPhaseId === toPhaseId) return
 
+    const targetPhase = data.phases.find((p) => p.id === toPhaseId)
+
+    // Build patch — always move phase, also sync status if the destination column
+    // has a status_mapping configured.
+    const patchPayload: Record<string, unknown> = { phase_id: toPhaseId }
+    if (targetPhase?.status_mapping) {
+      patchPayload.status = targetPhase.status_mapping
+    }
+
     const targetTasks = data.tasksByPhase[toPhaseId] ?? []
+    // Optimistically update both phase and status in the local store
     moveTask(taskId, toPhaseId, targetTasks.length)
-    await patchTask(taskId, { phase_id: toPhaseId })
+    if (patchPayload.status) {
+      useBoardStore.getState().updateTask(taskId, {
+        status: patchPayload.status as TaskWithMeta['status'],
+      })
+    }
+
+    await patchTask(taskId, patchPayload)
   }
 
   if (isLoading) {

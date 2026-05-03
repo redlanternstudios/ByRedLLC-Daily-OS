@@ -16,6 +16,8 @@ type PageOpts = {
   limit?: number
   offset?: number
   includeArchived?: boolean
+  /** Filter to a specific owner (byred_users.id). Used by the Today page to scope to the current user. */
+  ownerId?: string | null
 }
 
 function normPage(opts: PageOpts): { limit: number; offset: number } {
@@ -152,7 +154,7 @@ export async function getTasksForToday(opts: PageOpts = {}): Promise<Task[]> {
   const { limit, offset } = normPage(opts)
   const today = new Date().toISOString().split("T")[0]
 
-  const { data, error } = await supabase
+  let q = supabase
     .from("byred_tasks")
     .select("*")
     .in("tenant_id", tenantIds)
@@ -163,6 +165,10 @@ export async function getTasksForToday(opts: PageOpts = {}): Promise<Task[]> {
     .order("priority", { ascending: true })
     .order("due_date", { ascending: true })
     .range(offset, offset + limit - 1)
+
+  if (opts.ownerId) q = q.eq("owner_user_id", opts.ownerId)
+
+  const { data, error } = await q
 
   if (error) {
     console.error("Error fetching today tasks:", error)

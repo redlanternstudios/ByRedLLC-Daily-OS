@@ -16,6 +16,7 @@ const ROUTE_META: Record<string, { title: string; parent?: string }> = {
   "/os/team":       { title: "Team",          parent: "Home" },
   "/os/import":     { title: "Import",        parent: "Home" },
   "/os/lantern-ai": { title: "LanternAI",     parent: "Home" },
+  "/os/ai":         { title: "LanternAI",     parent: "Home" },
   "/os/workflows":  { title: "Workflows",     parent: "Home" },
   "/os/triggers":   { title: "Triggers",      parent: "Home" },
   "/os/settings":   { title: "Settings",      parent: "Home" },

@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useUser } from '@/lib/context/user-context'
-import { Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, Trash2, ToggleLeft, ToggleRight, FlaskConical } from 'lucide-react'
 
 type Workflow = {
   id: string
@@ -120,10 +121,12 @@ export default function OsWorkflowsPage() {
     if (res.ok) {
       const { workflow } = (await res.json()) as { workflow: Workflow }
       setWorkflows((prev) => [workflow, ...prev])
+      setCreating(false)
+      setStep(DEFAULT_STEP)
+    } else {
+      toast.error('Failed to save workflow')
     }
     setSaving(false)
-    setCreating(false)
-    setStep(DEFAULT_STEP)
   }
 
   async function handleToggle(id: string, current: boolean) {
@@ -134,13 +137,18 @@ export default function OsWorkflowsPage() {
     })
     if (res.ok) {
       setWorkflows((prev) => prev.map((w) => (w.id === id ? { ...w, is_active: !current } : w)))
+    } else {
+      toast.error('Failed to update workflow')
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this workflow?')) return
     const res = await fetch(`/api/os/workflows/${id}`, { method: 'DELETE' })
-    if (res.ok) setWorkflows((prev) => prev.filter((w) => w.id !== id))
+    if (res.ok) {
+      setWorkflows((prev) => prev.filter((w) => w.id !== id))
+    } else {
+      toast.error('Failed to delete workflow')
+    }
   }
 
   return (
@@ -152,6 +160,10 @@ export default function OsWorkflowsPage() {
           </h1>
           <p style={{ fontSize: 11, color: '#52525B' }}>
             Automate actions based on events in your workspace
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, fontSize: 9, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.12)', padding: '2px 7px', borderRadius: 3, textTransform: 'uppercase', letterSpacing: 0.5, verticalAlign: 'middle' }}>
+            <FlaskConical size={9} />
+            Rules saved · Execution engine coming soon
+          </span>
           </p>
         </div>
         <button

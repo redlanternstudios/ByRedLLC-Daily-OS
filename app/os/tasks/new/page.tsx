@@ -11,6 +11,7 @@ type FormState = {
   priority: string
   status: string
   due_date: string
+  estimated_minutes: string
 }
 
 const PRIORITY_OPTIONS = ['low', 'medium', 'high', 'critical']
@@ -50,6 +51,7 @@ export default function OsTaskNewPage() {
     priority: 'medium',
     status: 'not_started',
     due_date: '',
+    estimated_minutes: '30',
   })
 
   // Seed tenant_id from active tenant once context is available
@@ -84,6 +86,7 @@ export default function OsTaskNewPage() {
             priority: form.priority,
             status: form.status,
             due_date: form.due_date || null,
+            estimated_minutes: form.estimated_minutes ? parseInt(form.estimated_minutes, 10) : undefined,
           }),
         })
         const json = await res.json() as { task?: { id: string }; error?: string }
@@ -173,8 +176,8 @@ export default function OsTaskNewPage() {
           />
         </div>
 
-        {/* Priority + Status row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* Priority + Status + Est. time row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
           <div>
             <label style={LABEL_STYLE}>Priority</label>
             <select
@@ -199,6 +202,20 @@ export default function OsTaskNewPage() {
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s} style={{ background: '#18181B' }}>
                   {s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={LABEL_STYLE}>Est. time</label>
+            <select
+              value={form.estimated_minutes}
+              onChange={(e) => set('estimated_minutes', e.target.value)}
+              style={{ ...INPUT_STYLE, cursor: 'pointer' }}
+            >
+              {[15, 30, 45, 60, 90, 120, 180, 240].map((m) => (
+                <option key={m} value={String(m)} style={{ background: '#18181B' }}>
+                  {m < 60 ? `${m}m` : m % 60 === 0 ? `${m / 60}h` : `${Math.floor(m / 60)}h ${m % 60}m`}
                 </option>
               ))}
             </select>

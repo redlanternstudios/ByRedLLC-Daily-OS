@@ -1,7 +1,8 @@
 import { format } from 'date-fns'
 import { Flame, DollarSign, Zap, Calendar, Brain, AlertTriangle } from 'lucide-react'
-import { getTasks } from '@/lib/data/tasks'
+import { getTasksForToday } from '@/lib/data/tasks'
 import { getDailyBriefForSession } from '@/lib/data/daily-briefs'
+import { requireTenantScope } from '@/lib/data/tenant-scope'
 import Link from 'next/link'
 import type { Task } from '@/types/db'
 
@@ -117,7 +118,11 @@ function TaskCard({ task }: { task: Task }) {
 }
 
 export default async function OsTodayPage() {
-  const [tasks, brief] = await Promise.all([getTasks(), getDailyBriefForSession()])
+  const { profileId } = await requireTenantScope()
+  const [tasks, brief] = await Promise.all([
+    getTasksForToday({ ownerId: profileId }),
+    getDailyBriefForSession(),
+  ])
 
   const todayStr = format(new Date(), 'EEEE, MMMM d')
 

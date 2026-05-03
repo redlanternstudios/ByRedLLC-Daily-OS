@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useUser } from '@/lib/context/user-context'
 import { EditableField } from '@/components/os/EditableField'
 import Link from 'next/link'
@@ -84,6 +85,8 @@ export default function OsProjectsPage() {
     if (res.ok) {
       const { project } = (await res.json()) as { project: Project }
       setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...project } : p)))
+    } else {
+      toast.error('Failed to save changes')
     }
   }
 
@@ -97,9 +100,11 @@ export default function OsProjectsPage() {
     if (res.ok) {
       const { project } = (await res.json()) as { project: Project }
       setProjects((prev) => [project, ...prev])
+      setNewName('')
+      setCreating(false)
+    } else {
+      toast.error('Failed to create project')
     }
-    setNewName('')
-    setCreating(false)
   }
 
   const displayed = projects

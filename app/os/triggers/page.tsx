@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useUser } from '@/lib/context/user-context'
-import { Plus, Trash2, ToggleLeft, ToggleRight, Bell } from 'lucide-react'
+import { Plus, Trash2, ToggleLeft, ToggleRight, Bell, FlaskConical } from 'lucide-react'
 
 type Trigger = {
   id: string
@@ -149,6 +150,10 @@ export default function OsTriggersPage() {
           </h1>
           <p style={{ fontSize: 11, color: '#52525B' }}>
             Get alerted when conditions are met in your workspace
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 8, fontSize: 9, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.12)', padding: '2px 7px', borderRadius: 3, textTransform: 'uppercase', letterSpacing: 0.5, verticalAlign: 'middle' }}>
+              <FlaskConical size={9} />
+              Rules saved · Alert delivery coming soon
+            </span>
           </p>
         </div>
         <button

@@ -15,7 +15,8 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns'
-import { CalendarDays, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2, Plus, X } from 'lucide-react'
+import { toast } from 'sonner'
 import { useUser } from '@/lib/context/user-context'
 
 type CalendarItem = {
@@ -35,12 +36,33 @@ type CalendarItem = {
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+type CreateForm = {
+  title: string
+  date: string
+  end_date: string
+  all_day: boolean
+  event_type: string
+}
+
+const DEFAULT_FORM: CreateForm = {
+  title: '',
+  date: '',
+  end_date: '',
+  all_day: true,
+  event_type: 'internal',
+}
+
+const EVENT_TYPES = ['internal', 'deadline', 'renewal', 'meeting', 'follow_up']
+
 export default function CalendarPage() {
   const { activeTenantId } = useUser()
   const [month, setMonth] = useState(() => startOfMonth(new Date()))
   const [items, setItems] = useState<CalendarItem[]>([])
   const [loading, setLoading] = useState(true)
   const [refetching, setRefetching] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
+  const [createForm, setCreateForm] = useState<CreateForm>(DEFAULT_FORM)
+  const [creating, setCreating] = useState(false)
   const initialized = useRef(false)
 
   useEffect(() => {
@@ -87,6 +109,47 @@ export default function CalendarPage() {
     return items.filter((item) => isSameDay(parseISO(item.start_at), day))
   }
 
+  async function handleCreateEvent(e: React.FormEvent) {
+    e.preventDefault()
+    if (!createForm.title.trim() || !createForm.date || !activeTenantId) return
+    setCreating(true)
+    try {
+      const start_at = createForm.all_day
+        ? `${createForm.date}T00:00:00.000Z`
+        : createForm.date
+      const end_at = createForm.end_date
+        ? (createForm.all_day ? `${createForm.end_date}T23:59:59.000Z` : createForm.end_date)
+        : null
+
+      const res = await fetch('/api/os/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant_id: activeTenantId,
+          title: createForm.title.trim(),
+          start_at,
+          end_at,
+          all_day: createForm.all_day,
+          event_type: createForm.event_type,
+        }),
+      })
+      if (res.ok) {
+        const { event } = (await res.json()) as { event: { id: string; title: string; start_at: string; end_at: string | null; all_day: boolean; tenant_id: string } }
+        const color = createForm.event_type === 'deadline' || createForm.event_type === 'renewal' ? '#D7261E' : '#2563eb'
+        setItems((prev) => [...prev, { ...event, color, source: 'event' as const }])
+        setShowCreate(false)
+        setCreateForm(DEFAULT_FORM)
+        toast.success('Event created')
+      } else {
+        toast.error('Failed to create event')
+      }
+    } catch {
+      toast.error('Failed to create event')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   if (loading) return <CalendarSkeleton />
 
   return (
@@ -97,6 +160,15 @@ export default function CalendarPage() {
           <CalendarDays className="w-5 h-5" style={{ color: '#D7261E' }} strokeWidth={1.75} />
           <h1 className="text-2xl font-condensed font-bold tracking-tight">Calendar</h1>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold"
+            style={{ background: '#D7261E', color: '#fff', border: 'none', cursor: 'pointer', letterSpacing: 0.3, textTransform: 'uppercase' }}
+          >
+            <Plus className="w-3 h-3" strokeWidth={2.5} />
+            New Event
+          </button>
         <div className="flex items-center gap-1">
           {refetching && (
             <Loader2 className="w-4 h-4 animate-spin mr-1" style={{ color: '#D7261E' }} />
@@ -149,7 +221,101 @@ export default function CalendarPage() {
             Today
           </button>
         </div>
+        </div>
       </div>
+
+      {/* Create event modal */}
+      {showCreate && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}
+        >
+          <form
+            onSubmit={(e) => void handleCreateEvent(e)}
+            style={{
+              background: '#18181B', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 12, padding: 24, width: 400, display: 'flex', flexDirection: 'column', gap: 16,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#FAFAFA', textTransform: 'uppercase', letterSpacing: 0.8 }}>New Event</p>
+              <button type="button" onClick={() => setShowCreate(false)} style={{ background: 'transparent', border: 'none', color: '#71717A', cursor: 'pointer' }}>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <input
+              autoFocus
+              type="text"
+              placeholder="Event title"
+              value={createForm.title}
+              onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))}
+              required
+              style={{ height: 36, padding: '0 10px', background: '#0F0F10', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, color: '#FAFAFA', fontSize: 12, outline: 'none' }}
+            />
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <p style={{ fontSize: 9, fontWeight: 700, color: '#52525B', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 5 }}>Start</p>
+                <input
+                  type="date"
+                  value={createForm.date}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, date: e.target.value }))}
+                  required
+                  style={{ height: 36, padding: '0 10px', background: '#0F0F10', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, color: '#FAFAFA', fontSize: 12, outline: 'none', width: '100%' }}
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: 9, fontWeight: 700, color: '#52525B', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 5 }}>End (optional)</p>
+                <input
+                  type="date"
+                  value={createForm.end_date}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, end_date: e.target.value }))}
+                  style={{ height: 36, padding: '0 10px', background: '#0F0F10', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, color: '#FAFAFA', fontSize: 12, outline: 'none', width: '100%' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <p style={{ fontSize: 9, fontWeight: 700, color: '#52525B', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 5 }}>Type</p>
+                <select
+                  value={createForm.event_type}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, event_type: e.target.value }))}
+                  style={{ height: 36, padding: '0 8px', background: '#0F0F10', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, color: '#FAFAFA', fontSize: 12, outline: 'none', width: '100%' }}
+                >
+                  {EVENT_TYPES.map((t) => (
+                    <option key={t} value={t}>{t.replace('_', ' ')}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 22 }}>
+                <input
+                  type="checkbox"
+                  id="all_day"
+                  checked={createForm.all_day}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, all_day: e.target.checked }))}
+                />
+                <label htmlFor="all_day" style={{ fontSize: 11, color: '#A1A1AA', cursor: 'pointer' }}>All day</label>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setShowCreate(false)} style={{ fontSize: 11, color: '#71717A', background: 'transparent', border: 'none', cursor: 'pointer' }}>Cancel</button>
+              <button
+                type="submit"
+                disabled={creating || !createForm.title.trim() || !createForm.date}
+                style={{ fontSize: 11, fontWeight: 700, color: '#FAFAFA', background: creating ? '#52525B' : '#D7261E', border: 'none', borderRadius: 3, padding: '7px 16px', cursor: 'pointer' }}
+              >
+                {creating ? 'Creating…' : 'Create Event'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Day-of-week header */}
       <div className="grid grid-cols-7 mb-1">

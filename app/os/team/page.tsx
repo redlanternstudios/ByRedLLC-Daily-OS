@@ -15,10 +15,19 @@ async function getTeamWithTaskCounts(tenantIds: string[]): Promise<TeamMember[]>
   if (tenantIds.length === 0) return []
   const supabase = await createClient()
 
+  // Scope to users who belong to these tenants
+  const { data: memberRows } = await supabase
+    .from('byred_user_tenants')
+    .select('user_id')
+    .in('tenant_id', tenantIds)
+  const memberIds = [...new Set((memberRows ?? []).map((r) => r.user_id))]
+  if (memberIds.length === 0) return []
+
   const [usersRes, taskCountsRes] = await Promise.all([
     supabase
       .from('byred_users')
       .select('id,name,email,role,avatar_url,monday_user_id')
+      .in('id', memberIds)
       .eq('active', true),
     supabase
       .from('byred_tasks')
