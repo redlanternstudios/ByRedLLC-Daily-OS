@@ -27,8 +27,11 @@ export function Field({
   required = true,
   rightLabel,
 }: FieldProps) {
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => { setMounted(true) }, [])
+
   return (
-    <div suppressHydrationWarning className={topGap ? "mt-4" : ""}>
+    <div className={topGap ? "mt-4" : ""}>
       <div className="flex items-center justify-between mb-1.5">
         <label
           htmlFor={id}
@@ -38,17 +41,26 @@ export function Field({
         </label>
         {rightLabel}
       </div>
-      <input
-        suppressHydrationWarning
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-        required={required}
-        className="h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-[#c8102e]/60 focus:ring-1 focus:ring-[#c8102e]/30"
-      />
+      {/* Render a placeholder on the server; swap to real input on client only.
+          This prevents password manager extensions (LastPass etc.) from injecting
+          DOM nodes that cause React hydration mismatches. */}
+      {mounted ? (
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          required={required}
+          className="h-9 w-full rounded-md border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-[#c8102e]/60 focus:ring-1 focus:ring-[#c8102e]/30"
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="h-9 w-full rounded-md border border-white/10 bg-white/5"
+        />
+      )}
     </div>
   )
 }
