@@ -69,7 +69,17 @@ function VelocityTooltip({ active, payload, label }: { active?: boolean; payload
 }
 
 // ── Team Load Pie ──────────────────────────────────────────────────────────
-const MEMBER_COLORS = ["#D7261E", "#0EA5E9", "#10B981", "#F59E0B", "#8B5CF6", "#F43F5E", "#14B8A6", "#F97316"]
+// Refined palette: distinct hues, consistent saturation, dark-mode friendly
+const MEMBER_COLORS = [
+  "#22D3EE", // cyan-400 — primary accent
+  "#A78BFA", // violet-400
+  "#34D399", // emerald-400
+  "#FB923C", // orange-400
+  "#F472B6", // pink-400
+  "#60A5FA", // blue-400
+  "#FBBF24", // amber-400
+  "#A3E635", // lime-400
+]
 
 function TeamPieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
   if (!active || !payload?.length) return null
@@ -312,16 +322,15 @@ export default function OSKPIsPage() {
             <div className="space-y-3">
               {data.by_tenant.map((t) => (
                 <div key={t.tenant_id}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span
-                      className="text-[11px] font-medium truncate max-w-[200px]"
-                      style={{ color: t.tenant_color }}
-                    >
+                    <div className="flex items-center justify-between mb-1">
+                    {/* Project names use neutral text; color is reserved for the progress bar */}
+                    <span className="text-[11px] font-medium text-zinc-300 truncate max-w-[200px]">
                       {t.tenant_name.replace(/^[^\w\s]*\s*/, "").split(" — ")[0].split(" - ")[0]}
                     </span>
                     <div className="flex items-center gap-3 text-[10px] text-zinc-600 shrink-0">
-                      {t.overdue > 0 && <span className="text-amber-500">{t.overdue} overdue</span>}
-                      {t.blocked > 0 && <span className="text-red-400">{t.blocked} blocked</span>}
+                      {/* Overdue uses coral-red distinct from priority orange/yellow */}
+                      {t.overdue > 0 && <span className="text-rose-400">{t.overdue} overdue</span>}
+                      {t.blocked > 0 && <span className="text-red-500">{t.blocked} blocked</span>}
                       <span>{t.done}/{t.total} · {t.pct}%</span>
                     </div>
                   </div>
@@ -375,18 +384,21 @@ export default function OSKPIsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-zinc-300 group-hover:text-white truncate leading-snug">{t.title}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span
-                        className="text-[10px] font-medium"
-                        style={{ color: t.tenant_color }}
-                      >
+                      {/* Small color dot + neutral text for project name */}
+                      <span className="flex items-center gap-1.5 text-[10px] font-medium text-zinc-500">
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: t.tenant_color }}
+                        />
                         {t.tenant_name.replace(/^[^\w\s]*\s*/, "").split(" — ")[0].split(" - ")[0]}
                       </span>
                       <OSPriorityBadge priority={t.priority} />
                     </div>
                   </div>
+                  {/* Late indicator: rose for severe (>7d), amber for recent */}
                   <span className={cn(
                     "text-[10px] font-medium shrink-0 mt-0.5",
-                    t.days_overdue > 7 ? "text-red-400" : "text-amber-400"
+                    t.days_overdue > 7 ? "text-rose-400" : "text-amber-400"
                   )}>
                     {t.days_overdue}d late
                   </span>
@@ -441,11 +453,12 @@ export default function OSKPIsPage() {
                 <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Priority Mix</span>
               </div>
               {(() => {
+                // Distinct priority colors: red → orange → yellow → gray (clear severity gradient)
                 const priorities = [
-                  { label: "Critical", key: "critical" as const, color: "#EF4444" },
-                  { label: "High",     key: "high"     as const, color: "#F97316" },
-                  { label: "Medium",   key: "medium"   as const, color: "#F59E0B" },
-                  { label: "Low",      key: "low"      as const, color: "#71717A" },
+                  { label: "Critical", key: "critical" as const, color: "#F87171" }, // red-400
+                  { label: "High",     key: "high"     as const, color: "#FB923C" }, // orange-400
+                  { label: "Medium",   key: "medium"   as const, color: "#FACC15" }, // yellow-400 — distinct from orange
+                  { label: "Low",      key: "low"      as const, color: "#A1A1AA" }, // zinc-400
                 ]
                 const total = data.ops.total_active || 1
                 return (
