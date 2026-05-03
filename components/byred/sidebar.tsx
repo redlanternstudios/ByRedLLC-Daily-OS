@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
-  CalendarDays,
   FolderKanban,
   Trello,
   ListTodo,
@@ -17,17 +16,11 @@ import {
   BarChart2,
   Settings,
   MessageSquare,
-  Zap,
-  Bot,
-  Database,
-  Radio,
   ChevronLeft,
   ChevronRight,
   Menu,
   AlertTriangle,
-  Activity,
   Folder,
-  GitBranch,
   Cpu,
   Flame,
   BarChart,
@@ -78,8 +71,8 @@ const NAV_GROUPS = [
   {
     label: "Intel",
     items: [
-      { label: "Lantern AI", href: "/os/ai",      icon: Cpu },
-      { label: "Signals",    href: "/os/signals", icon: Radio },
+      { label: "Lantern AI", href: "/os/ai",   icon: Cpu },
+      { label: "KPIs",       href: "/os/kpis", icon: BarChart },
     ],
   },
   {
@@ -299,7 +292,6 @@ function SidebarContent({
                     icon={item.icon}
                     active={isActive(item.href)}
                     collapsed={collapsed}
-                    placeholder={item.placeholder}
                     onClick={onNavClick}
                   />
                 ))}
