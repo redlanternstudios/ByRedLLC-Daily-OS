@@ -32,8 +32,10 @@ import {
   Flame,
   BarChart,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
+import { setActiveTenantAction } from "@/lib/actions/tenant"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Sheet,
@@ -184,10 +186,24 @@ function SidebarContent({
   onNavClick?: () => void
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const currentUser = useUser()
   const activeTenant = useActiveTenant()
   const { toggleCollapsed } = useSidebar()
   const isMobile = useIsMobile()
+
+  async function handleTenantSwitch() {
+    const tenants = currentUser?.tenants ?? []
+    if (tenants.length < 2) return
+    const idx = tenants.findIndex((t) => t.id === currentUser?.activeTenantId)
+    const next = tenants[(idx + 1) % tenants.length]
+    // Optimistic UI update
+    currentUser?.setActiveTenantId(next.id)
+    // Persist to cookie so server routes pick it up
+    await setActiveTenantAction(next.id)
+    // Re-run all server components on the current page
+    router.refresh()
+  }
 
   function isActive(href: string) {
     if (href === "/os/dashboard") {
@@ -253,12 +269,7 @@ function SidebarContent({
               {(currentUser?.tenants?.length ?? 0) > 1 && (
                 <button
                   className="ml-auto text-[9px] text-zinc-700 hover:text-zinc-400 transition-colors"
-                  onClick={() => {
-                    const tenants = currentUser?.tenants ?? []
-                    const idx = tenants.findIndex((t) => t.id === currentUser?.activeTenantId)
-                    const next = tenants[(idx + 1) % tenants.length]
-                    currentUser?.setActiveTenantId(next.id)
-                  }}
+                  onClick={handleTenantSwitch}
                 >
                   Switch
                 </button>
