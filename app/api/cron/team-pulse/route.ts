@@ -62,9 +62,16 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
     })
 
     // Store the generated pulse in byred_daily_briefs
-    // summary is jsonb — store all data there; user_id is null for team-wide briefs
+    // user_id IS NULL for team-wide briefs — Supabase upsert can't target partial unique indexes,
+    // so we delete today's null-user brief then re-insert.
     const today = new Date().toISOString().split("T")[0]
-    await supabase.from("byred_daily_briefs").upsert({
+    await supabase
+      .from("byred_daily_briefs")
+      .delete()
+      .is("user_id", null)
+      .eq("date", today)
+
+    await supabase.from("byred_daily_briefs").insert({
       user_id: null,
       date: today,
       summary: {
@@ -76,7 +83,7 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
         generated_by: "cron",
         team,
       },
-    }, { onConflict: "user_id,date" })
+    })
 
     return NextResponse.json({
       ok: true,

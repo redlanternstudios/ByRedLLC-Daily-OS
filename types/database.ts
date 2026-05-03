@@ -410,6 +410,126 @@ export type Database = {
         }
         Relationships: []
       }
+      byred_import_batches: {
+        Row: {
+          id: string
+          source: string
+          status: string
+          total_rows: number
+          imported_rows: number
+          failed_rows: number
+          error_message: string | null
+          created_at: string | null
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          source?: string
+          status?: string
+          total_rows?: number
+          imported_rows?: number
+          failed_rows?: number
+          error_message?: string | null
+          created_at?: string | null
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          source?: string
+          status?: string
+          total_rows?: number
+          imported_rows?: number
+          failed_rows?: number
+          error_message?: string | null
+          created_at?: string | null
+          completed_at?: string | null
+        }
+        Relationships: []
+      }
+      os_calendar_events: {
+        Row: {
+          id: string
+          tenant_id: string
+          task_id: string | null
+          title: string
+          description: string | null
+          event_type: string
+          status: string
+          start_at: string
+          end_at: string | null
+          all_day: boolean
+          owner_user_id: string | null
+          calendar_color: string | null
+          calendar_label: string | null
+          related_entity_type: string | null
+          related_entity_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          task_id?: string | null
+          title: string
+          description?: string | null
+          event_type?: string
+          status?: string
+          start_at: string
+          end_at?: string | null
+          all_day?: boolean
+          owner_user_id?: string | null
+          calendar_color?: string | null
+          calendar_label?: string | null
+          related_entity_type?: string | null
+          related_entity_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          task_id?: string | null
+          title?: string
+          description?: string | null
+          event_type?: string
+          status?: string
+          start_at?: string
+          end_at?: string | null
+          all_day?: boolean
+          owner_user_id?: string | null
+          calendar_color?: string | null
+          calendar_label?: string | null
+          related_entity_type?: string | null
+          related_entity_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      os_calendar_event_attendees: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          rsvp: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          rsvp?: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          user_id?: string
+          rsvp?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -494,3 +614,12 @@ export type UserRole = (typeof USER_ROLES)[number]
 // Tenant types
 export const TENANT_TYPES = ["parent", "service", "product"] as const
 export type TenantType = (typeof TENANT_TYPES)[number]
+
+// Calendar event types
+export type OsCalendarEvent = Database["public"]["Tables"]["os_calendar_events"]["Row"]
+export type OsCalendarEventInsert = Database["public"]["Tables"]["os_calendar_events"]["Insert"]
+export type OsCalendarEventAttendee = Database["public"]["Tables"]["os_calendar_event_attendees"]["Row"]
+
+// Import batch types
+export type ByredImportBatch = Database["public"]["Tables"]["byred_import_batches"]["Row"]
+export type ByredImportBatchInsert = Database["public"]["Tables"]["byred_import_batches"]["Insert"]
