@@ -2,20 +2,21 @@
 
 import { use, useState, useRef } from "react"
 import Link from "next/link"
+import useSWR from "swr"
 import {
   ArrowLeft, AlertTriangle, CheckCircle2, Clock,
   Send, Tag, Users, Calendar, FileText, Activity, Loader2,
 } from "lucide-react"
-import { MOCK_TASKS, MOCK_COMMENTS, MOCK_TEAM } from "@/components/byred/os/mock-data"
 import { OSStatusBadge, OSPriorityBadge, OSBlockerBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-
-type OSTask = (typeof MOCK_TASKS)[0]
+import type { ByredTask, ByredTaskComment } from "@/types/database"
 
 const STATUS_OPTIONS = ["not_started", "in_progress", "blocked", "done"] as const
 const PRIORITY_OPTIONS = ["critical", "high", "medium", "low"] as const
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 function MetaRow({
   icon: Icon,
@@ -37,36 +38,44 @@ function MetaRow({
   )
 }
 
+// Comment shape returned from the API (joined with byred_users)
+type CommentRow = ByredTaskComment & {
+  byred_users: { id: string; name: string; avatar_url: string | null } | null
+}
+
 export default function OSTaskDetailPage({
   params,
 }: {
   params: Promise<{ taskId: string }>
 }) {
   const { taskId } = use(params)
-  const initialTask = MOCK_TASKS.find((t) => t.id === taskId) ?? null
-  const [task, setTask] = useState<OSTask | null>(initialTask)
-  const [comments, setComments] = useState(MOCK_COMMENTS.filter((c) => c.entity_id === taskId))
+
+  const { data: taskData, mutate: mutateTask, isLoading: taskLoading } = useSWR<ByredTask>(
+    `/api/tasks/${taskId}`,
+    fetcher
+  )
+  const { data: commentsData, mutate: mutateComments } = useSWR<CommentRow[]>(
+    `/api/tasks/${taskId}/comments`,
+    fetcher
+  )
+
+  const [localTask, setLocalTask] = useState<ByredTask | null>(null)
+  const task = localTask ?? taskData ?? null
+  const comments = commentsData ?? []
+
   const [commentInput, setCommentInput] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
   const [savingField, setSavingField] = useState<string | null>(null)
   const commentRef = useRef<HTMLInputElement>(null)
 
-  if (!task) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-zinc-500 text-sm">Task not found.</p>
-      </div>
-    )
-  }
-
-  const owner = task.owner_user_id ? MOCK_TEAM.find((m) => m.id === task.owner_user_id) : null
   const today = new Date().toISOString().split("T")[0]
-  const isOverdue = task.due_date && task.due_date < today && task.status !== "done"
+  const isOverdue = task?.due_date && task.due_date < today && task.status !== "done"
 
-  // Optimistic PATCH helper
-  async function patchTask(field: string, value: string | null) {
+  async function patchTask(field: string, value: string | boolean | number | null) {
+    if (!task) return
     const prev = { ...task }
-    setTask((t) => t ? { ...t, [field]: value } : t)
+    const updated = { ...task, [field]: value }
+    setLocalTask(updated)
     setSavingField(field)
     try {
       const res = await fetch(`/api/tasks/${task.id}`, {
@@ -78,8 +87,11 @@ export default function OSTaskDetailPage({
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error ?? "Update failed")
       }
+      const updated = await res.json()
+      setLocalTask(updated)
+      mutateTask(updated, false)
     } catch (err) {
-      setTask(prev)
+      setLocalTask(prev)
       toast.error(err instanceof Error ? err.message : "Failed to update task.")
     } finally {
       setSavingField(null)
@@ -88,22 +100,22 @@ export default function OSTaskDetailPage({
 
   async function submitComment() {
     const body = commentInput.trim()
-    if (!body) return
+    if (!body || !task) return
     setSubmittingComment(true)
     try {
       const res = await fetch(`/api/tasks/${task.id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body }),
+        // API expects the field named "comment" — not "body"
+        body: JSON.stringify({ comment: body }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error ?? "Failed to post comment")
       }
-      const { comment } = await res.json()
-      setComments((prev) => [...prev, comment])
       setCommentInput("")
       commentRef.current?.focus()
+      mutateComments()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to post comment.")
     } finally {
@@ -111,9 +123,27 @@ export default function OSTaskDetailPage({
     }
   }
 
+  if (taskLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" strokeWidth={1.75} />
+      </div>
+    )
+  }
+
+  if (!task) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <p className="text-zinc-500 text-sm">Task not found.</p>
+        <Link href="/os/tasks" className="text-xs text-zinc-600 hover:text-zinc-400 underline">
+          Back to Tasks
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl space-y-0">
-      {/* Back nav */}
       <div className="flex items-center gap-3 mb-5">
         <Link
           href="/os/tasks"
@@ -129,9 +159,7 @@ export default function OSTaskDetailPage({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-        {/* Main content */}
         <div className="space-y-5">
-          {/* Title + description */}
           <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-6">
             <div className="flex items-center gap-2 flex-wrap mb-4">
               <OSStatusBadge status={task.status} />
@@ -158,17 +186,6 @@ export default function OSTaskDetailPage({
             )}
           </div>
 
-          {/* Definition of Done */}
-          {task.definition_of_done && (
-            <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" strokeWidth={1.75} />
-                <span className="text-sm font-medium text-white">Definition of Done</span>
-              </div>
-              <p className="text-sm text-zinc-400 leading-relaxed">{task.definition_of_done}</p>
-            </div>
-          )}
-
           {/* Comments */}
           <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
             <div className="px-5 py-4 border-b border-zinc-800 flex items-center gap-2">
@@ -183,33 +200,37 @@ export default function OSTaskDetailPage({
 
             {comments.length > 0 && (
               <div className="divide-y divide-zinc-800/60">
-                {comments.map((c) => (
-                  <div key={c.id} className="flex gap-3 px-5 py-4">
-                    <OSAvatar name={c.user_name} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2 mb-1.5">
-                        <span className="text-xs font-semibold text-zinc-200">{c.user_name}</span>
-                        <span className="text-[10px] text-zinc-600">
-                          {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                          {" · "}
-                          {new Date(c.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-                        </span>
+                {comments.map((c) => {
+                  const userName = c.byred_users?.name ?? "Team Member"
+                  return (
+                    <div key={c.id} className="flex gap-3 px-5 py-4">
+                      <OSAvatar userId={c.user_id} fallbackName={userName} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 mb-1.5">
+                          <span className="text-xs font-semibold text-zinc-200">{userName}</span>
+                          <span className="text-[10px] text-zinc-600">
+                            {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            {" · "}
+                            {new Date(c.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-zinc-400 leading-relaxed">{c.comment}</p>
                       </div>
-                      <p className="text-sm text-zinc-400 leading-relaxed">{c.body}</p>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
-            {/* Comment input */}
             <div className="px-5 py-4 bg-black/20">
               <div className="flex items-center gap-2">
                 <input
                   ref={commentRef}
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment() } }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment() }
+                  }}
                   placeholder="Add a comment..."
                   className="flex-1 px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
                 />
@@ -232,7 +253,6 @@ export default function OSTaskDetailPage({
             </div>
           </div>
 
-          {/* Activity */}
           <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
             <div className="flex items-center gap-2 mb-3">
               <Activity className="w-4 h-4 text-zinc-600" strokeWidth={1.75} />
@@ -244,12 +264,11 @@ export default function OSTaskDetailPage({
           </div>
         </div>
 
-        {/* Sidebar meta — inline editable */}
+        {/* Sidebar meta */}
         <div className="space-y-4">
           <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
             <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-3">Details</p>
             <div>
-              {/* Status — inline select */}
               <MetaRow icon={Tag} label="Status">
                 <div className="flex items-center gap-2">
                   <select
@@ -266,7 +285,6 @@ export default function OSTaskDetailPage({
                 </div>
               </MetaRow>
 
-              {/* Priority — inline select */}
               <MetaRow icon={Tag} label="Priority">
                 <div className="flex items-center gap-2">
                   <select
@@ -283,19 +301,16 @@ export default function OSTaskDetailPage({
                 </div>
               </MetaRow>
 
-              {/* Owner */}
               <MetaRow icon={Users} label="Owner">
-                {owner ? (
+                {task.owner_user_id ? (
                   <div className="flex items-center gap-1.5">
-                    <OSAvatar name={owner.name} size="xs" />
-                    <span className="text-xs text-zinc-300">{owner.name}</span>
+                    <OSAvatar userId={task.owner_user_id} size="xs" />
                   </div>
                 ) : (
                   <span className="text-xs text-zinc-600">Unassigned</span>
                 )}
               </MetaRow>
 
-              {/* Due date — inline date input */}
               <MetaRow icon={Calendar} label="Due Date">
                 <div className="flex items-center gap-2">
                   <input
@@ -331,7 +346,7 @@ export default function OSTaskDetailPage({
           <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
             <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">Created</p>
             <p className="text-xs text-zinc-500">
-              {new Date(task.created_at).toLocaleDateString("en-US", {
+              {new Date(task.created_at ?? "").toLocaleDateString("en-US", {
                 month: "long", day: "numeric", year: "numeric",
               })}
             </p>
