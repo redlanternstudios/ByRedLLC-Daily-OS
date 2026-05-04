@@ -55,11 +55,12 @@ const BUCKETS: {
   border: string
   bg: string
 }[] = [
+  // Category colors: red (critical) → green (money) → yellow (quick/deep) → gray (upcoming)
   { key: "critical_now",  label: "Critical Now",  icon: Flame,      accent: "text-red-400",     border: "border-red-900/60",    bg: "bg-red-950/20" },
-  { key: "money_moves",   label: "Money Moves",   icon: DollarSign, accent: "text-emerald-400", border: "border-emerald-900/60", bg: "bg-emerald-950/20" },
-  { key: "quick_wins",    label: "Quick Wins",    icon: Zap,        accent: "text-sky-400",     border: "border-sky-900/60",    bg: "bg-sky-950/20" },
+  { key: "money_moves",   label: "Money Moves",   icon: DollarSign, accent: "text-green-400",   border: "border-green-900/60",  bg: "bg-green-950/20" },
+  { key: "quick_wins",    label: "Quick Wins",    icon: Zap,        accent: "text-yellow-400",  border: "border-yellow-900/60", bg: "bg-yellow-950/20" },
   { key: "coming_up",     label: "Coming Up",     icon: Calendar,   accent: "text-zinc-400",    border: "border-zinc-800",      bg: "bg-zinc-900/40" },
-  { key: "deep_work",     label: "Deep Work",     icon: Brain,      accent: "text-amber-400",   border: "border-amber-900/60",  bg: "bg-amber-950/20" },
+  { key: "deep_work",     label: "Deep Work",     icon: Brain,      accent: "text-orange-400",  border: "border-orange-900/60", bg: "bg-orange-950/20" },
 ]
 
 function fmtDate(d: string) {
@@ -518,9 +519,10 @@ export default function OSTodayPage() {
             {team.length === 0 ? (
               <p className="text-xs text-zinc-600 px-5 py-4">Loading team...</p>
             ) : (
+              // Team status: green (on track) → yellow (at risk) → red (blocked)
               team.map((member) => {
-                const dot = member.status === "on_track" ? "bg-emerald-400" :
-                  member.status === "at_risk" ? "bg-amber-400" : "bg-red-400"
+                const dot = member.status === "on_track" ? "bg-green-400" :
+                  member.status === "at_risk" ? "bg-yellow-400" : "bg-red-400"
                 const isExpanded = expandedMember === member.id
                 return (
                   <div key={member.id}>
@@ -539,8 +541,8 @@ export default function OSTodayPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <span className={cn(
                           "text-[10px] font-medium px-2 py-0.5 rounded border",
-                          member.status === "on_track" ? "text-emerald-400 bg-emerald-950/40 border-emerald-900" :
-                          member.status === "at_risk" ? "text-amber-400 bg-amber-950/40 border-amber-900" :
+                          member.status === "on_track" ? "text-green-400 bg-green-950/40 border-green-900" :
+                          member.status === "at_risk" ? "text-yellow-400 bg-yellow-950/40 border-yellow-900" :
                           "text-red-400 bg-red-950/40 border-red-900"
                         )}>
                           {member.status.replace("_", " ").toUpperCase()}

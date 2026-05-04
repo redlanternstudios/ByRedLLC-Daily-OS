@@ -13,11 +13,12 @@ import type { DerivedBoard } from "@/app/api/os/boards/route"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+// Status colors: gray (not started) → yellow (in progress) → red (blocked) → green (done)
 const COLUMN_CONFIG = [
   { key: "not_started", label: "Not Started", icon: Circle,       color: "text-zinc-500" },
-  { key: "in_progress", label: "In Progress", icon: PlayCircle,   color: "text-sky-400"  },
+  { key: "in_progress", label: "In Progress", icon: PlayCircle,   color: "text-yellow-400"  },
   { key: "blocked",     label: "Blocked",     icon: OctagonX,     color: "text-red-400"  },
-  { key: "done",        label: "Done",        icon: CheckCircle2, color: "text-emerald-400" },
+  { key: "done",        label: "Done",        icon: CheckCircle2, color: "text-green-400" },
 ] as const
 
 export default function OSBoardsPage() {

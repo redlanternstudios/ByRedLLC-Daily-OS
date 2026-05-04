@@ -35,11 +35,12 @@ const STATUS_ICONS = {
   pending: Clock,
 }
 
+// Status colors: gray (pending) → yellow (processing) → red (failed) → green (completed)
 const STATUS_COLORS = {
-  completed: "text-emerald-400",
+  completed: "text-green-400",
   failed: "text-red-400",
-  processing: "text-sky-400",
-  pending: "text-amber-400",
+  processing: "text-yellow-400",
+  pending: "text-zinc-400",
 }
 
 export default function OSImportMondayPage() {
@@ -109,9 +110,9 @@ export default function OSImportMondayPage() {
       </div>
 
       {lastSynced && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-emerald-950/40 border border-emerald-800/40">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" strokeWidth={2} />
-          <span className="text-sm text-emerald-300">Sync completed at {lastSynced}</span>
+        <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-green-950/40 border border-green-800/40">
+          <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" strokeWidth={2} />
+          <span className="text-sm text-green-300">Sync completed at {lastSynced}</span>
         </div>
       )}
 
@@ -201,8 +202,8 @@ export default function OSImportMondayPage() {
                       <div
                         className={cn(
                           "h-full rounded-full transition-all",
-                          batch.status === "completed" ? "bg-emerald-500" :
-                          batch.status === "failed" ? "bg-red-500" : "bg-sky-500"
+                          batch.status === "completed" ? "bg-green-500" :
+                          batch.status === "failed" ? "bg-red-500" : "bg-yellow-500"
                         )}
                         style={{ width: `${pct}%` }}
                       />

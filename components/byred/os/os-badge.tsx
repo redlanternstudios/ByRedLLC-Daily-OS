@@ -7,26 +7,28 @@ type StatusBadgeProps = {
   className?: string
 }
 
+// Status colors: gray (not started) → yellow (in progress/pending) → red (blocked/failed) → green (done/completed)
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   not_started:  { label: "Not Started",  className: "bg-zinc-800 text-zinc-300 border border-zinc-700" },
-  in_progress:  { label: "In Progress",  className: "bg-sky-950 text-sky-300 border border-sky-800" },
+  in_progress:  { label: "In Progress",  className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   blocked:      { label: "Blocked",      className: "bg-red-950 text-red-300 border border-red-800" },
-  done:         { label: "Done",         className: "bg-emerald-950 text-emerald-300 border border-emerald-800" },
-  active:       { label: "Active",       className: "bg-emerald-950 text-emerald-300 border border-emerald-800" },
-  paused:       { label: "Paused",       className: "bg-amber-950 text-amber-300 border border-amber-800" },
-  completed:    { label: "Completed",    className: "bg-emerald-950 text-emerald-300 border border-emerald-800" },
+  done:         { label: "Done",         className: "bg-green-950 text-green-300 border border-green-800" },
+  active:       { label: "Active",       className: "bg-green-950 text-green-300 border border-green-800" },
+  paused:       { label: "Paused",       className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
+  completed:    { label: "Completed",    className: "bg-green-950 text-green-300 border border-green-800" },
   archived:     { label: "Archived",     className: "bg-zinc-900 text-zinc-500 border border-zinc-800" },
-  upcoming:     { label: "Upcoming",     className: "bg-sky-950 text-sky-300 border border-sky-800" },
+  upcoming:     { label: "Upcoming",     className: "bg-zinc-800 text-zinc-300 border border-zinc-700" },
   cancelled:    { label: "Cancelled",    className: "bg-zinc-900 text-zinc-500 border border-zinc-800" },
-  pending:      { label: "Pending",      className: "bg-amber-950 text-amber-300 border border-amber-800" },
-  processing:   { label: "Processing",   className: "bg-sky-950 text-sky-300 border border-sky-800" },
+  pending:      { label: "Pending",      className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
+  processing:   { label: "Processing",   className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   failed:       { label: "Failed",       className: "bg-red-950 text-red-300 border border-red-800" },
 }
 
+// Priority colors: red (critical) → orange (high) → yellow (medium) → gray (low)
 const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
   critical: { label: "Critical", className: "bg-red-950 text-red-300 border border-red-800" },
   high:     { label: "High",     className: "bg-orange-950 text-orange-300 border border-orange-800" },
-  medium:   { label: "Medium",   className: "bg-amber-950 text-amber-300 border border-amber-800" },
+  medium:   { label: "Medium",   className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   low:      { label: "Low",      className: "bg-zinc-800 text-zinc-400 border border-zinc-700" },
 }
 

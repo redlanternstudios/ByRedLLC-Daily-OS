@@ -157,9 +157,10 @@ function TeamLoadPanel({ team }: { team: TeamMember[] }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-semibold text-white truncate">{selected.name}</span>
+                  {/* Risk indicator: red (blocker) → yellow (critical) → green (ok) */}
                   <span className={cn(
                     "w-1.5 h-1.5 rounded-full shrink-0",
-                    selected.has_blocker ? "bg-red-500" : selected.has_critical ? "bg-amber-500" : "bg-emerald-500"
+                    selected.has_blocker ? "bg-red-500" : selected.has_critical ? "bg-yellow-500" : "bg-green-500"
                   )} />
                 </div>
                 <p className="text-[10px] text-zinc-600">{selected.done_this_week} done this week</p>
@@ -219,7 +220,7 @@ function TeamLoadPanel({ team }: { team: TeamMember[] }) {
                   </span>
                   <span className={cn(
                     "w-1.5 h-1.5 rounded-full shrink-0",
-                    member.has_blocker ? "bg-red-500" : member.has_critical ? "bg-amber-500" : "bg-emerald-500"
+                    member.has_blocker ? "bg-red-500" : member.has_critical ? "bg-yellow-500" : "bg-green-500"
                   )} />
                   <span className="text-[10px] text-zinc-600 shrink-0 tabular-nums">{entry.value}</span>
                 </button>

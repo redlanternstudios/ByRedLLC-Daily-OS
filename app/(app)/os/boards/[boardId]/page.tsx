@@ -25,11 +25,12 @@ type Tenant = { id: string; name: string; color: string | null }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+// Status colors: gray (not started) → yellow (in progress) → red (blocked) → green (done)
 const KANBAN_COLUMNS = [
-  { id: "not_started", label: "Not Started", border: "border-zinc-700",    count_color: "text-zinc-400" },
-  { id: "in_progress", label: "In Progress", border: "border-sky-700",     count_color: "text-sky-400"  },
-  { id: "blocked",     label: "Blocked",     border: "border-red-700",     count_color: "text-red-400"  },
-  { id: "done",        label: "Done",        border: "border-emerald-700", count_color: "text-emerald-400" },
+  { id: "not_started", label: "Not Started", border: "border-zinc-700",   count_color: "text-zinc-400" },
+  { id: "in_progress", label: "In Progress", border: "border-yellow-700", count_color: "text-yellow-400"  },
+  { id: "blocked",     label: "Blocked",     border: "border-red-700",    count_color: "text-red-400"  },
+  { id: "done",        label: "Done",        border: "border-green-700",  count_color: "text-green-400" },
 ]
 
 function tenantColor(color: string | null): string {
@@ -59,8 +60,8 @@ function TaskCard({ task }: { task: Task }) {
       )}
       {task.blocked_by_task_id && !task.blocker_flag && (
         <div className="flex items-center gap-1.5 mb-2">
-          <GitMerge className="w-3 h-3 text-amber-500" strokeWidth={2} />
-          <span className="text-[10px] text-amber-500 font-medium">Has dependency</span>
+          <GitMerge className="w-3 h-3 text-orange-400" strokeWidth={2} />
+          <span className="text-[10px] text-orange-400 font-medium">Has dependency</span>
         </div>
       )}
 
