@@ -51,7 +51,10 @@ export function CommsClient({
   initialChannels: Channel[]
   initialMembers: Member[]
 }) {
-  const { activeTenantId, authUser, directory } = useUser()
+  const user = useUser()
+  const activeTenantId = user?.activeTenantId
+  const profileId = user?.profile?.id // byred_users.id — use for inserts
+  const directory = user?.directory ?? []
 
   const [channels, setChannels] = useState<Channel[]>(initialChannels)
   const [activeChannelId, setActiveChannelId] = useState<string | null>(
@@ -137,30 +140,40 @@ export function CommsClient({
 
   async function handleSend() {
     const text = input.trim()
-    if (!text || !activeChannelId || !activeTenantId || sending) return
+    if (!text || !activeChannelId || !activeTenantId || !profileId || sending) return
     setSending(true)
     setInput('')
     const reply = replyTo
     setReplyTo(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from('os_messages').insert({
+    const { error } = await (supabase as any).from('os_messages').insert({
       channel_id: activeChannelId,
       tenant_id: activeTenantId,
-      user_id: authUser?.id,
+      user_id: profileId, // byred_users.id, not auth.users.id
       body: text,
       reply_to_id: reply?.id ?? null,
     })
+    if (error) {
+      console.error('[v0] Failed to send message:', error)
+      // Restore input on failure
+      setInput(text)
+      if (reply) setReplyTo(reply)
+    }
     setSending(false)
   }
 
   async function handleCreateChannel() {
     const name = newChannelName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-    if (!name || !activeTenantId) return
+    if (!name || !activeTenantId || !profileId) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase as any).from('os_channels')
-      .insert({ tenant_id: activeTenantId, name, created_by: authUser?.id })
+    const { data, error } = await (supabase as any).from('os_channels')
+      .insert({ tenant_id: activeTenantId, name, created_by: profileId })
       .select()
       .single()
+    if (error) {
+      console.error('[v0] Failed to create channel:', error)
+      return
+    }
     if (data) {
       setChannels(prev => [...prev, data as Channel])
       setActiveChannelId(data.id)
@@ -281,9 +294,9 @@ export function CommsClient({
             <div className="min-w-0 flex-1">
               <p className={cn(
                 "text-[11px] font-semibold truncate",
-                m.id === authUser?.id ? "text-zinc-50" : "text-zinc-400"
+                m.id === profileId ? "text-zinc-50" : "text-zinc-400"
               )}>
-                {m.name}{m.id === authUser?.id ? ' (you)' : ''}
+                {m.name}{m.id === profileId ? ' (you)' : ''}
               </p>
               {m.role && <p className="text-[9px] text-zinc-700 uppercase tracking-wide">{m.role}</p>}
             </div>
