@@ -7,7 +7,9 @@ export const ACTIVE_TENANT_COOKIE = "byred_active_tenant"
 
 export type TenantScope = {
   tenantId: string
+  tenantIds: string[]
   tenant: Tenant
+  tenants: Tenant[]
 }
 
 function shapeTenant(row: Record<string, unknown>): Tenant {
@@ -47,47 +49,39 @@ export async function requireTenantScope(
 
   const profileId = (byredUser as { id: string } | null)?.id ?? null
 
-  // Determine which tenantId to use: explicit > cookie > first
+  // Fetch ALL tenants the user has access to
+  let allTenants: Tenant[] = []
+  if (profileId) {
+    const { data: userTenants } = await supabase
+      .from("byred_user_tenants")
+      .select("tenant_id, byred_tenants(*)")
+      .eq("user_id", profileId)
+
+    allTenants = ((userTenants ?? []) as Array<{ byred_tenants: Record<string, unknown> }>)
+      .map(ut => shapeTenant(ut.byred_tenants))
+      .filter(t => t.id)
+  }
+
+  const tenantIds = allTenants.map(t => t.id)
+
+  if (tenantIds.length === 0) redirect("/dashboard")
+
+  // Determine which tenantId to use as "active": explicit > cookie > first
   const jar = await cookies()
   const cookieTenantId = jar.get(ACTIVE_TENANT_COOKIE)?.value ?? null
   const candidateId = requestedTenantId ?? cookieTenantId ?? null
 
-  if (candidateId && profileId) {
-    // Verify the user actually has access to this tenant via byred_user_tenants
-    const { data: ut } = await supabase
-      .from("byred_user_tenants")
-      .select("tenant_id, byred_tenants(*)")
-      .eq("user_id", profileId)
-      .eq("tenant_id", candidateId)
-      .maybeSingle()
+  // Use candidate if valid, otherwise first tenant
+  const activeTenantId = (candidateId && tenantIds.includes(candidateId))
+    ? candidateId
+    : tenantIds[0]
 
-    const tenantRow = (ut as { byred_tenants: Record<string, unknown> } | null)?.byred_tenants
-    if (tenantRow) {
-      return { tenantId: candidateId, tenant: shapeTenant(tenantRow) }
-    }
+  const activeTenant = allTenants.find(t => t.id === activeTenantId) ?? allTenants[0]
+
+  return {
+    tenantId: activeTenantId,
+    tenantIds,
+    tenant: activeTenant,
+    tenants: allTenants,
   }
-
-  // Fall back to user's first tenant via byred_user_tenants
-  const query = profileId
-    ? supabase
-        .from("byred_user_tenants")
-        .select("tenant_id, byred_tenants(*)")
-        .eq("user_id", profileId)
-        .limit(1)
-    : supabase
-        .from("byred_tenants")
-        .select("*")
-        .eq("active", true)
-        .order("name", { ascending: true })
-        .limit(1)
-
-  const { data: rows } = await query
-
-  const first = profileId
-    ? (rows as Array<{ byred_tenants: Record<string, unknown> }>)?.[0]?.byred_tenants
-    : (rows as Array<Record<string, unknown>>)?.[0]
-
-  if (!first) redirect("/dashboard")
-
-  return { tenantId: first.id as string, tenant: shapeTenant(first) }
 }

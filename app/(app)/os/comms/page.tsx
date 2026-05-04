@@ -20,19 +20,19 @@ export type Member = {
 }
 
 export default async function CommsPage() {
-  const { tenantId } = await requireTenantScope()
+  const { tenantIds } = await requireTenantScope()
   const supabase = await createClient()
 
   const [channelsRes, membersRes] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any).from('os_channels')
       .select('id, name, description, is_dm, tenant_id, created_at')
-      .eq('tenant_id', tenantId)
+      .in('tenant_id', tenantIds)
       .order('created_at'),
     supabase
       .from('byred_user_tenants')
       .select('user_id')
-      .eq('tenant_id', tenantId),
+      .in('tenant_id', tenantIds),
   ])
 
   const channels: Channel[] = channelsRes.data ?? []
