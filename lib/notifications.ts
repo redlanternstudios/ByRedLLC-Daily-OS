@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { sendMentionEmail } from "@/lib/email"
 
 /** Parse @Name tokens from a body string and return matched names */
 function parseMentions(body: string): string[] {
@@ -8,14 +9,10 @@ function parseMentions(body: string): string[] {
 
 type NotifyMentionsArgs = {
   body: string
-  actorId: string        // byred_users.id of the sender
-  contextUrl?: string    // link back to the message/comment location
+  actorId: string
+  contextUrl?: string
 }
 
-/**
- * Parse @mentions from body, look up matching byred_users by name,
- * and insert os_notifications rows for each mentioned user (skipping the actor).
- */
 export async function notifyMentions({ body, actorId, contextUrl }: NotifyMentionsArgs) {
   const names = parseMentions(body)
   if (names.length === 0) return
@@ -23,32 +20,45 @@ export async function notifyMentions({ body, actorId, contextUrl }: NotifyMentio
   const supabase = await createAdminClient()
   const sa = supabase as any
 
-  // Fetch actor name for the notification body
   const { data: actor } = await sa
     .from("byred_users")
-    .select("name")
+    .select("name, email")
     .eq("id", actorId)
-    .maybeSingle() as { data: { name: string } | null }
+    .maybeSingle() as { data: { name: string; email: string } | null }
 
   const actorName = actor?.name ?? "Someone"
 
-  // Look up all mentioned users by name (case-insensitive)
   const { data: users } = await sa
     .from("byred_users")
-    .select("id, name")
-    .in("name", names) as { data: Array<{ id: string; name: string }> | null }
+    .select("id, name, email")
+    .in("name", names) as { data: Array<{ id: string; name: string; email: string }> | null }
 
   const targets = (users ?? []).filter(u => u.id !== actorId)
   if (targets.length === 0) return
+
+  const snippet = `${body.slice(0, 160)}${body.length > 160 ? "…" : ""}`
 
   const rows = targets.map(u => ({
     user_id: u.id,
     actor_id: actorId,
     type: "mention",
-    body: `${actorName} mentioned you: "${body.slice(0, 120)}${body.length > 120 ? "…" : ""}"`,
+    body: `${actorName} mentioned you: "${snippet}"`,
     context_url: contextUrl ?? null,
     read: false,
   }))
 
   await sa.from("os_notifications").insert(rows)
+
+  // Fire emails — each independently so one failure doesn't block others
+  await Promise.allSettled(
+    targets.map(u =>
+      sendMentionEmail({
+        toEmail: u.email,
+        toName: u.name,
+        actorName,
+        snippet,
+        contextUrl,
+      })
+    )
+  )
 }
