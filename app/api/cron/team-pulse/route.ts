@@ -4,8 +4,8 @@ import { mapTaskFromDb } from "@/types/db"
 import { createGroq } from "@ai-sdk/groq"
 import { generateText } from "ai"
 
-// Vercel Cron: runs at 7:05am and 7:05pm UTC daily
-// Add to vercel.json: { "crons": [{ "path": "/api/cron/team-pulse", "schedule": "5 7,19 * * *" }] }
+// Vercel Cron: runs at 7:05am and 7:05pm PST daily (03:05 + 15:05 UTC)
+// vercel.json schedule: "5 3,15 * * *"
 
 export async function GET(request: Request) {
   // Verify this is a legitimate Vercel cron invocation

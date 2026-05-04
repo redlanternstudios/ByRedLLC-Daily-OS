@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/team-pulse",
-      "schedule": "5 7,19 * * *"
+      "schedule": "5 3,15 * * *"
     }
   ]
 }

@@ -23,6 +23,7 @@ import {
   Cpu,
   Flame,
   BarChart,
+  Radio,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
@@ -64,7 +65,8 @@ const NAV_GROUPS = [
   {
     label: "Team",
     items: [
-      { label: "Team", href: "/os/team", icon: Users },
+      { label: "Team",       href: "/os/team",       icon: Users },
+      { label: "Team Pulse", href: "/os/team-pulse", icon: Radio },
     ],
   },
   {
