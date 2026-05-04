@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Bell, ChevronRight, FileText, AlertTriangle, Menu, Sun, Moon } from "lucide-react"
+import { ChevronRight, FileText, AlertTriangle, Menu, Sun, Moon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -17,6 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type { DailyBriefSummary } from "@/types/database"
+import { NotificationBell } from "@/components/byred/notification-bell"
 
 const ROUTE_LABELS: Record<string, string> = {
   "/": "Home",
@@ -260,14 +261,7 @@ export function AppTopbar() {
         </Button>
 
         {/* Notifications */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-zinc-500 hover:text-zinc-200 hover:bg-white/5 w-8 h-8"
-          aria-label="Notifications"
-        >
-          <Bell className="w-4 h-4" strokeWidth={1.75} />
-        </Button>
+        <NotificationBell />
 
         {/* Avatar — links to OS settings */}
         <Link

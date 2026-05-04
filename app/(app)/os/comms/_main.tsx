@@ -147,13 +147,15 @@ export function CommsClient({
     setInput('')
     const reply = replyTo
     setReplyTo(null)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from('os_messages').insert({
-      channel_id: activeChannelId,
-      tenant_id: activeTenantId,
-      user_id: authUser.id,
-      body: text,
-      reply_to_id: reply?.id ?? null,
+    await fetch('/api/os/comms/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel_id: activeChannelId,
+        tenant_id: activeTenantId,
+        body: text,
+        reply_to_id: reply?.id ?? null,
+      }),
     })
     setSending(false)
   }

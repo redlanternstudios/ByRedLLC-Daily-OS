@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { notifyMentions } from "@/lib/notifications"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -61,5 +62,13 @@ export async function POST(request: Request, { params }: RouteParams) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Fire-and-forget mention notifications
+  void notifyMentions({
+    body: body.comment.trim(),
+    actorId: byredUser.id,
+    contextUrl: `/os/tasks/${id}`,
+  })
+
   return NextResponse.json(data, { status: 201 })
 }
