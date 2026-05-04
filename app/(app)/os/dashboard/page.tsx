@@ -140,7 +140,7 @@ export default async function OSDashboardPage() {
           label="Critical Tasks"
           value={criticalTasks.length}
           icon={Clock}
-          accent="bg-amber-900/50 text-amber-300"
+          accent="bg-red-900/50 text-red-300"
           href="/os/tasks?filter=critical"
         />
       </div>

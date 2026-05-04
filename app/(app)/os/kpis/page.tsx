@@ -29,20 +29,21 @@ function StatCard({
   label: string
   value: number | string
   sub?: string
-  accent?: "red" | "amber" | "emerald" | "default"
+  accent?: "red" | "yellow" | "green" | "default"
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
 }) {
+  // Street light: red = stop/overdue, yellow = caution/at-risk, green = go/done
   const ring = accent === "red" && Number(value) > 0 ? "border-red-800/50 bg-red-950/20"
-    : accent === "amber" && Number(value) > 0 ? "border-amber-800/40 bg-amber-950/10"
-    : accent === "emerald" ? "border-emerald-800/30 bg-emerald-950/10"
+    : accent === "yellow" && Number(value) > 0 ? "border-yellow-800/40 bg-yellow-950/10"
+    : accent === "green" ? "border-green-800/30 bg-green-950/10"
     : "border-zinc-800 bg-zinc-900"
   const valColor = accent === "red" && Number(value) > 0 ? "text-red-400"
-    : accent === "amber" && Number(value) > 0 ? "text-amber-400"
-    : accent === "emerald" ? "text-emerald-400"
+    : accent === "yellow" && Number(value) > 0 ? "text-yellow-400"
+    : accent === "green" ? "text-green-400"
     : "text-white"
   const iconColor = accent === "red" && Number(value) > 0 ? "text-red-500"
-    : accent === "amber" && Number(value) > 0 ? "text-amber-500"
-    : accent === "emerald" ? "text-emerald-500"
+    : accent === "yellow" && Number(value) > 0 ? "text-yellow-500"
+    : accent === "green" ? "text-green-500"
     : "text-zinc-600"
 
   return (
@@ -63,7 +64,7 @@ function VelocityTooltip({ active, payload, label }: { active?: boolean; payload
   return (
     <div className="px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-zinc-200 shadow-xl">
       <p className="font-medium">{label}</p>
-      <p className="text-emerald-400">{payload[0].value} completed</p>
+      <p className="text-green-400">{payload[0].value} completed</p>
     </div>
   )
 }
@@ -296,14 +297,14 @@ export default function OSKPIsPage() {
           label="Overdue"
           value={data.ops.overdue}
           sub={data.ops.critical_count > 0 ? `${data.ops.critical_count} critical` : "No critical items"}
-          accent="amber"
+          accent="red"
           icon={Clock}
         />
         <StatCard
           label="Done This Week"
           value={data.ops.done_this_week}
           sub="tasks completed ≤ 7 days"
-          accent="emerald"
+          accent="green"
           icon={CheckCircle2}
         />
       </div>
@@ -329,8 +330,7 @@ export default function OSKPIsPage() {
                       {t.tenant_name.replace(/^[^\w\s]*\s*/, "").split(" — ")[0].split(" - ")[0]}
                     </span>
                     <div className="flex items-center gap-3 text-[10px] text-zinc-600 shrink-0">
-                      {/* Overdue uses coral-red distinct from priority orange/yellow */}
-                      {t.overdue > 0 && <span className="text-rose-400">{t.overdue} overdue</span>}
+                      {t.overdue > 0 && <span className="text-red-400">{t.overdue} overdue</span>}
                       {t.blocked > 0 && <span className="text-red-500">{t.blocked} blocked</span>}
                       <span>{t.done}/{t.total} · {t.pct}%</span>
                     </div>
@@ -366,7 +366,7 @@ export default function OSKPIsPage() {
             <Clock className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
             <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Delivery Risk</span>
             {data.overdue_detail.length > 0 && (
-              <span className="ml-auto text-[10px] text-amber-500 font-medium">{data.overdue_detail.length} overdue</span>
+              <span className="ml-auto text-[10px] text-red-400 font-medium">{data.overdue_detail.length} overdue</span>
             )}
           </div>
           {data.overdue_detail.length === 0 ? (
@@ -396,11 +396,8 @@ export default function OSKPIsPage() {
                       <OSPriorityBadge priority={t.priority} />
                     </div>
                   </div>
-                  {/* Late indicator: rose for severe (>7d), amber for recent */}
-                  <span className={cn(
-                    "text-[10px] font-medium shrink-0 mt-0.5",
-                    t.days_overdue > 7 ? "text-rose-400" : "text-amber-400"
-                  )}>
+                  {/* Late indicator — always red (street light: overdue = stop) */}
+                  <span className="text-[10px] font-medium shrink-0 mt-0.5 text-red-400">
                     {t.days_overdue}d late
                   </span>
                 </Link>
@@ -454,12 +451,12 @@ export default function OSKPIsPage() {
                 <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Priority Mix</span>
               </div>
               {(() => {
-                // Distinct priority colors: red → orange → yellow → gray (clear severity gradient)
+                // Street light: red (critical) → yellow (high) → green (medium) → gray (low)
                 const priorities = [
                   { label: "Critical", key: "critical" as const, color: "#F87171" }, // red-400
-                  { label: "High",     key: "high"     as const, color: "#FB923C" }, // orange-400
-                  { label: "Medium",   key: "medium"   as const, color: "#FACC15" }, // yellow-400 — distinct from orange
-                  { label: "Low",      key: "low"      as const, color: "#A1A1AA" }, // zinc-400
+                  { label: "High",     key: "high"     as const, color: "#FACC15" }, // yellow-400
+                  { label: "Medium",   key: "medium"   as const, color: "#4ADE80" }, // green-400
+                  { label: "Low",      key: "low"      as const, color: "#71717A" }, // zinc-500
                 ]
                 const total = data.ops.total_active || 1
                 return (
@@ -515,7 +512,7 @@ export default function OSKPIsPage() {
               {data.velocity.map((entry) => (
                 <Cell
                   key={entry.date}
-                  fill={entry.completed === 0 ? "#27272A" : entry.completed === maxVelocity ? "#10B981" : "#3F3F46"}
+                  fill={entry.completed === 0 ? "#27272A" : entry.completed === maxVelocity ? "#4ADE80" : "#3F3F46"}
                 />
               ))}
             </Bar>

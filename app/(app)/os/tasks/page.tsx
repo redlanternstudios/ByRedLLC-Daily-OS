@@ -185,7 +185,7 @@ function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, f
 
         <div className="flex items-center gap-2 min-w-0 pl-2">
           {task.blocker_flag && <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />}
-          {task.blocked_by_task_id && <GitMerge className="w-3.5 h-3.5 text-orange-400 shrink-0" strokeWidth={2} aria-label="Has dependency" />}
+          {task.blocked_by_task_id && <GitMerge className="w-3.5 h-3.5 text-yellow-400 shrink-0" strokeWidth={2} aria-label="Has dependency" />}
           <Link href={`/os/tasks/${task.id}`} className="text-sm text-zinc-200 group-hover:text-white truncate hover:underline">
             {task.title}
           </Link>
@@ -252,7 +252,7 @@ function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, f
               <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Details</p>
               <div className="space-y-1 text-zinc-500">
                 <p>Est. time: {task.estimated_minutes}m</p>
-                {task.blocked_by_task_id && <p className="text-orange-400">Blocked by: {task.blocked_by_task_id.slice(0, 8)}…</p>}
+                {task.blocked_by_task_id && <p className="text-yellow-400">Blocked by: {task.blocked_by_task_id.slice(0, 8)}…</p>}
                 {task.blocker_flag && <p className="text-red-400">This is a blocker</p>}
               </div>
             </div>

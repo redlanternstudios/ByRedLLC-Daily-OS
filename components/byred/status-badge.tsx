@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-// Status colors (dark mode): gray (not started) → yellow (in progress) → red (blocked/overdue) → green (done)
+// Status — street light: gray (not started) → yellow (in progress/caution) → red (blocked/overdue) → green (done)
 const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
   not_started:  { label: 'Not Started', classes: 'bg-zinc-800 text-zinc-400 border border-zinc-700' },
   in_progress:  { label: 'In Progress', classes: 'bg-yellow-950 text-yellow-300 border border-yellow-800' },

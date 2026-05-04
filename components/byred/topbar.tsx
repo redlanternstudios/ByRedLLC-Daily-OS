@@ -221,7 +221,7 @@ export function AppTopbar() {
                   {brief.warnings.map((w, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-2 text-xs text-amber-500"
+                      className="flex items-start gap-2 text-xs text-yellow-500"
                     >
                       <AlertTriangle
                         className="w-3 h-3 shrink-0 mt-0.5"

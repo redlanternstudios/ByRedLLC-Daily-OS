@@ -574,20 +574,22 @@ function EventDetailPanel({
           <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-3 space-y-2">
             <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Task</p>
             <div className="flex flex-wrap gap-1.5">
+              {/* Street light: red=critical, yellow=high, green=medium, gray=low */}
               <span className={cn(
                 "text-[10px] font-medium px-1.5 py-0.5 rounded border",
                 event._task.priority === "critical" ? "bg-red-950 text-red-300 border-red-800" :
-                event._task.priority === "high"     ? "bg-orange-950 text-orange-300 border-orange-800" :
-                event._task.priority === "medium"   ? "bg-amber-950 text-amber-300 border-amber-800" :
+                event._task.priority === "high"     ? "bg-yellow-950 text-yellow-300 border-yellow-800" :
+                event._task.priority === "medium"   ? "bg-green-950 text-green-300 border-green-800" :
                                                       "bg-zinc-800 text-zinc-400 border-zinc-700"
               )}>
                 {event._task.priority}
               </span>
+              {/* Street light: yellow=in_progress, red=blocked, green=done */}
               <span className={cn(
                 "text-[10px] font-medium px-1.5 py-0.5 rounded border",
-                event._task.status === "in_progress" ? "bg-sky-950 text-sky-300 border-sky-800" :
-                event._task.status === "blocked"      ? "bg-red-950 text-red-300 border-red-800" :
-                event._task.status === "done"         ? "bg-emerald-950 text-emerald-300 border-emerald-800" :
+                event._task.status === "in_progress" ? "bg-yellow-950 text-yellow-300 border border-yellow-800" :
+                event._task.status === "blocked"      ? "bg-red-950 text-red-300 border border-red-800" :
+                event._task.status === "done"         ? "bg-green-950 text-green-300 border border-green-800" :
                                                         "bg-zinc-800 text-zinc-400 border-zinc-700"
               )}>
                 {event._task.status.replace(/_/g, " ")}

@@ -60,7 +60,7 @@ const BUCKETS: {
   { key: "money_moves",   label: "Money Moves",   icon: DollarSign, accent: "text-green-400",   border: "border-green-900/60",  bg: "bg-green-950/20" },
   { key: "quick_wins",    label: "Quick Wins",    icon: Zap,        accent: "text-yellow-400",  border: "border-yellow-900/60", bg: "bg-yellow-950/20" },
   { key: "coming_up",     label: "Coming Up",     icon: Calendar,   accent: "text-zinc-400",    border: "border-zinc-800",      bg: "bg-zinc-900/40" },
-  { key: "deep_work",     label: "Deep Work",     icon: Brain,      accent: "text-orange-400",  border: "border-orange-900/60", bg: "bg-orange-950/20" },
+  { key: "deep_work",     label: "Deep Work",     icon: Brain,      accent: "text-yellow-400",  border: "border-yellow-900/60", bg: "bg-yellow-950/20" },
 ]
 
 function fmtDate(d: string) {
@@ -236,7 +236,7 @@ function TaskCard({
         <div className="border-t border-zinc-700/50 flex">
           <button
             onClick={onConfirm}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-emerald-400 hover:bg-emerald-950/40 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-green-400 hover:bg-green-950/40 transition-colors"
           >
             <CheckCheck className="w-3 h-3" strokeWidth={1.75} />
             Confirm
@@ -489,7 +489,7 @@ export default function OSTodayPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight font-condensed flex items-center gap-3">
-            {isMorning ? <Sun className="w-5 h-5 text-amber-400" strokeWidth={1.75} /> : <Moon className="w-5 h-5 text-indigo-400" strokeWidth={1.75} />}
+            {isMorning ? <Sun className="w-5 h-5 text-yellow-400" strokeWidth={1.75} /> : <Moon className="w-5 h-5 text-zinc-400" strokeWidth={1.75} />}
             Today
             <span className="text-zinc-600 font-normal text-base">{timeOfDay}</span>
           </h1>
@@ -500,7 +500,7 @@ export default function OSTodayPage() {
           {triageMode && pendingCount > 0 && (
             <button
               onClick={confirmAll}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-900/50 border border-emerald-800 text-emerald-300 text-xs font-medium hover:bg-emerald-900 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-900/50 border border-green-800 text-green-300 text-xs font-medium hover:bg-green-900 transition-colors"
             >
               <CheckCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
               Confirm All ({pendingCount})
@@ -564,9 +564,9 @@ export default function OSTodayPage() {
             {brief.warnings.length > 0 && (
               <div className="space-y-1.5">
                 {brief.warnings.map((w, i) => (
-                  <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-900/40">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" strokeWidth={1.75} />
-                    <p className="text-xs text-amber-400">{w}</p>
+                  <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-yellow-950/40 border border-yellow-900/40">
+                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 shrink-0 mt-0.5" strokeWidth={1.75} />
+                    <p className="text-xs text-yellow-400">{w}</p>
                   </div>
                 ))}
               </div>

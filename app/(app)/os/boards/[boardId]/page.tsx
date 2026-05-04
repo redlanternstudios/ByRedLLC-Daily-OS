@@ -60,8 +60,8 @@ function TaskCard({ task }: { task: Task }) {
       )}
       {task.blocked_by_task_id && !task.blocker_flag && (
         <div className="flex items-center gap-1.5 mb-2">
-          <GitMerge className="w-3 h-3 text-orange-400" strokeWidth={2} />
-          <span className="text-[10px] text-orange-400 font-medium">Has dependency</span>
+          <GitMerge className="w-3 h-3 text-yellow-400" strokeWidth={2} />
+          <span className="text-[10px] text-yellow-400 font-medium">Has dependency</span>
         </div>
       )}
 

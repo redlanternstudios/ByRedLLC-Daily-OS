@@ -7,7 +7,7 @@ type StatusBadgeProps = {
   className?: string
 }
 
-// Status colors: gray (not started) → yellow (in progress/pending) → red (blocked/failed) → green (done/completed)
+// Status — street light: gray (idle) → yellow (moving/caution) → red (stop/blocked) → green (done/go)
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   not_started:  { label: "Not Started",  className: "bg-zinc-800 text-zinc-300 border border-zinc-700" },
   in_progress:  { label: "In Progress",  className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
@@ -24,11 +24,11 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   failed:       { label: "Failed",       className: "bg-red-950 text-red-300 border border-red-800" },
 }
 
-// Priority colors: red (critical) → orange (high) → yellow (medium) → gray (low)
+// Priority — street light: red (critical) → yellow (high) → green (medium) → gray (low)
 const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
   critical: { label: "Critical", className: "bg-red-950 text-red-300 border border-red-800" },
-  high:     { label: "High",     className: "bg-orange-950 text-orange-300 border border-orange-800" },
-  medium:   { label: "Medium",   className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
+  high:     { label: "High",     className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
+  medium:   { label: "Medium",   className: "bg-green-950 text-green-300 border border-green-800" },
   low:      { label: "Low",      className: "bg-zinc-800 text-zinc-400 border border-zinc-700" },
 }
 

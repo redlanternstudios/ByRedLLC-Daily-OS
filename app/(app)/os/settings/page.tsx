@@ -192,9 +192,9 @@ export default function OSSettingsPage() {
               <div>
                 <p className="text-xs text-zinc-300 font-mono">{mode}</p>
                 {mode === "AI_EXECUTE" && (
-                  <div className="flex items-center gap-1.5 mt-1 px-2 py-1 rounded bg-amber-950/40 border border-amber-900/40">
-                    <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" strokeWidth={1.75} />
-                    <p className="text-[10px] text-amber-500">Runs without confirmation. Use with caution.</p>
+                  <div className="flex items-center gap-1.5 mt-1 px-2 py-1 rounded bg-yellow-950/40 border border-yellow-900/40">
+                    <AlertTriangle className="w-3 h-3 text-yellow-500 shrink-0" strokeWidth={1.75} />
+                    <p className="text-[10px] text-yellow-500">Runs without confirmation. Use with caution.</p>
                   </div>
                 )}
               </div>
