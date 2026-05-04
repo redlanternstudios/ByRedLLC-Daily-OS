@@ -396,10 +396,15 @@ export default function OSKPIsPage() {
                       <OSPriorityBadge priority={t.priority} />
                     </div>
                   </div>
-                  {/* Late indicator — always red (street light: overdue = stop) */}
-                  <span className="text-[10px] font-medium shrink-0 mt-0.5 text-red-400">
-                    {t.days_overdue}d late
-                  </span>
+                  {/* Due date — shown as "Due Jan 3" so it's immediately readable */}
+                  <div className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5">
+                    <span className="text-[10px] font-medium text-red-400">
+                      Due {new Date(t.due_date).toLocaleDateString([], { month: "short", day: "numeric" })}
+                    </span>
+                    <span className="text-[9px] text-zinc-600">
+                      {t.days_overdue === 1 ? "1 day ago" : `${t.days_overdue} days ago`}
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>
