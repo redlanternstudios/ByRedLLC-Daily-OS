@@ -451,12 +451,12 @@ export default function OSKPIsPage() {
                 <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Priority Mix</span>
               </div>
               {(() => {
-                // Street light: red (critical) → yellow (high) → green (medium) → gray (low)
+                // Street light: critical=red, high=red, medium=yellow, low=green
                 const priorities = [
                   { label: "Critical", key: "critical" as const, color: "#F87171" }, // red-400
-                  { label: "High",     key: "high"     as const, color: "#FACC15" }, // yellow-400
-                  { label: "Medium",   key: "medium"   as const, color: "#4ADE80" }, // green-400
-                  { label: "Low",      key: "low"      as const, color: "#71717A" }, // zinc-500
+                  { label: "High",     key: "high"     as const, color: "#F87171" }, // red-400
+                  { label: "Medium",   key: "medium"   as const, color: "#FACC15" }, // yellow-400
+                  { label: "Low",      key: "low"      as const, color: "#4ADE80" }, // green-400
                 ]
                 const total = data.ops.total_active || 1
                 return (

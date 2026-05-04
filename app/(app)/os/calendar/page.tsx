@@ -574,12 +574,13 @@ function EventDetailPanel({
           <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-3 space-y-2">
             <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Task</p>
             <div className="flex flex-wrap gap-1.5">
-              {/* Street light: red=critical, yellow=high, green=medium, gray=low */}
+              {/* Street light: critical=red, high=red, medium=yellow, low=green */}
               <span className={cn(
                 "text-[10px] font-medium px-1.5 py-0.5 rounded border",
                 event._task.priority === "critical" ? "bg-red-950 text-red-300 border-red-800" :
-                event._task.priority === "high"     ? "bg-yellow-950 text-yellow-300 border-yellow-800" :
-                event._task.priority === "medium"   ? "bg-green-950 text-green-300 border-green-800" :
+                event._task.priority === "high"     ? "bg-red-950 text-red-300 border-red-800" :
+                event._task.priority === "medium"   ? "bg-yellow-950 text-yellow-300 border-yellow-800" :
+                event._task.priority === "low"      ? "bg-green-950 text-green-300 border-green-800" :
                                                       "bg-zinc-800 text-zinc-400 border-zinc-700"
               )}>
                 {event._task.priority}

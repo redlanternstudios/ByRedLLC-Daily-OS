@@ -24,12 +24,12 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   failed:       { label: "Failed",       className: "bg-red-950 text-red-300 border border-red-800" },
 }
 
-// Priority — street light: red (critical) → yellow (high) → green (medium) → gray (low)
+// Priority — street light: critical=red, high=red, medium=yellow, low=green
 const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
   critical: { label: "Critical", className: "bg-red-950 text-red-300 border border-red-800" },
-  high:     { label: "High",     className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
-  medium:   { label: "Medium",   className: "bg-green-950 text-green-300 border border-green-800" },
-  low:      { label: "Low",      className: "bg-zinc-800 text-zinc-400 border border-zinc-700" },
+  high:     { label: "High",     className: "bg-red-950 text-red-300 border border-red-800" },
+  medium:   { label: "Medium",   className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
+  low:      { label: "Low",      className: "bg-green-950 text-green-300 border border-green-800" },
 }
 
 export function OSStatusBadge({ status, className }: StatusBadgeProps) {
