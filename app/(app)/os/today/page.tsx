@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import {
   Flame, DollarSign, Zap, Calendar, Brain,
   AlertTriangle, RefreshCw, CheckCheck, RotateCcw,
   ChevronDown, ChevronUp, Clock, Users, Mic,
-  Sun, Moon, Send
+  Sun, Moon, Send, Pencil, Check, X, Loader2,
 } from "lucide-react"
 import { OSStatusBadge, OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
@@ -75,20 +75,65 @@ function fmtMinutes(min: number) {
 
 // ─── Task Card ───────────────────────────────────────────────────────────────
 
+async function patchTaskNote(id: string, description: string | null) {
+  const res = await fetch(`/api/tasks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ description }),
+  })
+  if (!res.ok) throw new Error("Failed to save")
+}
+
 function TaskCard({
   task,
   aiReason,
   onConfirm,
   onReassign,
   showActions,
+  onNoteSaved,
 }: {
   task: Task
   aiReason?: string
   onConfirm?: () => void
   onReassign?: () => void
   showActions?: boolean
+  onNoteSaved?: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const [editingNote, setEditingNote] = useState(false)
+  const [noteValue, setNoteValue] = useState(task.description ?? "")
+  const [savingNote, setSavingNote] = useState(false)
+  const noteRef = useRef<HTMLTextAreaElement>(null)
+
+  async function saveNote() {
+    if (noteValue === (task.description ?? "")) { setEditingNote(false); return }
+    setSavingNote(true)
+    try {
+      await patchTaskNote(task.id, noteValue || null)
+      onNoteSaved?.()
+      toast.success("Notes saved")
+    } catch {
+      toast.error("Failed to save notes")
+    } finally {
+      setSavingNote(false)
+      setEditingNote(false)
+    }
+  }
+
+  async function deleteNote() {
+    if (!task.description) return
+    setSavingNote(true)
+    try {
+      await patchTaskNote(task.id, null)
+      setNoteValue("")
+      onNoteSaved?.()
+      toast.success("Notes cleared")
+    } catch {
+      toast.error("Failed to clear notes")
+    } finally {
+      setSavingNote(false)
+    }
+  }
 
   return (
     <div className="rounded-lg bg-zinc-800/60 border border-zinc-700/50 overflow-hidden hover:border-zinc-600 transition-colors">
@@ -118,9 +163,60 @@ function TaskCard({
 
       {expanded && (
         <div className="border-t border-zinc-700/50 px-3 py-2.5 space-y-2 bg-zinc-900/40">
-          {task.description && (
-            <p className="text-[11px] text-zinc-400 leading-relaxed">{task.description}</p>
+          {/* Notes — edit inline */}
+          {editingNote ? (
+            <div className="flex items-start gap-1.5">
+              <textarea
+                ref={noteRef}
+                value={noteValue}
+                onChange={(e) => setNoteValue(e.target.value)}
+                rows={2}
+                autoFocus
+                className="flex-1 text-[11px] bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 resize-none outline-none focus:border-zinc-400"
+                placeholder="Add notes…"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void saveNote() }
+                  if (e.key === "Escape") { setEditingNote(false); setNoteValue(task.description ?? "") }
+                }}
+              />
+              <button type="button" onClick={() => void saveNote()} disabled={savingNote} aria-label="Save" className="text-green-400 hover:text-green-300 mt-0.5 shrink-0">
+                {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2} />}
+              </button>
+              <button type="button" onClick={() => { setEditingNote(false); setNoteValue(task.description ?? "") }} aria-label="Cancel" className="text-zinc-500 hover:text-zinc-300 mt-0.5 shrink-0">
+                <X className="w-3.5 h-3.5" strokeWidth={2} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 group/note">
+              {noteValue ? (
+                <p className="text-[11px] text-zinc-400 leading-relaxed flex-1">{noteValue}</p>
+              ) : (
+                <p className="text-[11px] text-zinc-700 flex-1 italic">No notes yet</p>
+              )}
+              <div className="flex items-center gap-1 opacity-0 group-hover/note:opacity-100 transition-opacity shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setEditingNote(true) }}
+                  aria-label="Edit note"
+                  className="text-zinc-600 hover:text-zinc-300"
+                >
+                  <Pencil className="w-3 h-3" strokeWidth={1.75} />
+                </button>
+                {noteValue && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); void deleteNote() }}
+                    disabled={savingNote}
+                    aria-label="Delete note"
+                    className="text-zinc-600 hover:text-red-400"
+                  >
+                    {savingNote ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" strokeWidth={2} />}
+                  </button>
+                )}
+              </div>
+            </div>
           )}
+
           {task.blocker_flag && task.blocker_reason && (
             <div className="flex items-start gap-1.5 text-[11px] text-red-400">
               <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" strokeWidth={1.75} />
@@ -168,6 +264,7 @@ function BucketColumn({
   onConfirm,
   onReassign,
   triageMode,
+  onNoteSaved,
 }: {
   bucket: typeof BUCKETS[0]
   tasks: Task[]
@@ -175,6 +272,7 @@ function BucketColumn({
   onConfirm: (taskId: string) => void
   onReassign: (taskId: string) => void
   triageMode: boolean
+  onNoteSaved: () => void
 }) {
   const Icon = bucket.icon
   const pendingSuggestions = suggestions.filter((s) => s.bucket === bucket.key && s.confirmed === null)
@@ -203,12 +301,13 @@ function BucketColumn({
             showActions
             onConfirm={() => onConfirm(s.taskId)}
             onReassign={() => onReassign(s.taskId)}
+            onNoteSaved={onNoteSaved}
           />
         ))}
 
         {/* Confirmed / regular tasks */}
         {displayTasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard key={task.id} task={task} onNoteSaved={onNoteSaved} />
         ))}
 
         {displayTasks.length === 0 && pendingSuggestions.length === 0 && (
@@ -501,6 +600,7 @@ export default function OSTodayPage() {
               onConfirm={confirmSuggestion}
               onReassign={reassignSuggestion}
               triageMode={triageMode}
+              onNoteSaved={loadData}
             />
           ))}
         </div>

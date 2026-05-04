@@ -61,6 +61,7 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState(task.description ?? "")
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const textRef = useRef<HTMLTextAreaElement>(null)
 
   async function save() {
@@ -78,23 +79,51 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
     }
   }
 
+  async function clearNote() {
+    if (!task.description) return
+    setDeleting(true)
+    try {
+      await patchTask(task.id, { description: null })
+      setValue("")
+      onSaved()
+      toast.success("Notes cleared")
+    } catch {
+      toast.error("Failed to clear notes")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); setOpen(true); setTimeout(() => textRef.current?.focus(), 50) }}
-        className="group/notes flex items-center gap-1.5 max-w-[160px] text-left"
-      >
-        {task.description ? (
-          <span className="text-xs text-zinc-400 truncate group-hover/notes:text-zinc-200 transition-colors">
-            {task.description.slice(0, 40)}{task.description.length > 40 ? "…" : ""}
-          </span>
-        ) : (
-          <span className="text-xs text-zinc-700 group-hover/notes:text-zinc-500 transition-colors flex items-center gap-1">
-            <Pencil className="w-3 h-3" strokeWidth={1.5} /> Add notes
-          </span>
+      <div className="flex items-center gap-1 group/notes">
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); setOpen(true); setTimeout(() => textRef.current?.focus(), 50) }}
+          className="flex items-center gap-1.5 max-w-[140px] text-left"
+        >
+          {task.description ? (
+            <span className="text-xs text-zinc-400 truncate group-hover/notes:text-zinc-200 transition-colors">
+              {task.description.slice(0, 35)}{task.description.length > 35 ? "…" : ""}
+            </span>
+          ) : (
+            <span className="text-xs text-zinc-700 group-hover/notes:text-zinc-500 transition-colors flex items-center gap-1">
+              <Pencil className="w-3 h-3" strokeWidth={1.5} /> Add notes
+            </span>
+          )}
+        </button>
+        {task.description && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); void clearNote() }}
+            disabled={deleting}
+            aria-label="Delete note"
+            className="opacity-0 group-hover/notes:opacity-100 text-zinc-600 hover:text-red-400 transition-all shrink-0"
+          >
+            {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" strokeWidth={2} />}
+          </button>
         )}
-      </button>
+      </div>
     )
   }
 
@@ -107,9 +136,12 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
         rows={2}
         className="flex-1 min-w-[180px] text-xs bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 resize-none outline-none focus:border-zinc-400"
         placeholder="Add notes…"
-        onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); setValue(task.description ?? "") } }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void save() }
+          if (e.key === "Escape") { setOpen(false); setValue(task.description ?? "") }
+        }}
       />
-      <button type="button" onClick={save} disabled={saving} aria-label="Save notes" className="text-green-400 hover:text-green-300 mt-0.5 shrink-0">
+      <button type="button" onClick={() => void save()} disabled={saving} aria-label="Save notes" className="text-green-400 hover:text-green-300 mt-0.5 shrink-0">
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2} />}
       </button>
       <button type="button" onClick={() => { setOpen(false); setValue(task.description ?? "") }} aria-label="Cancel" className="text-zinc-500 hover:text-zinc-300 mt-0.5 shrink-0">
@@ -213,15 +245,15 @@ function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, f
         <div className="px-10 py-3 bg-zinc-950/60 border-t border-zinc-800/60">
           <div className="grid grid-cols-3 gap-6 text-xs text-zinc-400">
             <div>
-              <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Description / Notes</p>
-              <p className="whitespace-pre-wrap leading-relaxed">{task.description || <span className="text-zinc-700 italic">No description yet.</span>}</p>
+              <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-2">Notes</p>
+              <NotesCell task={task} onSaved={onSaved} />
             </div>
             <div>
               <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Details</p>
               <div className="space-y-1 text-zinc-500">
                 <p>Est. time: {task.estimated_minutes}m</p>
                 {task.blocked_by_task_id && <p className="text-orange-400">Blocked by: {task.blocked_by_task_id.slice(0, 8)}…</p>}
-                {task.blocker_flag && <p className="text-red-400">⚠ This is a blocker</p>}
+                {task.blocker_flag && <p className="text-red-400">This is a blocker</p>}
               </div>
             </div>
             <div>
