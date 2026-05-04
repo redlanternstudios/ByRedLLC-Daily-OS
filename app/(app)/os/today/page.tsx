@@ -657,7 +657,7 @@ export default function OSTodayPage() {
                       <div className="px-5 pb-3 space-y-1.5 bg-zinc-900/60">
                         {member.tasks.slice(0, 5).map((t) => (
                           <div key={t.id} className="flex items-center gap-2.5">
-                            <OSStatusBadge status={t.status ?? "not_started"} className="text-[9px] py-0 px-1.5 shrink-0" />
+                            <OSStatusBadge status={t.status ?? "not_started"} taskId={t.id} className="text-[9px] py-0 px-1.5 shrink-0" />
                             <Link
                               href={`/os/tasks/${t.id}`}
                               className="text-xs text-zinc-400 hover:text-zinc-200 truncate transition-colors"

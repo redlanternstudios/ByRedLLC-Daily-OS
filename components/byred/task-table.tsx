@@ -94,7 +94,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
             >
               {/* Status dot */}
               <td className="px-4 py-2">
-                <StatusBadge status={task.status} />
+                <StatusBadge status={task.status} taskId={task.id} />
               </td>
 
               {/* Title */}
@@ -154,7 +154,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
 
               {/* Status */}
               <td className="px-4 py-2">
-                <StatusBadge status={task.status} />
+                <StatusBadge status={task.status} taskId={task.id} />
               </td>
 
               {/* Actions */}

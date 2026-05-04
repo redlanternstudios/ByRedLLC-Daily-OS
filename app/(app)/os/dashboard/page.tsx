@@ -300,7 +300,7 @@ export default async function OSDashboardPage() {
                 className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] transition-colors group"
               >
                 <div className="flex-1 min-w-0 flex items-center gap-3">
-                  <OSStatusBadge status={task.status ?? "not_started"} />
+                  <OSStatusBadge status={task.status ?? "not_started"} taskId={task.id} />
                   <span className="text-sm text-zinc-200 truncate group-hover:text-white transition-colors">
                     {task.title}
                   </span>

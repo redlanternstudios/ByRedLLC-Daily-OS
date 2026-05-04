@@ -191,7 +191,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             <TenantPill tenantId={task.tenant_id} />
             <DueDateCell dueDate={task.due_date} />
             <PriorityFlag priority={task.priority} showLabel />
-            <StatusBadge status={task.status} />
+            <StatusBadge status={task.status} taskId={task.id} onStatusChange={setStatus} />
             <AiModeChip mode={task.ai_mode} />
           </div>
         </div>

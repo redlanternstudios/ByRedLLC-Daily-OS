@@ -207,7 +207,7 @@ function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, f
           </div>
         )}
 
-        <div><OSStatusBadge status={task.status} /></div>
+        <div><OSStatusBadge status={task.status} taskId={task.id} /></div>
         <div><OSPriorityBadge priority={task.priority} /></div>
 
         <div className="flex items-center gap-1">

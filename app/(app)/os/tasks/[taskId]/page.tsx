@@ -162,7 +162,7 @@ export default function OSTaskDetailPage({
         <div className="space-y-5">
           <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-6">
             <div className="flex items-center gap-2 flex-wrap mb-4">
-              <OSStatusBadge status={task.status} />
+              <OSStatusBadge status={task.status} taskId={task.id} />
               <OSPriorityBadge priority={task.priority} />
               {task.blocker_flag && <OSBlockerBadge />}
               {task.monday_item_id && (
