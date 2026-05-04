@@ -113,6 +113,13 @@ function getMonthRange(year: number, month: number) {
   return { from, to }
 }
 
+/** Convert any ISO timestamp to the local YYYY-MM-DD string for calendar cell matching */
+function toLocalDateStr(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 }
@@ -618,7 +625,7 @@ function EventDetailPanel({
                 <span className="text-xs text-zinc-400 flex-1 font-mono text-[10px]">{a.user_id.slice(0, 8)}…</span>
                 <span className={cn(
                   "text-[10px] px-1.5 py-0.5 rounded",
-                  a.rsvp === "accepted" ? "bg-emerald-950/60 text-emerald-400" :
+                  a.rsvp === "accepted" ? "bg-green-950/60 text-green-400" :
                   a.rsvp === "declined" ? "bg-red-950/60 text-red-400" :
                                           "bg-zinc-800 text-zinc-500"
                 )}>
@@ -894,16 +901,11 @@ export default function OSCalendarPage() {
 
   const allItems = useMemo(() => {
     if (!data) return []
-    const rangeFrom = new Date(from)
-    const rangeTo = new Date(to)
-    // Expand recurring events; non-recurring pass through as-is
-    const expanded = (data.events ?? []).flatMap((e) =>
-      e.recurrence_rule ? expandRecurring(e, rangeFrom, rangeTo) : [e]
-    )
-    return [...expanded, ...(data.taskEvents ?? [])].sort(
+    // No recurrence support yet — pass calendar events through as-is, merge with task events
+    return [...(data.events ?? []), ...(data.taskEvents ?? [])].sort(
       (a, b) => a.start_at.localeCompare(b.start_at)
     )
-  }, [data, from, to])
+  }, [data])
 
   // Apply filters
   const filteredItems = useMemo(() => {
@@ -924,12 +926,14 @@ export default function OSCalendarPage() {
   }, [allItems, filters])
 
   const cells = useMemo(() => buildMonthGrid(viewYear, viewMonth), [viewYear, viewMonth])
-  const today = now.toISOString().split("T")[0]
+  // Use local date string so today highlight matches the grid cells (not UTC)
+  const today = toLocalDateStr(now.toISOString())
   const monthLabel = new Date(viewYear, viewMonth).toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
   function eventsForDay(iso: string) {
     return filteredItems.filter((e) => {
-      const eventDate = e.start_at.split("T")[0]
+      // Convert start_at to local date so UTC midnight events don't shift a day
+      const eventDate = e.all_day ? e.start_at.split("T")[0] : toLocalDateStr(e.start_at)
       return eventDate === iso
     })
   }
