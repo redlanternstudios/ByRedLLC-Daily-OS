@@ -16,7 +16,7 @@ export async function rateLimit(opts: {
 }): Promise<RateLimitResult> {
   try {
     const admin = createAdminClient()
-    const { data, error } = await admin.rpc("byred_rate_limit_try", {
+    const { data, error } = await (admin as any).rpc("byred_rate_limit_try", {
       p_key: opts.key,
       p_max_events: opts.maxEvents,
       p_window_seconds: opts.windowSeconds,

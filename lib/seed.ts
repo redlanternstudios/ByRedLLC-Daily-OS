@@ -1,18 +1,22 @@
 import type { Tenant, User, Task, Lead, Activity, DailyBrief } from '@/types/db';
 
 export const SEED_TENANTS: Tenant[] = [
-  { id: 't1', name: 'By Red LLC', type: 'parent', created_at: '2024-01-01T00:00:00Z' },
-  { id: 't2', name: 'Paradise Property Services', type: 'service', created_at: '2024-01-01T00:00:00Z' },
-  { id: 't3', name: 'HireWire', type: 'product', created_at: '2024-01-01T00:00:00Z' },
-  { id: 't4', name: 'Authentic Hadith', type: 'product', created_at: '2024-01-01T00:00:00Z' },
+  { id: 't1', name: 'By Red LLC', type: 'parent', active: true, color: '#D7261E', created_at: '2024-01-01T00:00:00Z', updated_at: new Date().toISOString() },
+  { id: 't2', name: 'Paradise Property Services', type: 'service', active: true, color: '#D7261E', created_at: '2024-01-01T00:00:00Z', updated_at: new Date().toISOString() },
+  { id: 't3', name: 'HireWire', type: 'product', active: true, color: '#D7261E', created_at: '2024-01-01T00:00:00Z', updated_at: new Date().toISOString() },
+  { id: 't4', name: 'Authentic Hadith', type: 'product', active: true, color: '#D7261E', created_at: '2024-01-01T00:00:00Z', updated_at: new Date().toISOString() },
 ];
 
 export const SEED_USER: User = {
   id: 'u-ro',
   email: 'rorylee@pennenterprisesllc.com',
-  full_name: 'Ro Semeah',
+  name: 'Ro Semeah',
   role: 'admin',
+  active: true,
+  auth_user_id: null,
+  avatar_url: null,
   created_at: '2024-01-01T00:00:00Z',
+  updated_at: new Date().toISOString(),
 };
 
 export const SEED_TASKS: Task[] = [
@@ -126,6 +130,9 @@ export const SEED_LEADS: Lead[] = [
     last_contacted_at: '2026-04-18T15:00:00Z',
     next_follow_up_at: '2026-04-21T10:00:00Z',
     revenue_potential: 38400,
+    created_by_user_id: null,
+    notes: null,
+    updated_at: new Date().toISOString(),
     created_at: '2026-04-10T00:00:00Z',
   },
   {
@@ -140,6 +147,9 @@ export const SEED_LEADS: Lead[] = [
     last_contacted_at: '2026-04-15T12:00:00Z',
     next_follow_up_at: '2026-04-19T09:00:00Z',
     revenue_potential: 84000,
+    created_by_user_id: null,
+    notes: null,
+    updated_at: new Date().toISOString(),
     created_at: '2026-04-08T00:00:00Z',
   },
   {
@@ -154,6 +164,9 @@ export const SEED_LEADS: Lead[] = [
     last_contacted_at: '2026-04-17T09:00:00Z',
     next_follow_up_at: '2026-04-22T09:00:00Z',
     revenue_potential: 12000,
+    created_by_user_id: null,
+    notes: null,
+    updated_at: new Date().toISOString(),
     created_at: '2026-04-12T00:00:00Z',
   },
 ];
@@ -167,6 +180,7 @@ export const SEED_ACTIVITIES: Activity[] = [
     user_id: 'u-ro',
     type: 'stage_change',
     summary: 'CONTACTED → QUALIFIED',
+    metadata: null,
     created_at: '2026-04-18T15:00:00Z',
   },
   {
@@ -177,6 +191,7 @@ export const SEED_ACTIVITIES: Activity[] = [
     user_id: 'u-ro',
     type: 'lead_link',
     summary: 'Linked to lead ld-1',
+    metadata: null,
     created_at: '2026-04-18T15:01:00Z',
   },
 ];
@@ -184,6 +199,7 @@ export const SEED_ACTIVITIES: Activity[] = [
 export const SEED_DAILY_BRIEF: DailyBrief = {
   id: 'br-1',
   date: '2026-04-20',
+  user_id: null,
   summary: {
     headline: '3 due today. GL insurance is the money gate.',
     top_3: [

@@ -62,7 +62,7 @@ Every task must appear exactly once. Use the exact task IDs provided.`
     const { text } = await generateText({
       model: groq("llama-3.3-70b-versatile"),
       prompt,
-      maxTokens: 1500,
+      maxOutputTokens: 1500,
     })
 
     const clean = text.replace(/```json|```/g, "").trim()

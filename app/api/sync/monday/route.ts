@@ -121,12 +121,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "No active boards found", synced: 0 })
     }
 
+    const sa = supabase as any
+
     // 2. Get byred_users profiles for the 3 users
-    const { data: byredUsers } = await supabase
+    const { data: byredUsers } = await sa
       .from("byred_users")
-      .select("id, email, monday_user_id")
+      .select("id, email")
       .in("email", Object.values(MONDAY_USER_MAP))
-      .eq("active", true)
+      .eq("active", true) as { data: Array<{ id: string; email: string }> | null }
 
     const emailToByredId: Record<string, string> = {}
     for (const u of byredUsers ?? []) {
@@ -134,13 +136,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Get first tenant as default (tasks must have a tenant_id)
-    const { data: defaultTenant } = await supabase
+    const { data: defaultTenant } = await sa
       .from("byred_tenants")
       .select("id, name")
       .eq("active", true)
       .order("created_at")
       .limit(1)
-      .single()
+      .single() as { data: { id: string; name: string } | null }
 
     const mondayUserIds = Object.keys(MONDAY_USER_MAP)
     let totalSynced = 0
@@ -153,13 +155,13 @@ export async function POST(req: NextRequest) {
         let hasMore = true
 
         while (hasMore) {
-          const data = await mondayQuery<MondayBoardsResponse>(ITEMS_QUERY, {
+          const data: MondayBoardsResponse = await mondayQuery<MondayBoardsResponse>(ITEMS_QUERY, {
             boardIds: [boardId],
             userIds: mondayUserIds,
             cursor: cursor ?? undefined,
           })
 
-          const board = data.boards[0]
+          const board: MondayBoardsResponse["boards"][0] | undefined = data.boards[0]
           if (!board) break
 
           const items = board.items_page.items

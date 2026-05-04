@@ -81,7 +81,7 @@ export function AppTopbar() {
       const supabase = createClient()
       const today = new Date().toISOString().split("T")[0]
 
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("byred_daily_briefs")
         .select("summary, date")
         .eq("date", today)

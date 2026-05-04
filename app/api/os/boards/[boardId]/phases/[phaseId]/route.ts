@@ -15,8 +15,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const scope = await requireTenantScope()
     const tenantIds = [scope.tenantId]
     const supabase = await createClient()
+    const sa = supabase as any
 
-    const { data: board } = await supabase
+    const { data: board } = await sa
       .from('os_boards')
       .select('tenant_id')
       .eq('id', boardId)
@@ -26,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    const { data: existing } = await supabase
+    const { data: existing } = await sa
       .from('os_phases')
       .select('id')
       .eq('id', phaseId)
@@ -56,7 +57,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       if (key in body) patch[key] = (body as Record<string, unknown>)[key]
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await sa
       .from('os_phases')
       .update(patch)
       .eq('id', phaseId)
@@ -86,8 +87,9 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     const scope = await requireTenantScope()
     const tenantIds = [scope.tenantId]
     const supabase = await createClient()
+    const sa = supabase as any
 
-    const { data: board } = await supabase
+    const { data: board } = await sa
       .from('os_boards')
       .select('tenant_id')
       .eq('id', boardId)
@@ -97,7 +99,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    const { data: existing } = await supabase
+    const { data: existing } = await sa
       .from('os_phases')
       .select('id')
       .eq('id', phaseId)
@@ -106,12 +108,12 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
 
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    await supabase
+    await sa
       .from('byred_tasks')
       .update({ phase_id: null })
       .eq('phase_id', phaseId)
 
-    const { error } = await supabase
+    const { error } = await sa
       .from('os_phases')
       .delete()
       .eq('id', phaseId)

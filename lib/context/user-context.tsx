@@ -7,7 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react"
-import type { ByredUser, ByredTenant, ByredUserTenant } from "@/types/database"
+import type { ByredUser, ByredTenant } from "@/types/database"
 import type { User } from "@supabase/supabase-js"
 
 // A directory entry: another active user in the org
@@ -24,7 +24,11 @@ export type DirectoryEntry = {
 export type SerializedUser = {
   authUser: User
   profile: ByredUser | null
-  tenants: Array<ByredTenant & { role: string }>
+  tenants: Array<Omit<ByredTenant, "monday_board_id" | "monday_group_id"> & {
+    monday_board_id?: string | null
+    monday_group_id?: string | null
+    role: string
+  }>
   isAdmin: boolean
   activeTenantId: string | null
   directory: DirectoryEntry[]

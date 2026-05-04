@@ -15,8 +15,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     const scope = await requireTenantScope()
     const tenantIds = [scope.tenantId]
     const supabase = await createClient()
+    const sa = supabase as any
 
-    const { data: board } = await supabase
+    const { data: board } = await sa
       .from('os_boards')
       .select('tenant_id')
       .eq('id', boardId)
@@ -26,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await sa
       .from('os_phases')
       .select('*')
       .eq('board_id', boardId)
@@ -46,8 +47,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     const scope = await requireTenantScope()
     const tenantIds = [scope.tenantId]
     const supabase = await createClient()
+    const sa = supabase as any
 
-    const { data: board } = await supabase
+    const { data: board } = await sa
       .from('os_boards')
       .select('tenant_id')
       .eq('id', boardId)
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: 'invalid status_mapping' }, { status: 400 })
     }
 
-    const { data: maxRow } = await supabase
+    const { data: maxRow } = await sa
       .from('os_phases')
       .select('order_index')
       .eq('board_id', boardId)
@@ -81,7 +83,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
     const nextOrder = ((maxRow?.order_index as number | null) ?? -1) + 1
 
-    const { data, error } = await supabase
+    const { data, error } = await sa
       .from('os_phases')
       .insert({
         board_id: boardId,

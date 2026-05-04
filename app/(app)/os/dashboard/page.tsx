@@ -55,14 +55,15 @@ export default async function OSDashboardPage() {
     getTasks(),
     getBlockedTasks(),
     getRecentTasks(8),
-    supabase
+    (supabase as any)
       .from("byred_users")
       .select("id, name, role, avatar_url")
       .eq("active", true)
       .order("name"),
   ])
 
-  const team = teamData.data ?? []
+  type TeamMember = { id: string; name: string; role: string; avatar_url: string | null }
+  const team = (teamData.data ?? []) as TeamMember[]
 
   // Derive stats from real tasks
   const inProgressTasks = allTasks.filter((t) => t.status === "in_progress")

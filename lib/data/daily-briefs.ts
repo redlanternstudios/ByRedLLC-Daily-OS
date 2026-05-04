@@ -15,7 +15,7 @@ export async function getTodayBrief(): Promise<{
   const supabase = await createClient()
   const today = new Date().toISOString().split("T")[0]
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("byred_daily_briefs")
     .select("summary, date")
     .eq("date", today)
@@ -39,7 +39,7 @@ export async function getUserBrief(
   const today = new Date().toISOString().split("T")[0]
 
   // Try user-specific brief first
-  const { data: userBrief } = await supabase
+  const { data: userBrief } = await (supabase as any)
     .from("byred_daily_briefs")
     .select("summary, date")
     .eq("date", today)

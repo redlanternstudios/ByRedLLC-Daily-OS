@@ -21,7 +21,7 @@ export async function updateProfileAction(formData: FormData) {
     return { error: "Not authenticated" }
   }
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("byred_users")
     .update({ name: fullName })
     .eq("auth_user_id", authUser.id)

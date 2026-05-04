@@ -24,10 +24,10 @@ export async function GET() {
 
   if (!byredUserId) return NextResponse.json({ tenants: [] })
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("byred_user_tenants")
     .select("tenant_id, role, byred_tenants(id, name, type, color)")
-    .eq("user_id", byredUserId)
+    .eq("user_id", byredUserId) as { data: Array<{ tenant_id: string; role: string; byred_tenants: { id: string; name: string; type: string; color: string | null } | null }> | null; error: { message: string } | null }
 
   if (error) return NextResponse.json({ tenants: [] })
 

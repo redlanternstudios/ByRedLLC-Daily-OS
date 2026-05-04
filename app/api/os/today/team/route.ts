@@ -8,13 +8,15 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+    const sa = supabase as any
+
     // Fetch ALL active users — do NOT exclude the current user so Keymon appears
     const [usersRes, tasksRes] = await Promise.all([
-      supabase.from("byred_users").select("id, name, role, avatar_url").eq("active", true).order("name"),
-      supabase.from("byred_tasks").select("*").not("status", "in", "(done,cancelled)"),
+      sa.from("byred_users").select("id, name, role, avatar_url").eq("active", true).order("name") as Promise<{ data: Array<{ id: string; name: string; role: string; avatar_url: string | null }> | null }>,
+      sa.from("byred_tasks").select("*").not("status", "in", "(done,cancelled)") as Promise<{ data: import("@/types/database").ByredTask[] | null }>,
     ])
 
-    const users = usersRes.data ?? []
+    const users = (usersRes.data ?? [])
     const tasks = (tasksRes.data ?? []).map(mapTaskFromDb)
 
     const team = users.map((u) => {

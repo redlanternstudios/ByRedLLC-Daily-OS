@@ -16,11 +16,12 @@ export async function GET(request: Request) {
 
   try {
     const supabase = await createClient()
+    const sa = supabase as any
 
     // Fetch all active tasks and users
     const [usersRes, tasksRes] = await Promise.all([
-      supabase.from("byred_users").select("id, name, role").eq("active", true).order("name"),
-      supabase.from("byred_tasks").select("*").not("status", "in", "(done,cancelled)"),
+      sa.from("byred_users").select("id, name, role").eq("active", true).order("name") as Promise<{ data: Array<{ id: string; name: string; role: string }> | null }>,
+      sa.from("byred_tasks").select("*").not("status", "in", "(done,cancelled)") as Promise<{ data: import("@/types/database").ByredTask[] | null }>,
     ])
 
     const users = usersRes.data ?? []
@@ -58,20 +59,20 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
     const { text } = await generateText({
       model: groq("llama-3.3-70b-versatile"),
       prompt,
-      maxTokens: 300,
+      maxOutputTokens: 300,
     })
 
     // Store the generated pulse in byred_daily_briefs
     // user_id IS NULL for team-wide briefs — Supabase upsert can't target partial unique indexes,
     // so we delete today's null-user brief then re-insert.
     const today = new Date().toISOString().split("T")[0]
-    await supabase
+    await sa
       .from("byred_daily_briefs")
       .delete()
       .is("user_id", null)
       .eq("date", today)
 
-    await supabase.from("byred_daily_briefs").insert({
+    await sa.from("byred_daily_briefs").insert({
       user_id: null,
       date: today,
       summary: {

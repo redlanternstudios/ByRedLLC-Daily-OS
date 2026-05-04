@@ -18,7 +18,7 @@ interface ActivityItemProps {
 
 export function ActivityItem({ activity, showObject = true }: ActivityItemProps) {
   const Icon = TYPE_ICONS[activity.type] ?? MessageSquare
-  const relativeTime = formatDistanceToNow(parseISO(activity.created_at), { addSuffix: true })
+  const relativeTime = formatDistanceToNow(parseISO(activity.created_at ?? new Date().toISOString()), { addSuffix: true })
 
   const objectHref = activity.object_type === 'task'
     ? `/tasks/${activity.object_id}`

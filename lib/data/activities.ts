@@ -9,7 +9,7 @@ export type ActivityRow = {
   user_id: string | null
   type: string
   summary: string
-  metadata: unknown
+  metadata: import("@/types/database").Json | null
   created_at: string
 }
 
@@ -17,11 +17,12 @@ function mapActivityFromDb(row: ActivityRow): Activity {
   return {
     id: row.id,
     tenant_id: row.tenant_id,
-    object_type: row.object_type as "task" | "lead",
+    object_type: row.object_type,
     object_id: row.object_id,
     user_id: row.user_id,
     type: row.type,
     summary: row.summary,
+    metadata: row.metadata,
     created_at: row.created_at,
   }
 }
@@ -29,7 +30,7 @@ function mapActivityFromDb(row: ActivityRow): Activity {
 export async function getActivities(): Promise<Activity[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("byred_activities")
     .select("*")
     .order("created_at", { ascending: false })
@@ -49,7 +50,7 @@ export async function getActivitiesForObject(
 ): Promise<Activity[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("byred_activities")
     .select("*")
     .eq("object_type", objectType)
@@ -67,7 +68,7 @@ export async function getActivitiesForObject(
 export async function getActivitiesByTenant(tenantId: string): Promise<Activity[]> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("byred_activities")
     .select("*")
     .eq("tenant_id", tenantId)

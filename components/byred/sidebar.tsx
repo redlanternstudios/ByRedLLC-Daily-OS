@@ -202,8 +202,9 @@ function SidebarContent({
     if (href === "/os/dashboard") {
       return pathname === "/os/dashboard" || pathname === "/" || pathname === "/os"
     }
-    // Exact match for /os/today to avoid prefix collision with /os/tasks etc.
+    // Exact match for short paths that are prefixes of other routes
     if (href === "/os/today") return pathname === "/os/today"
+    if (href === "/os/team")  return pathname === "/os/team"
     return pathname.startsWith(href)
   }
 

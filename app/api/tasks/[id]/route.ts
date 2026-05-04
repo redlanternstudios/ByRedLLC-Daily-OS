@@ -11,21 +11,21 @@ async function getCallerProfile(supabase: Awaited<ReturnType<typeof createClient
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: byredUserRaw } = await supabase
+  const sa = supabase as any
+  const { data: byredUserRaw } = await sa
     .from("byred_users")
     .select("id")
     .eq("auth_user_id", user.id)
-    .maybeSingle()
-  const byredUser = byredUserRaw as { id: string } | null
-  if (!byredUser) return null
+    .maybeSingle() as { data: { id: string } | null }
+  if (!byredUserRaw) return null
 
-  const { data: userTenants } = await supabase
+  const { data: userTenants } = await sa
     .from("byred_user_tenants")
     .select("tenant_id")
-    .eq("user_id", byredUser.id)
+    .eq("user_id", byredUserRaw.id) as { data: Array<{ tenant_id: string }> | null }
 
-  const tenantIds = (userTenants ?? []).map((ut: { tenant_id: string }) => ut.tenant_id)
-  return { id: byredUser.id, tenantIds }
+  const tenantIds = (userTenants ?? []).map((ut) => ut.tenant_id)
+  return { id: byredUserRaw.id, tenantIds }
 }
 
 export async function GET(_req: Request, { params }: RouteParams) {
@@ -34,12 +34,12 @@ export async function GET(_req: Request, { params }: RouteParams) {
   if (!caller) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("byred_tasks")
     .select("*")
     .eq("id", id)
     .in("tenant_id", caller.tenantIds)
-    .single()
+    .single() as { data: Record<string, unknown> | null; error: { message: string } | null }
 
   if (error || !data)
     return NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -54,11 +54,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   const { id } = await params
 
   // Verify this task belongs to one of the caller's tenants
-  const { data: existing } = await supabase
+  const { data: existing } = await (supabase as any)
     .from("byred_tasks")
     .select("id, tenant_id")
     .eq("id", id)
-    .maybeSingle()
+    .maybeSingle() as { data: { id: string; tenant_id: string } | null }
 
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (!caller.tenantIds.includes(existing.tenant_id)) {
@@ -101,18 +101,18 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
   const { id } = await params
 
   // Verify this task belongs to one of the caller's tenants before deleting
-  const { data: existing } = await supabase
+  const { data: existing } = await (supabase as any)
     .from("byred_tasks")
     .select("id, tenant_id")
     .eq("id", id)
-    .maybeSingle()
+    .maybeSingle() as { data: { id: string; tenant_id: string } | null }
 
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (!caller.tenantIds.includes(existing.tenant_id)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { error } = await supabase.from("byred_tasks").delete().eq("id", id)
+  const { error } = await (supabase as any).from("byred_tasks").delete().eq("id", id) as { error: { message: string } | null }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })

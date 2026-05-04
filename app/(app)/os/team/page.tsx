@@ -14,8 +14,9 @@ export default async function OSTeamPage() {
   await requireAuth()
   const supabase = await createClient()
 
+  const sa = supabase as any
   // Get all active users with their task counts
-  const { data: users } = await supabase
+  const { data: users } = await sa
     .from("byred_users")
     .select(`
       id,
@@ -29,30 +30,31 @@ export default async function OSTeamPage() {
     .order("name")
 
   // Get task counts per user (non-done, non-cancelled)
-  const { data: taskCounts } = await supabase
+  const { data: taskCounts } = await sa
     .from("byred_tasks")
     .select("owner_user_id")
     .not("status", "in", "(done,cancelled)")
     .not("owner_user_id", "is", null)
 
   // Get tenant counts per user
-  const { data: tenantMemberships } = await supabase
+  const { data: tenantMemberships } = await sa
     .from("byred_user_tenants")
     .select("user_id, tenant_id")
 
   const taskCountMap: Record<string, number> = {}
-  for (const t of taskCounts ?? []) {
+  for (const t of (taskCounts ?? []) as Array<{ owner_user_id: string | null }>) {
     if (t.owner_user_id) {
       taskCountMap[t.owner_user_id] = (taskCountMap[t.owner_user_id] ?? 0) + 1
     }
   }
 
   const tenantCountMap: Record<string, number> = {}
-  for (const m of tenantMemberships ?? []) {
+  for (const m of (tenantMemberships ?? []) as Array<{ user_id: string; tenant_id: string }>) {
     tenantCountMap[m.user_id] = (tenantCountMap[m.user_id] ?? 0) + 1
   }
 
-  const members = (users ?? []).map((u) => ({
+  type UserRow = { id: string; name: string; email: string; role: string; avatar_url: string | null; active: boolean | null }
+  const members = ((users ?? []) as UserRow[]).map((u) => ({
     ...u,
     task_count: taskCountMap[u.id] ?? 0,
     tenant_count: tenantCountMap[u.id] ?? 0,

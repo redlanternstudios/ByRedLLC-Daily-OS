@@ -33,6 +33,7 @@ type CalendarEventRow = {
   tenant_id: string
   owner_user_id: string | null
   os_calendar_event_attendees: Attendee[]
+  recurrence_rule?: string | null
   // task-derived
   _source?: "task"
   _task?: {
@@ -1279,7 +1280,7 @@ export default function OSCalendarPage() {
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getEventColor(evt) }} />
                   <span className="text-xs text-zinc-300 truncate">{evt.title}</span>
                   {!evt.all_day && (
-                    <span className="ml-auto text-[10px] text-zinc-600 shrink-0">{fmtTime(evt.starts_at)}</span>
+                    <span className="ml-auto text-[10px] text-zinc-600 shrink-0">{fmtTime(evt.start_at)}</span>
                   )}
                   {evt.all_day && (
                     <span className="ml-auto text-[10px] text-zinc-600 shrink-0">All day</span>

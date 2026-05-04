@@ -29,34 +29,36 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  const sa = supabase as any
+
   // Resolve byred_users.id for this auth user
-  const { data: byredUserRaw } = await supabase
+  const { data: byredUserRaw } = await sa
     .from("byred_users")
     .select("id")
     .eq("auth_user_id", user.id)
-    .maybeSingle()
-  const byredUserId = (byredUserRaw as { id: string } | null)?.id
+    .maybeSingle() as { data: { id: string } | null }
+  const byredUserId = byredUserRaw?.id
 
   if (!byredUserId) return NextResponse.json([])
 
   // Fetch only tenants this user belongs to
-  const { data: memberRows, error: memberError } = await supabase
+  const { data: memberRows, error: memberError } = await sa
     .from("byred_user_tenants")
     .select("tenant_id, byred_tenants(id, name, color)")
-    .eq("user_id", byredUserId)
+    .eq("user_id", byredUserId) as { data: Array<{ tenant_id: string; byred_tenants: { id: string; name: string; color: string | null } | null }> | null; error: { message: string } | null }
 
   if (memberError) return NextResponse.json({ error: memberError.message }, { status: 500 })
 
   const tenants = (memberRows ?? []).map((row) => {
-    const t = row.byred_tenants as { id: string; name: string; color: string | null } | null
+    const t = row.byred_tenants
     return { id: t?.id ?? row.tenant_id, name: t?.name ?? row.tenant_id, color: t?.color ?? "#D7261E" }
   }).sort((a, b) => a.name.localeCompare(b.name))
 
   // Fetch all non-cancelled tasks with just the fields we need
-  const { data: tasks, error: taskError } = await supabase
+  const { data: tasks, error: taskError } = await sa
     .from("byred_tasks")
     .select("tenant_id, status")
-    .neq("status", "cancelled")
+    .neq("status", "cancelled") as { data: Array<{ tenant_id: string; status: string }> | null; error: { message: string } | null }
 
   if (taskError) return NextResponse.json({ error: taskError.message }, { status: 500 })
 

@@ -1,6 +1,12 @@
 // Re-export types from the generated database types
+import type { ByredTenant as _ByredTenant } from "./database"
+export type { ByredTenant } from "./database"
+export type Tenant = Omit<_ByredTenant, "monday_board_id" | "monday_group_id"> & {
+  monday_board_id?: string | null
+  monday_group_id?: string | null
+}
+// keep the rest of the re-exports but remove ByredTenant from the list:
 export type {
-  ByredTenant as Tenant,
   ByredUser as User,
   ByredTask,
   ByredLead as Lead,

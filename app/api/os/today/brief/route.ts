@@ -43,7 +43,7 @@ Respond with a JSON object ONLY (no markdown, no explanation) with this exact sh
     const { text } = await generateText({
       model: groq("llama-3.3-70b-versatile"),
       prompt,
-      maxTokens: 500,
+      maxOutputTokens: 500,
     })
 
     const clean = text.replace(/```json|```/g, "").trim()

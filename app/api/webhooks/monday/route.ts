@@ -66,10 +66,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const supabase = await createAdminClient()
+    const sa = supabase as any
 
     // Handle item deletion
     if (event.type === "delete_pulse") {
-      await supabase
+      await sa
         .from("byred_tasks")
         .update({ status: "cancelled", updated_at: new Date().toISOString() })
         .eq("monday_item_id", itemId)
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (Object.keys(updates).length > 1) {
-        await supabase
+        await sa
           .from("byred_tasks")
           .update(updates)
           .eq("monday_item_id", itemId)
@@ -113,24 +114,24 @@ export async function POST(req: NextRequest) {
 
       // Get owner byred_users.id
       const { data: ownerUser } = ownerEmail
-        ? await supabase
+        ? await (sa
             .from("byred_users")
             .select("id")
             .eq("email", ownerEmail)
-            .single()
+            .single() as Promise<{ data: { id: string } | null }>)
         : { data: null }
 
       // Default to first active tenant
-      const { data: defaultTenant } = await supabase
+      const { data: defaultTenant } = await (sa
         .from("byred_tenants")
         .select("id")
         .eq("active", true)
         .order("created_at")
         .limit(1)
-        .single()
+        .single() as Promise<{ data: { id: string } | null }>)
 
       if (defaultTenant) {
-        await supabase.from("byred_tasks").upsert(
+        await sa.from("byred_tasks").upsert(
           {
             monday_item_id: itemId,
             title,

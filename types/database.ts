@@ -582,13 +582,7 @@ export type ByredDailyBriefUpdate = Database["public"]["Tables"]["byred_daily_br
 // Daily brief summary structure
 export type DailyBriefSummary = {
   headline: string
-  top_3: Array<{
-    id: string
-    title: string
-    tenant_id: string
-    due_date: string | null
-    priority: string
-  }>
+  top_3: Array<string | { title: string }>
   warnings: string[]
   next_action: string
 }
