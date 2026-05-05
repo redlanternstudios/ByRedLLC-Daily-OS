@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { mapTaskFromDb } from "@/types/db"
-import { createGroq } from "@ai-sdk/groq"
 import { generateText } from "ai"
 
 // Vercel Cron: runs at 7:05am and 7:05pm PST daily (03:05 + 15:05 UTC)
@@ -43,8 +42,6 @@ export async function GET(request: Request) {
       }
     })
 
-    const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
-
     const prompt = `You are the operations voice for By Red, LLC.
 Generate a concise ${timeOfDay} team pulse for ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}.
 
@@ -57,22 +54,17 @@ BLOCKERS: ${blockers.length}${blockers.length > 0 ? "\n" + blockers.map((b) => `
 Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag blockers urgently. End with the single most important next action.`
 
     const { text } = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: "groq/llama-3.3-70b-versatile",
       prompt,
-      maxOutputTokens: 300,
+      maxTokens: 300,
     })
 
-    // Store the generated pulse in byred_daily_briefs
-    // user_id IS NULL for team-wide briefs — Supabase upsert can't target partial unique indexes,
-    // so we delete today's null-user brief then re-insert.
+    // Use admin client to bypass RLS for team-wide pulse insert (user_id = NULL)
+    const adminClient = createAdminClient()
     const today = new Date().toISOString().split("T")[0]
-    await sa
-      .from("byred_daily_briefs")
-      .delete()
-      .is("user_id", null)
-      .eq("date", today)
+    const now = new Date().toISOString()
 
-    await sa.from("byred_daily_briefs").insert({
+    const { error: insertError } = await adminClient.from("byred_daily_briefs").insert({
       user_id: null,
       date: today,
       summary: {
@@ -80,11 +72,16 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
         time_of_day: timeOfDay,
         task_count: tasks.length,
         blocker_count: blockers.length,
-        generated_at: new Date().toISOString(),
+        generated_at: now,
         generated_by: "cron",
         team,
       },
     })
+
+    if (insertError) {
+      console.error("[cron/team-pulse] Insert failed:", insertError)
+      throw new Error(`Failed to save pulse: ${insertError.message}`)
+    }
 
     return NextResponse.json({
       ok: true,

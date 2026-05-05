@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { mapTaskFromDb } from "@/types/db"
 import { generateText } from "ai"
 import type { ByredTask } from "@/types/database"
@@ -100,9 +100,10 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
     const today = new Date().toISOString().split("T")[0]
     const now = new Date().toISOString()
     
-    // Don't delete old pulse for today — keep history (morning + evening)
-    // Just insert new one
-    const { error: insertError } = await sa.from("byred_daily_briefs").insert({
+    // Use admin client to bypass RLS for team-wide pulse insert (user_id = NULL)
+    const adminClient = createAdminClient()
+    
+    const { error: insertError } = await adminClient.from("byred_daily_briefs").insert({
       user_id: null,
       date: today,
       summary: {
