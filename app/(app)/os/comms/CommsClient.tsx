@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Hash, Plus, Send, CornerUpLeft, X, Users, ChevronLeft, Menu } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client' // still needed for realtime channel subscription
 import { useUser } from '@/lib/context/user-context'
 import { cn } from '@/lib/utils'
+import { MentionTextarea, renderMentions } from '@/components/byred/mention-textarea'
 import type { Channel, Member } from './page'
 
 type Message = {
@@ -145,21 +146,29 @@ export function CommsClient({
     setInput('')
     const reply = replyTo
     setReplyTo(null)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase as any).from('os_messages').insert({
-      channel_id: activeChannelId,
-      tenant_id: activeTenantId,
-      user_id: profileId, // byred_users.id, not auth.users.id
-      body: text,
-      reply_to_id: reply?.id ?? null,
+    // Use the API route so notifyMentions fires server-side (in-app + email)
+    const res = await fetch('/api/os/comms/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel_id: activeChannelId,
+        tenant_id: activeTenantId,
+        body: text,
+        reply_to_id: reply?.id ?? null,
+      }),
     })
-    if (error) {
-      console.error('[v0] Failed to send message:', error)
-      // Restore input on failure
+    if (!res.ok) {
+      console.error('[v0] Failed to send message:', await res.text())
       setInput(text)
       if (reply) setReplyTo(reply)
     }
     setSending(false)
+  }
+
+  function mentionMember(name: string) {
+    const prefix = input && !input.endsWith(' ') ? ' ' : ''
+    setInput(prev => prev + prefix + `@${name} `)
+    inputRef.current?.focus()
   }
 
   async function handleCreateChannel() {
@@ -288,20 +297,33 @@ export function CommsClient({
         <span className="text-[10px] text-zinc-700 ml-auto">{members.length}</span>
       </div>
       <div className="flex-1 overflow-y-auto scrollbar-none pb-2">
-        {members.map(m => (
-          <div key={m.id} className="flex items-center gap-2 px-3.5 py-1.5">
-            <AvatarCircle name={m.name} size={24} />
-            <div className="min-w-0 flex-1">
-              <p className={cn(
-                "text-[11px] font-semibold truncate",
-                m.id === profileId ? "text-zinc-50" : "text-zinc-400"
-              )}>
-                {m.name}{m.id === profileId ? ' (you)' : ''}
-              </p>
-              {m.role && <p className="text-[9px] text-zinc-700 uppercase tracking-wide">{m.role}</p>}
-            </div>
-          </div>
-        ))}
+        {members.map(m => {
+          const isMe = m.id === profileId
+          return (
+            <button
+              key={m.id}
+              type="button"
+              title={isMe ? undefined : `@mention ${m.name}`}
+              disabled={isMe}
+              onClick={() => !isMe && mentionMember(m.name)}
+              className={cn(
+                "w-full flex items-center gap-2 px-3.5 py-1.5 text-left border-none bg-transparent rounded",
+                isMe ? "cursor-default" : "cursor-pointer hover:bg-byred-red/[0.06] transition-colors"
+              )}
+            >
+              <AvatarCircle name={m.name} size={24} />
+              <div className="min-w-0 flex-1">
+                <p className={cn(
+                  "text-[11px] font-semibold truncate",
+                  isMe ? "text-zinc-50" : "text-zinc-400"
+                )}>
+                  {m.name}{isMe ? ' (you)' : ''}
+                </p>
+                {m.role && <p className="text-[9px] text-zinc-700 uppercase tracking-wide">{m.role}</p>}
+              </div>
+            </button>
+          )
+        })}
       </div>
 
       {/* Mobile back button */}
@@ -408,7 +430,7 @@ export function CommsClient({
                   </div>
                 )}
                 <p className="text-[13px] text-zinc-200 leading-relaxed break-words whitespace-pre-wrap">
-                  {msg.body}
+                  {renderMentions(msg.body, 'font-semibold text-byred-red')}
                 </p>
               </div>
               <button
@@ -444,19 +466,18 @@ export function CommsClient({
           "flex gap-2 items-end bg-zinc-900 border border-white/10 px-3 py-2",
           replyTo ? "rounded-b-lg" : "rounded-lg"
         )}>
-          <textarea
-            ref={inputRef} rows={1}
-            placeholder={activeChannel ? `Message #${activeChannel.name}` : 'Select a channel'}
+          <MentionTextarea
+            ref={inputRef}
             value={input}
-            onChange={e => {
-              setInput(e.target.value)
-              const el = e.target
-              el.style.height = 'auto'
-              el.style.height = Math.min(el.scrollHeight, 120) + 'px'
-            }}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleSend() } }}
+            onChange={setInput}
+            onSubmit={handleSend}
+            users={[...members, ...directory.filter(d => !members.some(m => m.id === d.id))]}
+            autoResize
+            maxHeight={120}
+            rows={1}
+            placeholder={activeChannel ? `Message #${activeChannel.name} — @ to mention` : 'Select a channel'}
             disabled={!activeChannelId || sending}
-            className="flex-1 bg-transparent border-none outline-none text-zinc-50 text-[13px] resize-none leading-relaxed max-h-[120px] overflow-hidden min-h-[20px]"
+            className="flex-1 text-zinc-50 text-[13px] leading-relaxed min-h-[20px]"
             style={{ fontSize: 16 }} // Prevents iOS zoom
           />
           <button
