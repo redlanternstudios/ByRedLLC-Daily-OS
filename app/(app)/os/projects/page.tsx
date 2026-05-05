@@ -141,7 +141,7 @@ export default function OSProjectsPage() {
         <OSEmpty
           icon={FolderKanban}
           title="No projects found"
-          description={search ? "Try adjusting your search." : "Import tasks from Monday.com to get started."}
+          description={search ? "Try adjusting your search." : "Create a task to get started."}
         />
       )}
 

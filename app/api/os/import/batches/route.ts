@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-// GET /api/os/import/batches — list recent import batches (newest first)
+// GET /api/os/batch-ops — list recent batch operations (newest first)
+// source values: "claude", "notion", "drive", "manual", etc.
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { data, error } = await supabase
-    .from("byred_import_batches")
+  const { data, error } = await (supabase as any)
+    .from("byred_batch_ops")
     .select("id, source, status, total_rows, imported_rows, failed_rows, error_message, created_at, completed_at")
     .order("created_at", { ascending: false })
     .limit(20)

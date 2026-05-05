@@ -29,7 +29,7 @@ export async function sendEmail({
   html: string
   text?: string
 }) {
-  if (!isConfigured()) return { ok: false, reason: "Email not configured" }
+  if (!isConfigured()) return { ok: false, reason: "GMAIL_USER or GMAIL_APP_PASSWORD not set in environment — add both to Vercel and redeploy" }
   try {
     await getTransporter().sendMail({
       from: `"By Red OS" <${process.env.GMAIL_USER}>`,

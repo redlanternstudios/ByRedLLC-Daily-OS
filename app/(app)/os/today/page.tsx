@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import useSWR from "swr"
 import {
   Flame, DollarSign, Zap, Calendar, Brain,
   AlertTriangle, RefreshCw, CheckCheck, RotateCcw,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react"
 import { OSStatusBadge, OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
+import { MentionTextarea } from "@/components/byred/mention-textarea"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -63,6 +65,8 @@ const BUCKETS: {
   { key: "deep_work",     label: "Deep Work",     icon: Brain,      accent: "text-yellow-400",  border: "border-yellow-900/60", bg: "bg-yellow-950/20" },
 ]
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
@@ -104,6 +108,8 @@ function TaskCard({
   const [noteValue, setNoteValue] = useState(task.description ?? "")
   const [savingNote, setSavingNote] = useState(false)
   const noteRef = useRef<HTMLTextAreaElement>(null)
+  const { data: memberData } = useSWR<{ members: { id: string; name: string }[] }>("/api/os/members", fetcher)
+  const mentionUsers = (memberData?.members ?? []).map((m) => ({ id: m.id, name: m.name }))
 
   async function saveNote() {
     if (noteValue === (task.description ?? "")) { setEditingNote(false); return }
@@ -166,19 +172,23 @@ function TaskCard({
           {/* Notes — edit inline */}
           {editingNote ? (
             <div className="flex items-start gap-1.5">
-              <textarea
-                ref={noteRef}
-                value={noteValue}
-                onChange={(e) => setNoteValue(e.target.value)}
-                rows={2}
-                autoFocus
-                className="flex-1 text-[11px] bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 resize-none outline-none focus:border-zinc-400"
-                placeholder="Add notes…"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void saveNote() }
-                  if (e.key === "Escape") { setEditingNote(false); setNoteValue(task.description ?? "") }
-                }}
-              />
+              <div className="flex-1">
+                <MentionTextarea
+                  ref={noteRef}
+                  value={noteValue}
+                  onChange={setNoteValue}
+                  users={mentionUsers}
+                  onSubmit={() => void saveNote()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") { setEditingNote(false); setNoteValue(task.description ?? "") }
+                  }}
+                  autoFocus
+                  autoResize
+                  maxHeight={80}
+                  className="text-[11px] bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-400"
+                  placeholder="Add notes…"
+                />
+              </div>
               <button type="button" onClick={() => void saveNote()} disabled={savingNote} aria-label="Save" className="text-green-400 hover:text-green-300 mt-0.5 shrink-0">
                 {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2} />}
               </button>

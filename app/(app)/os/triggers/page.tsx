@@ -33,7 +33,7 @@ export default function OSTriggersPage() {
           { label: "Task status changed", detail: "Fire when a task moves to blocked, done, or any custom status" },
           { label: "Due date approaching", detail: "Alert N days before a task or project deadline" },
           { label: "Blocker flagged", detail: "Trigger escalation workflow when a task is marked blocked" },
-          { label: "Monday.com sync event", detail: "React to inbound Monday webhook payloads" },
+          { label: "Claude agent event", detail: "React when a Claude-initiated task creation or triage completes" },
           { label: "Manual trigger", detail: "Button-based one-click trigger for on-demand workflows" },
         ].map((t) => (
           <div key={t.label} className="flex items-start gap-3 px-5 py-4">

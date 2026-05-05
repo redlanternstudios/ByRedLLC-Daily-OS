@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import {
   Users, AlertTriangle, RefreshCw, Copy, Check,
   Sun, Moon, Activity, ChevronDown, ChevronUp,
-  Clock, CheckSquare, TrendingUp,
+  Clock, CheckSquare, TrendingUp, Sparkles, Loader2,
+  ArrowRight, Shield, BarChart2,
 } from "lucide-react"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSStatusBadge } from "@/components/byred/os/os-badge"
@@ -56,23 +57,27 @@ function statusLabel(status: string) {
   return status.replace(/_/g, " ").toUpperCase()
 }
 
+function statusColor(status: string) {
+  if (status === "on_track" || status === "ON TRACK") return "text-green-400"
+  if (status === "at_risk" || status === "AT RISK") return "text-yellow-400"
+  return "text-red-400"
+}
+
 // ─── Member Row ───────────────────────────────────────────────────────────────
 
 function MemberRow({ member }: { member: TeamMember }) {
   const [expanded, setExpanded] = useState(false)
-  const blockerTasks = member.tasks.filter((t) => t.blocker_flag)
-  const criticalTasks = member.tasks.filter((t) => t.priority === "critical" && !t.blocker_flag)
+  const blockerTasks = member.tasks.filter((t) => t.blocker_flag || t.status === "blocked")
+  const criticalTasks = member.tasks.filter((t) => t.priority === "critical" && t.status !== "blocked")
 
   return (
     <div className="border-b border-zinc-800/60 last:border-0">
       <button
+        type="button"
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-colors text-left"
       >
-        {/* Avatar */}
         <OSAvatar name={member.name} size="md" />
-
-        {/* Name + role */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5">
             <p className="text-sm font-semibold text-white">{member.name}</p>
@@ -80,23 +85,17 @@ function MemberRow({ member }: { member: TeamMember }) {
           </div>
           <p className="text-[11px] text-zinc-500 capitalize">{member.role}</p>
         </div>
-
-        {/* Task count */}
         <div className="flex items-center gap-1.5 shrink-0">
           <CheckSquare className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
           <span className="text-sm font-mono font-semibold text-zinc-300">{member.taskCount}</span>
           <span className="text-[10px] text-zinc-600">tasks</span>
         </div>
-
-        {/* Blocker badge */}
         {blockerTasks.length > 0 && (
           <span className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-red-400 bg-red-950/50 border border-red-800">
             <AlertTriangle className="w-3 h-3" strokeWidth={2} />
             {blockerTasks.length} BLOCKED
           </span>
         )}
-
-        {/* Status pill */}
         <span className={cn(
           "shrink-0 text-[10px] font-bold px-2.5 py-1 rounded border",
           member.status === "on_track"
@@ -107,7 +106,6 @@ function MemberRow({ member }: { member: TeamMember }) {
         )}>
           {statusLabel(member.status)}
         </span>
-
         {expanded
           ? <ChevronUp className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={1.75} />
           : <ChevronDown className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={1.75} />
@@ -135,7 +133,6 @@ function MemberRow({ member }: { member: TeamMember }) {
               ))}
             </div>
           )}
-
           {criticalTasks.length > 0 && (
             <div className="mb-3 space-y-1.5">
               <p className="text-[10px] font-semibold text-yellow-400 uppercase tracking-widest">Critical</p>
@@ -149,8 +146,7 @@ function MemberRow({ member }: { member: TeamMember }) {
               ))}
             </div>
           )}
-
-          {member.tasks.filter((t) => !t.blocker_flag && t.priority !== "critical").slice(0, 5).map((t) => (
+          {member.tasks.filter((t) => t.status !== "blocked" && !t.blocker_flag && t.priority !== "critical").slice(0, 5).map((t) => (
             <div key={t.id} className="flex items-center gap-2">
               <OSStatusBadge status={t.status ?? "not_started"} className="text-[9px] shrink-0" />
               <Link href={`/os/tasks/${t.id}`} className="text-xs text-zinc-400 hover:text-zinc-200 truncate">
@@ -167,36 +163,186 @@ function MemberRow({ member }: { member: TeamMember }) {
   )
 }
 
-// ─── Meeting Script Generator ─────────────────────────────────────────────────
+// ─── Stand-Up Agenda ─────────────────────────────────────────────────────────
 
-function buildScript(
-  timeOfDay: string,
-  pulseText: string,
-  team: TeamMember[],
-  blockers: Task[],
-) {
-  const date = new Date().toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric",
-  })
-  const lines = [
-    `Team Pulse — ${date}`,
-    `${timeOfDay}`,
-    ``,
-    pulseText,
-    ``,
-    `TEAM ROLL CALL (${team.length} members):`,
-    ...team.map((m) =>
-      `  ${m.name} — ${m.taskCount} active tasks — ${statusLabel(m.status)}`
-    ),
-    ``,
-    `BLOCKERS (${blockers.length}):`,
-    blockers.length === 0
-      ? `  None. All clear.`
-      : blockers.map((b) =>
-          `  [BLOCKED] ${b.title}${b.blocker_reason ? ` — ${b.blocker_reason}` : ""}`
-        ).join("\n"),
-  ]
-  return lines.join("\n")
+function StandUpAgenda({
+  timeOfDay,
+  today,
+  pulseText,
+  team,
+  blockers,
+  latestPulse,
+}: {
+  timeOfDay: string
+  today: string
+  pulseText: string
+  team: TeamMember[]
+  blockers: Task[]
+  latestPulse: StoredPulse | null
+}) {
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  function buildPlainText() {
+    const lines = [
+      `Stand-Up Agenda — ${today}`,
+      `${timeOfDay}`,
+      ``,
+      pulseText,
+      ``,
+      `ROLL CALL (${team.length} members):`,
+      ...team.map((m) => `  ${m.name} — ${m.taskCount} active tasks — ${statusLabel(m.status)}`),
+      ``,
+      `BLOCKERS (${blockers.length}):`,
+      blockers.length === 0
+        ? `  None. All clear.`
+        : blockers.map((b) => `  [BLOCKED] ${b.title}${b.blocker_reason ? ` — ${b.blocker_reason}` : ""}`).join("\n"),
+    ]
+    return lines.join("\n")
+  }
+
+  async function copy() {
+    await navigator.clipboard.writeText(buildPlainText())
+    setCopied(true)
+    toast.success("Agenda copied to clipboard")
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-md bg-[#D7261E]/10 border border-[#D7261E]/20 flex items-center justify-center shrink-0">
+            <Activity className="w-3 h-3 text-[#D7261E]" strokeWidth={1.75} />
+          </div>
+          <span className="text-sm font-semibold text-white">Stand-Up Agenda</span>
+          <span className="text-[10px] text-zinc-600 hidden sm:inline">Keymon — read this aloud</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {latestPulse?.summary.generated_at && (
+            <span className="text-[10px] text-zinc-700 font-mono hidden sm:inline">
+              {fmtTime(latestPulse.summary.generated_at)}
+            </span>
+          )}
+          {open
+            ? <ChevronUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+            : <ChevronDown className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+          }
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-zinc-800 divide-y divide-zinc-800/60">
+
+          {/* Date / time header */}
+          <div className="px-5 py-4 flex items-center justify-between">
+            <div>
+              <p className="text-base font-bold text-white">{today}</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">{timeOfDay}</p>
+            </div>
+            <button
+              type="button"
+              onClick={copy}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition-colors"
+            >
+              {copied
+                ? <Check className="w-3 h-3 text-green-400" strokeWidth={2} />
+                : <Copy className="w-3 h-3" strokeWidth={1.75} />
+              }
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+
+          {/* AI Pulse summary */}
+          <div className="px-5 py-4">
+            <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3" strokeWidth={1.75} />
+              Pulse
+            </p>
+            <p className="text-sm text-zinc-200 leading-relaxed">
+              {latestPulse
+                ? <>&ldquo;{pulseText}&rdquo;</>
+                : <span className="text-zinc-600 italic">No pulse yet — generate one above.</span>
+              }
+            </p>
+          </div>
+
+          {/* Roll Call */}
+          {team.length > 0 && (
+            <div className="px-5 py-4">
+              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-3 flex items-center gap-1.5">
+                <Users className="w-3 h-3" strokeWidth={1.75} />
+                Roll Call
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {team.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-2.5 p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/40"
+                  >
+                    <OSAvatar name={m.name} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-zinc-200 truncate">{m.name}</p>
+                      <p className="text-[10px] text-zinc-600">{m.taskCount} tasks</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusDot(m.status))} />
+                      <span className={cn("text-[9px] font-bold", statusColor(m.status))}>
+                        {statusLabel(m.status)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Blockers */}
+          <div className="px-5 py-4">
+            <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5">
+              <AlertTriangle className="w-3 h-3" strokeWidth={1.75} />
+              Blockers
+              <span className={cn("ml-1 font-mono", blockers.length > 0 ? "text-red-400" : "text-green-400")}>
+                ({blockers.length})
+              </span>
+            </p>
+            {blockers.length === 0 ? (
+              <div className="flex items-center gap-2 py-1">
+                <TrendingUp className="w-3.5 h-3.5 text-green-400 shrink-0" strokeWidth={1.75} />
+                <p className="text-sm text-green-400 font-medium">All clear — no active blockers</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {blockers.map((b) => (
+                  <div key={b.id} className="flex items-start gap-2.5 p-3 rounded-lg bg-red-950/20 border border-red-900/30">
+                    <AlertTriangle className="w-3 h-3 text-red-400 shrink-0 mt-0.5" strokeWidth={1.75} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-zinc-200 leading-snug">{b.title}</p>
+                      {b.blocker_reason && (
+                        <p className="text-[10px] text-zinc-500 italic mt-0.5">{b.blocker_reason}</p>
+                      )}
+                    </div>
+                    <Link
+                      href={`/os/tasks/${b.id}`}
+                      className="text-[10px] font-medium text-[#D7261E] hover:text-red-400 shrink-0 flex items-center gap-0.5"
+                    >
+                      Resolve
+                      <ArrowRight className="w-2.5 h-2.5" strokeWidth={2} />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -213,8 +359,7 @@ export default function TeamPulsePage() {
   const [team, setTeam] = useState<TeamMember[]>([])
   const [pulses, setPulses] = useState<StoredPulse[]>([])
   const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
-  const [scriptOpen, setScriptOpen] = useState(false)
+  const [generatingPulse, setGeneratingPulse] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -236,24 +381,65 @@ export default function TeamPulsePage() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  const latestPulse = pulses[0] ?? null
-  const blockers = team.flatMap((m) => m.tasks.filter((t) => t.blocker_flag))
+  async function generatePulse() {
+    setGeneratingPulse(true)
+    try {
+      const res = await fetch("/api/os/generate-pulse", { method: "POST" })
+      if (!res.ok) throw new Error()
+      toast.success("Pulse generated")
+      await loadData()
+    } catch {
+      toast.error("Failed to generate pulse")
+    } finally {
+      setGeneratingPulse(false)
+    }
+  }
 
-  // Summary stats
+  const latestPulse = pulses[0] ?? null
+  const blockers = team.flatMap((m) => m.tasks.filter((t) => t.blocker_flag || t.status === "blocked"))
+
   const totalTasks = team.reduce((acc, m) => acc + m.taskCount, 0)
   const blockedCount = team.filter((m) => m.status === "blocked").length
   const atRiskCount = team.filter((m) => m.status === "at_risk").length
   const onTrackCount = team.filter((m) => m.status === "on_track").length
 
-  const pulseText = latestPulse?.summary.text ?? "No pulse generated yet. Run the cron or wait for the 7am / 7pm schedule."
-  const script = buildScript(timeOfDay, pulseText, team, blockers)
+  const pulseText = latestPulse?.summary.text ?? "No pulse generated yet."
 
-  async function copyScript() {
-    await navigator.clipboard.writeText(script)
-    setCopied(true)
-    toast.success("Meeting script copied")
-    setTimeout(() => setCopied(false), 2000)
-  }
+  // Stats tile definition
+  const statTiles = [
+    {
+      label: "Members",
+      value: loading ? "—" : String(team.length),
+      href: "/os/team",
+      icon: Users,
+      border: "border-zinc-800",
+      valueColor: "text-white",
+    },
+    {
+      label: "Active Tasks",
+      value: loading ? "—" : String(totalTasks),
+      href: "/os/tasks",
+      icon: CheckSquare,
+      border: "border-zinc-800",
+      valueColor: "text-white",
+    },
+    {
+      label: "Blockers",
+      value: loading ? "—" : String(blockers.length),
+      href: "/os/blockers",
+      icon: Shield,
+      border: blockers.length > 0 ? "border-red-900/40" : "border-zinc-800",
+      valueColor: blockers.length > 0 ? "text-red-400" : "text-white",
+    },
+    {
+      label: "Team Status",
+      value: null, // custom render
+      href: "/os/team",
+      icon: BarChart2,
+      border: "border-zinc-800",
+      valueColor: "text-white",
+    },
+  ]
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -267,20 +453,29 @@ export default function TeamPulsePage() {
             <span className="text-zinc-600 font-normal text-base">{timeOfDay}</span>
           </h1>
           <p className="text-xs text-zinc-500 mt-1">
-            {isMorning ? <Sun className="w-3 h-3 inline mr-1 text-yellow-400" strokeWidth={1.75} /> : <Moon className="w-3 h-3 inline mr-1 text-zinc-400" strokeWidth={1.75} />}
+            {isMorning
+              ? <Sun className="w-3 h-3 inline mr-1 text-yellow-400" strokeWidth={1.75} />
+              : <Moon className="w-3 h-3 inline mr-1 text-zinc-400" strokeWidth={1.75} />
+            }
             {today}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            onClick={copyScript}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-colors"
+            type="button"
+            onClick={() => void generatePulse()}
+            disabled={generatingPulse}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#D7261E]/20 border border-[#D7261E]/40 text-red-300 text-xs font-medium hover:bg-[#D7261E]/30 transition-colors disabled:opacity-50"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-400" strokeWidth={2} /> : <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />}
-            {copied ? "Copied!" : "Copy Script"}
+            {generatingPulse
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.75} />
+              : <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} />
+            }
+            {generatingPulse ? "Generating…" : "Generate Pulse"}
           </button>
           <button
+            type="button"
             onClick={loadData}
             disabled={loading}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50"
@@ -291,38 +486,46 @@ export default function TeamPulsePage() {
         </div>
       </div>
 
-      {/* ── Stats Bar ── */}
+      {/* ── Stats Bar — clickable tiles ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-3">
-          <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold">Members</p>
-          <p className="text-2xl font-bold text-white font-condensed mt-1">{team.length}</p>
-        </div>
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-3">
-          <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold">Active Tasks</p>
-          <p className="text-2xl font-bold text-white font-condensed mt-1">{loading ? "—" : totalTasks}</p>
-        </div>
-        <div className="rounded-xl bg-zinc-900 border border-red-900/40 px-4 py-3">
-          <p className="text-[10px] text-red-500 uppercase tracking-widest font-semibold">Blockers</p>
-          <p className={cn("text-2xl font-bold font-condensed mt-1", blockers.length > 0 ? "text-red-400" : "text-white")}>
-            {loading ? "—" : blockers.length}
-          </p>
-        </div>
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-3">
-          <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold">Health</p>
-          <div className="flex items-center gap-1.5 mt-1">
-            {onTrackCount > 0 && <span className="text-sm font-bold text-green-400 font-condensed">{onTrackCount}</span>}
-            {atRiskCount > 0 && <span className="text-sm font-bold text-yellow-400 font-condensed">{atRiskCount}</span>}
-            {blockedCount > 0 && <span className="text-sm font-bold text-red-400 font-condensed">{blockedCount}</span>}
-            {team.length === 0 && <span className="text-2xl font-bold text-white font-condensed">—</span>}
-          </div>
-          {team.length > 0 && (
-            <div className="flex items-center gap-2 mt-0.5">
-              {onTrackCount > 0 && <span className="text-[9px] text-green-600">on track</span>}
-              {atRiskCount > 0 && <span className="text-[9px] text-yellow-600">at risk</span>}
-              {blockedCount > 0 && <span className="text-[9px] text-red-600">blocked</span>}
+        {statTiles.map((tile) => (
+          <Link
+            key={tile.label}
+            href={tile.href}
+            className={cn(
+              "rounded-xl bg-zinc-900 border px-4 py-3 hover:bg-zinc-800/60 transition-colors group",
+              tile.border
+            )}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold">{tile.label}</p>
+              <tile.icon className="w-3 h-3 text-zinc-700 group-hover:text-zinc-500 transition-colors" strokeWidth={1.75} />
             </div>
-          )}
-        </div>
+
+            {tile.label === "Team Status" ? (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  {onTrackCount > 0 && <span className="text-sm font-bold text-green-400 font-condensed">{onTrackCount}</span>}
+                  {atRiskCount > 0 && <span className="text-sm font-bold text-yellow-400 font-condensed">{atRiskCount}</span>}
+                  {blockedCount > 0 && <span className="text-sm font-bold text-red-400 font-condensed">{blockedCount}</span>}
+                  {team.length === 0 && <span className="text-2xl font-bold text-white font-condensed">—</span>}
+                </div>
+                {team.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    {onTrackCount > 0 && <span className="text-[9px] text-green-600">on track</span>}
+                    {atRiskCount > 0 && <span className="text-[9px] text-yellow-600">at risk</span>}
+                    {blockedCount > 0 && <span className="text-[9px] text-red-600">blocked</span>}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-end justify-between">
+                <p className={cn("text-2xl font-bold font-condensed", tile.valueColor)}>{tile.value}</p>
+                <ArrowRight className="w-3 h-3 text-zinc-700 group-hover:text-zinc-500 transition-colors mb-1" strokeWidth={1.75} />
+              </div>
+            )}
+          </Link>
+        ))}
       </div>
 
       {/* ── AI-Generated Pulse (from cron) ── */}
@@ -331,7 +534,7 @@ export default function TeamPulsePage() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#D7261E]" />
             <span className="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
-              Scheduled Pulse · {latestPulse?.summary.time_of_day ?? timeOfDay}
+              {latestPulse?.summary.generated_by === "manual" ? "Manual Pulse" : "Scheduled Pulse"} · {latestPulse?.summary.time_of_day ?? timeOfDay}
             </span>
           </div>
           {latestPulse?.summary.generated_at && (
@@ -345,11 +548,9 @@ export default function TeamPulsePage() {
           {loading ? (
             <div className="h-12 rounded-lg bg-zinc-800 animate-pulse" />
           ) : (
-            <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{pulseText}</p>
+            <p className="text-sm text-zinc-200 leading-relaxed">{pulseText}</p>
           )}
         </div>
-
-        {/* Second pulse of the day if exists */}
         {pulses.length > 1 && (
           <div className="border-t border-zinc-800/60 px-5 py-3">
             <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2">
@@ -367,7 +568,6 @@ export default function TeamPulsePage() {
           <span className="text-sm font-semibold text-white">Team Roll Call</span>
           <span className="ml-auto text-[10px] text-zinc-600 font-mono">{team.length} members</span>
         </div>
-
         {loading ? (
           <div className="divide-y divide-zinc-800/60">
             {[...Array(3)].map((_, i) => (
@@ -384,9 +584,7 @@ export default function TeamPulsePage() {
           <p className="text-xs text-zinc-600 px-5 py-6 text-center">No team members found.</p>
         ) : (
           <div>
-            {team.map((member) => (
-              <MemberRow key={member.id} member={member} />
-            ))}
+            {team.map((member) => <MemberRow key={member.id} member={member} />)}
           </div>
         )}
       </div>
@@ -405,6 +603,15 @@ export default function TeamPulsePage() {
             )}>
               {blockers.length}
             </span>
+            {blockers.length > 0 && (
+              <Link
+                href="/os/blockers"
+                className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors"
+              >
+                View all
+                <ArrowRight className="w-2.5 h-2.5" strokeWidth={2} />
+              </Link>
+            )}
           </div>
           {blockers.length === 0 ? (
             <div className="flex items-center gap-2 px-5 py-4">
@@ -424,9 +631,7 @@ export default function TeamPulsePage() {
                         {b.blocker_reason && (
                           <p className="text-xs text-zinc-500 italic mt-0.5">{b.blocker_reason}</p>
                         )}
-                        {owner && (
-                          <p className="text-[10px] text-zinc-600 mt-1">Owner: {owner.name}</p>
-                        )}
+                        {owner && <p className="text-[10px] text-zinc-600 mt-1">Owner: {owner.name}</p>}
                       </div>
                       <Link
                         href={`/os/tasks/${b.id}`}
@@ -446,37 +651,15 @@ export default function TeamPulsePage() {
         </div>
       )}
 
-      {/* ── Meeting Script ── */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-        <button
-          onClick={() => setScriptOpen((v) => !v)}
-          className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Copy className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
-            <span className="text-sm font-semibold text-white">Meeting Script</span>
-            <span className="text-[10px] text-zinc-600">— read aloud</span>
-          </div>
-          {scriptOpen
-            ? <ChevronUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-            : <ChevronDown className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-          }
-        </button>
-        {scriptOpen && (
-          <div className="border-t border-zinc-800 px-5 py-4 space-y-3">
-            <pre className="text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed font-mono bg-zinc-950/50 rounded-lg p-4">
-              {script}
-            </pre>
-            <button
-              onClick={copyScript}
-              className="flex items-center gap-2 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-green-400" strokeWidth={2} /> : <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />}
-              {copied ? "Copied!" : "Copy to clipboard"}
-            </button>
-          </div>
-        )}
-      </div>
+      {/* ── Stand-Up Agenda ── */}
+      <StandUpAgenda
+        timeOfDay={timeOfDay}
+        today={today}
+        pulseText={pulseText}
+        team={team}
+        blockers={blockers}
+        latestPulse={latestPulse}
+      />
 
     </div>
   )

@@ -1,20 +1,30 @@
 "use client"
 
-import { useState, useRef, useMemo } from "react"
+import React, { useState, useRef, useMemo } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import {
   ListTodo, Search, Clock, AlertTriangle, Loader2, Pencil, X, Check,
-  GitMerge, ChevronDown, ChevronRight, FolderKanban,
+  GitMerge, ChevronDown, ChevronRight, FolderKanban, Users, ShieldAlert,
+  CalendarClock, CalendarCheck, User, List, Kanban,
 } from "lucide-react"
 import { OSStatusBadge, OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSEmpty } from "@/components/byred/os/os-empty"
+import { MentionTextarea } from "@/components/byred/mention-textarea"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
+import { useUser } from "@/lib/context/user-context"
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const STATUS_OPTIONS = ["all", "not_started", "in_progress", "blocked", "done"]
 const PRIORITY_OPTIONS = ["all", "critical", "high", "medium", "low"]
+
+type QuickFilter = "" | "mine" | "due_today" | "overdue" | "blocked"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Task = {
   id: string
@@ -34,17 +44,13 @@ type Task = {
 }
 
 type Tenant = { id: string; name: string; color: string | null }
+type Member = { id: string; name: string; role: string; avatar_url: string | null }
+
+type GroupMode = "owner" | "project"
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
-async function patchTask(id: string, patch: Partial<Pick<Task, "description" | "status" | "priority">>) {
-  const res = await fetch(`/api/tasks/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
-  })
-  if (!res.ok) throw new Error("Failed to save")
-}
 
 function tenantColor(color: string | null): string {
   if (!color || color === "amber") return "#F59E0B"
@@ -57,12 +63,38 @@ function shortName(name: string) {
   return name.replace(/^[^\w\s]*\s*/, "").split(" — ")[0].split(" - ")[0]
 }
 
+function daysOverdue(dueDate: string | null, today: string): number {
+  if (!dueDate) return 0
+  const d = dueDate.includes("T") ? dueDate.split("T")[0] : dueDate
+  if (d >= today) return 0
+  return Math.floor((new Date(today).getTime() - new Date(d).getTime()) / 86400000)
+}
+
+function fmtDate(d: string | null) {
+  if (!d) return null
+  const str = d.includes("T") ? d : d + "T00:00:00"
+  return new Date(str).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
+async function patchTask(id: string, patch: Partial<Pick<Task, "description" | "status" | "priority">>) {
+  const res = await fetch(`/api/tasks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  })
+  if (!res.ok) throw new Error("Failed to save")
+}
+
+// ─── Notes Cell ───────────────────────────────────────────────────────────────
+
 function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState(task.description ?? "")
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const textRef = useRef<HTMLTextAreaElement>(null)
+  const { data: memberData } = useSWR<{ members: Member[] }>("/api/os/members", fetcher)
+  const mentionUsers = (memberData?.members ?? []).map((m) => ({ id: m.id, name: m.name }))
 
   async function save() {
     if (value === (task.description ?? "")) { setOpen(false); return }
@@ -71,12 +103,8 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
       await patchTask(task.id, { description: value || null })
       onSaved()
       toast.success("Notes saved")
-    } catch {
-      toast.error("Failed to save notes")
-    } finally {
-      setSaving(false)
-      setOpen(false)
-    }
+    } catch { toast.error("Failed to save notes") }
+    finally { setSaving(false); setOpen(false) }
   }
 
   async function clearNote() {
@@ -87,11 +115,8 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
       setValue("")
       onSaved()
       toast.success("Notes cleared")
-    } catch {
-      toast.error("Failed to clear notes")
-    } finally {
-      setDeleting(false)
-    }
+    } catch { toast.error("Failed to clear notes") }
+    finally { setDeleting(false) }
   }
 
   if (!open) {
@@ -129,17 +154,19 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
 
   return (
     <div className="flex items-start gap-1.5" onClick={(e) => e.preventDefault()}>
-      <textarea
+      <MentionTextarea
         ref={textRef}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
-        rows={2}
-        className="flex-1 min-w-[180px] text-xs bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 resize-none outline-none focus:border-zinc-400"
-        placeholder="Add notes…"
+        onChange={setValue}
+        onSubmit={() => void save()}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void save() }
           if (e.key === "Escape") { setOpen(false); setValue(task.description ?? "") }
         }}
+        users={mentionUsers}
+        autoResize
+        maxHeight={80}
+        placeholder="Add notes…"
+        className="flex-1 min-w-[180px] text-xs bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-400"
       />
       <button type="button" onClick={() => void save()} disabled={saving} aria-label="Save notes" className="text-green-400 hover:text-green-300 mt-0.5 shrink-0">
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2} />}
@@ -151,28 +178,38 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
   )
 }
 
-type RowProps = {
+// ─── Task Row ─────────────────────────────────────────────────────────────────
+
+const COLS = "grid-cols-[28px_1fr_100px_90px_80px_80px_180px]"
+const MIN_W = "min-w-[900px]"
+
+const COL_HEADER = (
+  <div className={cn("grid gap-0 px-4 py-2 border-b border-zinc-800/60 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest bg-zinc-950/40", COLS, MIN_W)}>
+    <span />
+    <span className="pl-2">Task</span>
+    <span>Status</span>
+    <span>Priority</span>
+    <span>Start</span>
+    <span>Due</span>
+    <span>Notes</span>
+  </div>
+)
+
+function TaskRow({
+  task, today, expandedId, setExpandedId, onSaved,
+}: {
   task: Task
-  tenantMap: Map<string, Tenant>
   today: string
   expandedId: string | null
   setExpandedId: (id: string | null) => void
   onSaved: () => void
-  fmtDate: (d: string | null) => string | null
-  showProject: boolean
-  cols: string
-  minW: string
-}
-
-function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, fmtDate, showProject, cols, minW }: RowProps) {
-  const isOverdue = task.due_date && task.due_date < today && task.status !== "done"
-  const tenant = tenantMap.get(task.tenant_id)
-  const color = tenantColor(tenant?.color ?? null)
+}) {
+  const overdue = daysOverdue(task.due_date, today)
   const isExpanded = expandedId === task.id
 
   return (
     <div>
-      <div className={cn("grid gap-0 items-center px-4 py-3 hover:bg-white/[0.02] transition-colors group", cols, minW)}>
+      <div className={cn("grid gap-0 items-center px-4 py-3 hover:bg-white/[0.02] transition-colors group", COLS, MIN_W)}>
         <button
           type="button"
           onClick={() => setExpandedId(isExpanded ? null : task.id)}
@@ -191,33 +228,8 @@ function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, f
           </Link>
         </div>
 
-        {showProject && (
-          <div className="min-w-0 pr-2">
-            {tenant ? (
-              <span
-                className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded truncate max-w-full"
-                style={{ background: `${color}15`, color, border: `1px solid ${color}25` }}
-                title={tenant.name}
-              >
-                {shortName(tenant.name)}
-              </span>
-            ) : (
-              <span className="text-zinc-700 text-xs">—</span>
-            )}
-          </div>
-        )}
-
         <div><OSStatusBadge status={task.status} taskId={task.id} /></div>
         <div><OSPriorityBadge priority={task.priority} /></div>
-
-        <div className="flex items-center gap-1">
-          {task.owner_user_id
-            ? <OSAvatar userId={task.owner_user_id} size="xs" />
-            : <span className="text-zinc-700 text-xs">—</span>}
-          {(task.support_user_ids ?? []).slice(0, 2).map((uid) => (
-            <OSAvatar key={uid} userId={uid} size="xs" />
-          ))}
-        </div>
 
         <div>
           {task.start_date
@@ -227,10 +239,15 @@ function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, f
 
         <div>
           {task.due_date ? (
-            <span className={cn("text-xs flex items-center gap-1", isOverdue ? "text-red-400" : "text-zinc-500")}>
-              {isOverdue && <Clock className="w-3 h-3" strokeWidth={2} />}
-              {fmtDate(task.due_date)}
-            </span>
+            <div className="flex flex-col">
+              <span className={cn("text-xs flex items-center gap-1", overdue > 0 ? "text-red-400" : "text-zinc-500")}>
+                {overdue > 0 && <Clock className="w-3 h-3" strokeWidth={2} />}
+                {fmtDate(task.due_date)}
+              </span>
+              {overdue > 0 && (
+                <span className="text-[9px] text-red-500 font-mono">{overdue}d overdue</span>
+              )}
+            </div>
           ) : (
             <span className="text-zinc-700 text-xs">—</span>
           )}
@@ -269,24 +286,362 @@ function TaskRow({ task, tenantMap, today, expandedId, setExpandedId, onSaved, f
   )
 }
 
+// ─── Project Section (used inside both owner and project modes) ───────────────
+
+function ProjectSection({
+  tenantId, taskList, tenant, collapsedGroups, toggleGroup, today, expandedId, setExpandedId, onSaved, indent,
+}: {
+  tenantId: string
+  taskList: Task[]
+  tenant: Tenant | undefined
+  collapsedGroups: Set<string>
+  toggleGroup: (id: string) => void
+  today: string
+  expandedId: string | null
+  setExpandedId: (id: string | null) => void
+  onSaved: () => void
+  indent?: boolean
+}) {
+  const color = tenantColor(tenant?.color ?? null)
+  const isCollapsed = collapsedGroups.has(tenantId)
+  const openCount = taskList.filter((t) => t.status !== "done" && t.status !== "cancelled").length
+  const doneCount = taskList.filter((t) => t.status === "done").length
+  const blockerCount = taskList.filter((t) => t.blocker_flag).length
+  const overdueCount = taskList.filter((t) => daysOverdue(t.due_date, today) > 0).length
+  const display = tenant ? shortName(tenant.name) : "Unassigned Project"
+
+  return (
+    <div className="border-b border-zinc-800/40 last:border-0">
+      <button
+        type="button"
+        onClick={() => toggleGroup(tenantId)}
+        className={cn(
+          "w-full flex items-center gap-3 py-2 hover:bg-white/[0.02] transition-colors text-left",
+          indent ? "px-8" : "px-4"
+        )}
+        style={{ borderLeft: `2px solid ${color}` }}
+      >
+        {isCollapsed
+          ? <ChevronRight className="w-3 h-3 text-zinc-600" strokeWidth={2} />
+          : <ChevronDown className="w-3 h-3 text-zinc-600" strokeWidth={2} />}
+        <span className="text-xs font-semibold" style={{ color }}>{display}</span>
+        <span className="text-[10px] text-zinc-600">{taskList.length} tasks</span>
+        {openCount > 0 && <span className="text-[10px] text-zinc-500">{openCount} open</span>}
+        {overdueCount > 0 && (
+          <span className="text-[10px] text-red-500 flex items-center gap-0.5">
+            <Clock className="w-2.5 h-2.5" strokeWidth={2} />
+            {overdueCount} overdue
+          </span>
+        )}
+        {doneCount > 0 && <span className="text-[10px] text-green-600">{doneCount} done</span>}
+        {blockerCount > 0 && (
+          <span className="text-[10px] text-red-600 flex items-center gap-0.5">
+            <AlertTriangle className="w-2.5 h-2.5" strokeWidth={2} />
+            {blockerCount} blocked
+          </span>
+        )}
+      </button>
+
+      {!isCollapsed && (
+        <div className="divide-y divide-zinc-800/30">
+          {taskList.map((task) => (
+            <TaskRow
+              key={task.id}
+              task={task}
+              today={today}
+              expandedId={expandedId}
+              setExpandedId={setExpandedId}
+              onSaved={onSaved}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Kanban ───────────────────────────────────────────────────────────────────
+
+const KANBAN_COLS: { id: string; label: string; dot: string; bg: string; border: string }[] = [
+  { id: "not_started", label: "Backlog",     dot: "bg-zinc-500",   bg: "bg-zinc-900/60",     border: "border-zinc-800" },
+  { id: "in_progress", label: "In Progress", dot: "bg-sky-500",    bg: "bg-sky-950/20",      border: "border-sky-900/50" },
+  { id: "blocked",     label: "Blocked",     dot: "bg-red-500",    bg: "bg-red-950/20",      border: "border-red-900/50" },
+  { id: "done",        label: "Done",        dot: "bg-green-500",  bg: "bg-green-950/20",    border: "border-green-900/50" },
+]
+
+const PRIORITY_DOT: Record<string, string> = {
+  critical: "bg-red-500",
+  high:     "bg-orange-400",
+  medium:   "bg-amber-400",
+  low:      "bg-zinc-500",
+}
+
+function KanbanCard({
+  task, today, tenantColor: tColor, onDragStart,
+}: {
+  task: Task
+  today: string
+  tenantColor: string
+  onDragStart: (id: string) => void
+}) {
+  const overdue = daysOverdue(task.due_date, today)
+
+  return (
+    <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = "move"
+        onDragStart(task.id)
+      }}
+      className="group/card rounded-lg bg-zinc-800 border border-zinc-700/60 p-3 cursor-grab active:cursor-grabbing hover:border-zinc-600 transition-colors select-none"
+    >
+      {/* Top row: priority dot + project dot + blocker */}
+      <div className="flex items-center gap-1.5 mb-2">
+        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", PRIORITY_DOT[task.priority] ?? "bg-zinc-600")} title={task.priority} />
+        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tColor }} />
+        {task.blocker_flag && <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" strokeWidth={2} />}
+        {task.blocked_by_task_id && <GitMerge className="w-3 h-3 text-yellow-400 shrink-0" strokeWidth={2} />}
+        <div className="ml-auto flex items-center gap-1">
+          {task.owner_user_id && <OSAvatar userId={task.owner_user_id} size="xs" />}
+        </div>
+      </div>
+
+      {/* Title */}
+      <Link
+        href={`/os/tasks/${task.id}`}
+        className="block text-xs font-medium text-zinc-200 leading-snug hover:text-white line-clamp-2 mb-2"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {task.title}
+      </Link>
+
+      {/* Due date */}
+      {task.due_date && (
+        <div className={cn("flex items-center gap-1 text-[10px]", overdue > 0 ? "text-red-400" : "text-zinc-600")}>
+          <Clock className="w-2.5 h-2.5" strokeWidth={2} />
+          {fmtDate(task.due_date)}
+          {overdue > 0 && <span className="font-mono">· {overdue}d late</span>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function KanbanBoard({
+  tasks, today, tenantMap, onStatusChange,
+}: {
+  tasks: Task[]
+  today: string
+  tenantMap: Map<string, Tenant>
+  onStatusChange: (taskId: string, status: string) => Promise<void>
+}) {
+  const dragId = useRef<string | null>(null)
+  const [dragOver, setDragOver] = useState<string | null>(null)
+
+  function handleDragOver(e: React.DragEvent, colId: string) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    setDragOver(colId)
+  }
+
+  function handleDrop(e: React.DragEvent, colId: string) {
+    e.preventDefault()
+    setDragOver(null)
+    if (dragId.current && dragId.current !== colId) {
+      void onStatusChange(dragId.current, colId)
+    }
+    dragId.current = null
+  }
+
+  return (
+    <div className="grid grid-cols-4 gap-3 min-w-[900px]">
+      {KANBAN_COLS.map((col) => {
+        const colTasks = tasks.filter((t) => t.status === col.id)
+        const isDragTarget = dragOver === col.id
+
+        return (
+          <div
+            key={col.id}
+            onDragOver={(e) => handleDragOver(e, col.id)}
+            onDragLeave={() => setDragOver(null)}
+            onDrop={(e) => handleDrop(e, col.id)}
+            className={cn(
+              "rounded-xl border flex flex-col transition-colors min-h-[300px]",
+              col.bg, col.border,
+              isDragTarget && "ring-2 ring-white/20"
+            )}
+          >
+            {/* Column header */}
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5">
+              <span className={cn("w-2 h-2 rounded-full shrink-0", col.dot)} />
+              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">{col.label}</span>
+              <span className="ml-auto text-[10px] text-zinc-600 tabular-nums">{colTasks.length}</span>
+            </div>
+
+            {/* Cards */}
+            <div className="flex-1 p-2.5 space-y-2 overflow-y-auto">
+              {colTasks.length === 0 ? (
+                <div className={cn(
+                  "h-16 rounded-lg border border-dashed flex items-center justify-center transition-colors",
+                  isDragTarget ? "border-white/20 bg-white/5" : "border-zinc-800"
+                )}>
+                  <span className="text-[10px] text-zinc-700">
+                    {isDragTarget ? "Drop here" : "Empty"}
+                  </span>
+                </div>
+              ) : (
+                colTasks.map((task) => (
+                  <KanbanCard
+                    key={task.id}
+                    task={task}
+                    today={today}
+                    tenantColor={tenantColor(tenantMap.get(task.tenant_id)?.color ?? null)}
+                    onDragStart={(id) => { dragId.current = id }}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function OSTasksPage() {
+  const currentUser = useUser()
+  const router = useRouter()
   const [search, setSearch] = useState("")
   const [tenantFilter, setTenantFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [priorityFilter, setPriorityFilter] = useState("all")
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("")
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list")
+  const [groupMode, setGroupMode] = useState<GroupMode>("owner")
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const [collapsedOwners, setCollapsedOwners] = useState<Set<string>>(new Set())
 
   const { data: tasks, isLoading, error, mutate: mutateTasks } = useSWR<Task[]>("/api/tasks", fetcher)
   const { data: tenantData } = useSWR<{ tenants: Tenant[] }>("/api/os/tenants", fetcher)
+  const { data: memberData } = useSWR<{ members: Member[] }>("/api/os/members", fetcher)
 
   const tenantMap = useMemo(
     () => new Map<string, Tenant>((tenantData?.tenants ?? []).map((t) => [t.id, t])),
     [tenantData]
   )
+  const memberMap = useMemo(
+    () => new Map<string, Member>((memberData?.members ?? []).map((m) => [m.id, m])),
+    [memberData]
+  )
 
   const today = new Date().toISOString().split("T")[0]
+  const onSaved = () => mutateTasks()
 
+  async function onStatusChange(taskId: string, newStatus: string) {
+    const task = (tasks ?? []).find((t) => t.id === taskId)
+    const prevStatus = task?.status
+
+    // Build patch — set start_date automatically when entering In Progress
+    const patch: Record<string, unknown> = { status: newStatus }
+    if (newStatus === "in_progress" && !task?.start_date) {
+      patch.start_date = today
+    }
+
+    // Optimistic update
+    mutateTasks(
+      (prev) => (prev ?? []).map((t) => t.id === taskId ? { ...t, ...patch } : t),
+      false
+    )
+
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      })
+      if (!res.ok) throw new Error()
+
+      // ── Post-transition logic ──────────────────────────────────────────────
+
+      if (newStatus === "done" && prevStatus !== "done") {
+        // 1. Warn about open subtasks
+        const subRes = await fetch(`/api/tasks/${taskId}/subtasks`)
+        if (subRes.ok) {
+          const subtasks: { status: string }[] = await subRes.json()
+          const openCount = subtasks.filter((s) => s.status !== "done").length
+          if (openCount > 0) {
+            toast.warning(`${openCount} subtask${openCount > 1 ? "s" : ""} still open`, {
+              description: "Mark them done or they'll stay in the backlog.",
+            })
+          }
+        }
+
+        // 2. Surface tasks this task was blocking
+        const depRes = await fetch(`/api/tasks/${taskId}/dependencies`)
+        if (depRes.ok) {
+          const deps: { blocking: { id: string; title: string }[] } = await depRes.json()
+          if (deps.blocking.length > 0) {
+            const n = deps.blocking.length
+            toast.success(`${n} task${n > 1 ? "s" : ""} may now be unblocked`, {
+              description: deps.blocking.map((d) => d.title).join(", ").slice(0, 80),
+              action: {
+                label: "Review blockers",
+                onClick: () => router.push("/os/blockers"),
+              },
+            })
+          }
+        }
+      }
+
+      if (newStatus === "blocked" && prevStatus !== "blocked") {
+        toast.warning("Task marked blocked — it will appear on the Blockers board.", {
+          action: {
+            label: "View",
+            onClick: () => router.push("/os/blockers"),
+          },
+        })
+      }
+    } catch {
+      toast.error("Failed to update status")
+      mutateTasks()
+    }
+  }
+
+  // Filtered task list
+  const filtered = useMemo(() => (tasks ?? []).filter((t) => {
+    const tenant = tenantMap.get(t.tenant_id)
+    const tenantName = tenant?.name ?? ""
+
+    if (tenantFilter !== "all" && t.tenant_id !== tenantFilter) return false
+    if (!t.title.toLowerCase().includes(search.toLowerCase()) && !tenantName.toLowerCase().includes(search.toLowerCase())) return false
+    if (statusFilter !== "all" && t.status !== statusFilter) return false
+    if (priorityFilter !== "all" && (t.priority?.toLowerCase() ?? "") !== priorityFilter) return false
+
+    if (quickFilter === "mine") {
+      const myId = currentUser?.profile?.id
+      if (!myId) return false
+      if (t.owner_user_id !== myId && !(t.support_user_ids ?? []).includes(myId)) return false
+    }
+    if (quickFilter === "due_today") {
+      if (!t.due_date) return false
+      const d = t.due_date.includes("T") ? t.due_date.split("T")[0] : t.due_date
+      if (d !== today) return false
+    }
+    if (quickFilter === "overdue") {
+      if (t.status === "done" || t.status === "cancelled") return false
+      if (daysOverdue(t.due_date, today) <= 0) return false
+    }
+    if (quickFilter === "blocked") {
+      if (t.status !== "blocked" && !t.blocker_flag) return false
+    }
+
+    return true
+  }), [tasks, tenantMap, tenantFilter, search, statusFilter, priorityFilter, quickFilter, currentUser?.profile?.id, today])
+
+  // Project pills
   const tenantsWithTasks = useMemo(() => {
     const seen = new Map<string, { tenant: Tenant; total: number }>()
     for (const task of tasks ?? []) {
@@ -299,18 +654,50 @@ export default function OSTasksPage() {
     return Array.from(seen.values()).sort((a, b) => b.total - a.total)
   }, [tasks, tenantMap])
 
-  const filtered = useMemo(() => (tasks ?? []).filter((t) => {
-    const tenant = tenantMap.get(t.tenant_id)
-    const tenantName = tenant?.name ?? ""
-    return (
-      (tenantFilter === "all" || t.tenant_id === tenantFilter) &&
-      (t.title.toLowerCase().includes(search.toLowerCase()) || tenantName.toLowerCase().includes(search.toLowerCase())) &&
-      (statusFilter === "all" || t.status === statusFilter) &&
-      (priorityFilter === "all" || t.priority?.toLowerCase() === priorityFilter)
-    )
-  }), [tasks, tenantMap, tenantFilter, search, statusFilter, priorityFilter])
+  // Owner → Project grouping
+  const ownerGroups = useMemo(() => {
+    const map = new Map<string | null, Map<string, Task[]>>()
 
-  const groups = useMemo(() => {
+    for (const task of filtered) {
+      const ownerId = task.owner_user_id
+      if (!map.has(ownerId)) map.set(ownerId, new Map())
+      const projects = map.get(ownerId)!
+      const arr = projects.get(task.tenant_id) ?? []
+      arr.push(task)
+      projects.set(task.tenant_id, arr)
+    }
+
+    // Build sorted array — assigned owners first (sorted by name), unassigned last
+    const result: {
+      ownerId: string | null
+      member: Member | null
+      projects: { tenantId: string; taskList: Task[] }[]
+      totalCount: number
+      overdueCount: number
+    }[] = []
+
+    for (const [ownerId, projectMap] of map.entries()) {
+      const member = ownerId ? (memberMap.get(ownerId) ?? null) : null
+      const projects = Array.from(projectMap.entries())
+        .map(([tenantId, taskList]) => ({ tenantId, taskList }))
+        .sort((a, b) => b.taskList.length - a.taskList.length)
+      const totalCount = projects.reduce((acc, p) => acc + p.taskList.length, 0)
+      const overdueCount = projects.reduce(
+        (acc, p) => acc + p.taskList.filter((t) => daysOverdue(t.due_date, today) > 0).length,
+        0
+      )
+      result.push({ ownerId, member, projects, totalCount, overdueCount })
+    }
+
+    return result.sort((a, b) => {
+      if (!a.ownerId) return 1
+      if (!b.ownerId) return -1
+      return (a.member?.name ?? "").localeCompare(b.member?.name ?? "")
+    })
+  }, [filtered, memberMap, today])
+
+  // Project-only grouping (original mode)
+  const projectGroups = useMemo(() => {
     if (tenantFilter !== "all") return null
     const map = new Map<string, Task[]>()
     for (const task of filtered) {
@@ -323,30 +710,26 @@ export default function OSTasksPage() {
       .sort((a, b) => b.taskList.length - a.taskList.length)
   }, [filtered, tenantFilter])
 
-  function fmtDate(d: string | null) {
-    if (!d) return null
-    const dateStr = d.includes("T") ? d : d + "T00:00:00"
-    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-  }
-
   function toggleGroup(id: string) {
     setCollapsedGroups((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) { next.delete(id) } else { next.add(id) }
       return next
     })
   }
 
-  const showProject = tenantFilter === "all"
-  const COLS = showProject
-    ? "grid-cols-[28px_1fr_130px_100px_90px_100px_80px_80px_180px]"
-    : "grid-cols-[28px_1fr_100px_90px_100px_80px_80px_180px]"
-  const MIN_W = showProject ? "min-w-[1100px]" : "min-w-[960px]"
-  const onSaved = () => mutateTasks()
+  function toggleOwner(id: string) {
+    setCollapsedOwners((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id) } else { next.add(id) }
+      return next
+    })
+  }
 
   return (
     <div className="space-y-5 max-w-full">
+
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Tasks</h1>
@@ -362,7 +745,7 @@ export default function OSTasksPage() {
         </Link>
       </div>
 
-      {/* Project pills */}
+      {/* Project filter pills */}
       <div className="flex items-center gap-2 flex-wrap">
         <button
           type="button"
@@ -403,7 +786,44 @@ export default function OSTasksPage() {
         })}
       </div>
 
-      {/* Status + Priority + Search */}
+      {/* Quick filters */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {([
+          { id: "mine",      label: "My Tasks",  icon: User,         color: "text-blue-400 border-blue-800 bg-blue-950/40" },
+          { id: "due_today", label: "Due Today",  icon: CalendarCheck, color: "text-amber-400 border-amber-800 bg-amber-950/40" },
+          { id: "overdue",   label: "Overdue",    icon: CalendarClock, color: "text-red-400 border-red-800 bg-red-950/40" },
+          { id: "blocked",   label: "Blocked",    icon: ShieldAlert,   color: "text-orange-400 border-orange-800 bg-orange-950/40" },
+        ] as { id: QuickFilter; label: string; icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; color: string }[]).map(({ id, label, icon: Icon, color }) => {
+          const active = quickFilter === id
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setQuickFilter(active ? "" : id)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                active
+                  ? color
+                  : "text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700"
+              )}
+            >
+              <Icon className="w-3 h-3" strokeWidth={1.75} />
+              {label}
+            </button>
+          )
+        })}
+        {quickFilter && (
+          <button
+            type="button"
+            onClick={() => setQuickFilter("")}
+            className="flex items-center gap-1 text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
+          >
+            <X className="w-3 h-3" strokeWidth={2} /> Clear
+          </button>
+        )}
+      </div>
+
+      {/* Filter + Group Mode bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48 max-w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
@@ -414,6 +834,7 @@ export default function OSTasksPage() {
             className="w-full pl-8 pr-3 py-2 text-sm bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
           />
         </div>
+
         <div className="flex items-center gap-1.5 flex-wrap">
           {STATUS_OPTIONS.map((s) => (
             <button
@@ -429,6 +850,7 @@ export default function OSTasksPage() {
             </button>
           ))}
         </div>
+
         <div className="flex items-center gap-1.5 flex-wrap">
           {PRIORITY_OPTIONS.map((p) => (
             <button
@@ -444,8 +866,66 @@ export default function OSTasksPage() {
             </button>
           ))}
         </div>
+
+        {/* View + Group mode toggles */}
+        <div className="ml-auto flex items-center gap-2">
+          {/* View mode: List / Kanban */}
+          <div className="flex items-center gap-1 rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
+                viewMode === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+              )}
+            >
+              <List className="w-3 h-3" strokeWidth={1.75} />
+              List
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("kanban")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
+                viewMode === "kanban" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+              )}
+            >
+              <Kanban className="w-3 h-3" strokeWidth={1.75} />
+              Kanban
+            </button>
+          </div>
+
+          {/* Group mode — only in list view, all projects */}
+          {viewMode === "list" && tenantFilter === "all" && (
+            <div className="flex items-center gap-1 rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
+              <button
+                type="button"
+                onClick={() => setGroupMode("owner")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
+                  groupMode === "owner" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                <Users className="w-3 h-3" strokeWidth={1.75} />
+                By Owner
+              </button>
+              <button
+                type="button"
+                onClick={() => setGroupMode("project")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
+                  groupMode === "project" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                <FolderKanban className="w-3 h-3" strokeWidth={1.75} />
+                By Project
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Task board */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" strokeWidth={1.75} />
@@ -456,98 +936,119 @@ export default function OSTasksPage() {
         </div>
       ) : filtered.length === 0 ? (
         <OSEmpty icon={ListTodo} title="No tasks found" description="Adjust your filters or create your first task." />
-      ) : (
+      ) : viewMode === "kanban" ? (
+        <div className="overflow-x-auto pb-4">
+          <KanbanBoard
+            tasks={filtered}
+            today={today}
+            tenantMap={tenantMap}
+            onStatusChange={onStatusChange}
+          />
+        </div>
+      ) : tenantFilter !== "all" ? (
+        // Single project selected — flat list
         <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
-          {/* Column header */}
-          <div className={cn("grid gap-0 px-4 py-2.5 border-b border-zinc-800 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest", COLS, MIN_W)}>
-            <span />
-            <span className="pl-2">Task</span>
-            {showProject && <span>Project</span>}
-            <span>Status</span>
-            <span>Priority</span>
-            <span>Owner / Support</span>
-            <span>Start</span>
-            <span>Due</span>
-            <span>Notes</span>
-          </div>
-
+          {COL_HEADER}
           <div className={cn("divide-y divide-zinc-800/60", MIN_W)}>
-            {groups ? (
-              groups.map(({ tenantId, taskList }) => {
-                const tenant = tenantMap.get(tenantId)
-                const color = tenantColor(tenant?.color ?? null)
-                const isCollapsed = collapsedGroups.has(tenantId)
-                const openCount = taskList.filter((t) => t.status !== "done" && t.status !== "cancelled").length
-                const doneCount = taskList.filter((t) => t.status === "done").length
-                const blockerCount = taskList.filter((t) => t.blocker_flag).length
-                const display = tenant ? shortName(tenant.name) : tenantId
+            {filtered.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                today={today}
+                expandedId={expandedId}
+                setExpandedId={setExpandedId}
+                onSaved={onSaved}
+              />
+            ))}
+          </div>
+        </div>
+      ) : groupMode === "owner" ? (
+        // Owner → Project grouping
+        <div className="space-y-3">
+          {ownerGroups.map(({ ownerId, member, projects, totalCount, overdueCount }) => {
+            const ownerKey = ownerId ?? "__unassigned__"
+            const isCollapsed = collapsedOwners.has(ownerKey)
+            const displayName = member?.name ?? "Unassigned"
 
-                return (
-                  <div key={tenantId} className="border-b border-zinc-800/60 last:border-0">
-                    <button
-                      type="button"
-                      onClick={() => toggleGroup(tenantId)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.02] transition-colors text-left"
-                      style={{ borderLeft: `2px solid ${color}` }}
-                    >
-                      {isCollapsed
-                        ? <ChevronRight className="w-3 h-3 text-zinc-600" strokeWidth={2} />
-                        : <ChevronDown className="w-3 h-3 text-zinc-600" strokeWidth={2} />}
-                      <span className="text-xs font-semibold" style={{ color }}>{display}</span>
-                      <span className="text-[10px] text-zinc-600">{taskList.length} tasks</span>
-                      {openCount > 0 && (
-                        <span className="text-[10px] text-zinc-500">{openCount} open</span>
-                      )}
-                      {doneCount > 0 && (
-                        <span className="text-[10px] text-green-600">{doneCount} done</span>
-                      )}
-                      {blockerCount > 0 && (
-                        <span className="text-[10px] text-red-600 flex items-center gap-0.5">
-                          <AlertTriangle className="w-2.5 h-2.5" strokeWidth={2} />
-                          {blockerCount} blocked
-                        </span>
-                      )}
-                    </button>
+            return (
+              <div key={ownerKey} className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
+                {/* Owner header */}
+                <button
+                  type="button"
+                  onClick={() => toggleOwner(ownerKey)}
+                  className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors text-left border-b border-zinc-800"
+                >
+                  {isCollapsed
+                    ? <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={2} />
+                    : <ChevronDown className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={2} />}
 
-                    {!isCollapsed && (
-                      <div className="divide-y divide-zinc-800/40">
-                        {taskList.map((task) => (
-                          <TaskRow
-                            key={task.id}
-                            task={task}
-                            tenantMap={tenantMap}
-                            today={today}
-                            expandedId={expandedId}
-                            setExpandedId={setExpandedId}
-                            onSaved={onSaved}
-                            fmtDate={fmtDate}
-                            showProject={false}
-                            cols={COLS}
-                            minW={MIN_W}
-                          />
-                        ))}
+                  {ownerId
+                    ? <OSAvatar userId={ownerId} size="sm" />
+                    : <div className="w-6 h-6 rounded-full bg-zinc-700 border border-zinc-600 flex items-center justify-center shrink-0">
+                        <Users className="w-3 h-3 text-zinc-400" strokeWidth={1.75} />
                       </div>
+                  }
+
+                  <span className="text-sm font-semibold text-white">{displayName}</span>
+                  {member?.role && (
+                    <span className="text-[10px] text-zinc-600 capitalize">{member.role}</span>
+                  )}
+
+                  <div className="flex items-center gap-3 ml-auto">
+                    <span className="text-xs text-zinc-500">{totalCount} tasks</span>
+                    {overdueCount > 0 && (
+                      <span className="flex items-center gap-1 text-xs font-semibold text-red-400">
+                        <Clock className="w-3.5 h-3.5" strokeWidth={2} />
+                        {overdueCount} overdue
+                      </span>
                     )}
                   </div>
-                )
-              })
-            ) : (
-              filtered.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  tenantMap={tenantMap}
-                  today={today}
-                  expandedId={expandedId}
-                  setExpandedId={setExpandedId}
-                  onSaved={onSaved}
-                  fmtDate={fmtDate}
-                  showProject={false}
-                  cols={COLS}
-                  minW={MIN_W}
-                />
-              ))
-            )}
+                </button>
+
+                {/* Project sections within owner */}
+                {!isCollapsed && (
+                  <div className={cn("divide-y divide-zinc-800/40", MIN_W)}>
+                    {COL_HEADER}
+                    {projects.map(({ tenantId, taskList }) => (
+                      <ProjectSection
+                        key={tenantId}
+                        tenantId={tenantId}
+                        taskList={taskList}
+                        tenant={tenantMap.get(tenantId)}
+                        collapsedGroups={collapsedGroups}
+                        toggleGroup={toggleGroup}
+                        today={today}
+                        expandedId={expandedId}
+                        setExpandedId={setExpandedId}
+                        onSaved={onSaved}
+                        indent
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        // Project-only grouping (original mode)
+        <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
+          {COL_HEADER}
+          <div className={cn("divide-y divide-zinc-800/60", MIN_W)}>
+            {(projectGroups ?? []).map(({ tenantId, taskList }) => (
+              <ProjectSection
+                key={tenantId}
+                tenantId={tenantId}
+                taskList={taskList}
+                tenant={tenantMap.get(tenantId)}
+                collapsedGroups={collapsedGroups}
+                toggleGroup={toggleGroup}
+                today={today}
+                expandedId={expandedId}
+                setExpandedId={setExpandedId}
+                onSaved={onSaved}
+              />
+            ))}
           </div>
         </div>
       )}

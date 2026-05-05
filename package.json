@@ -11,6 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.74",
     "@ai-sdk/groq": "^3.0.38",
     "@ai-sdk/react": "^3.0.175",
     "@hookform/resolvers": "^3.9.1",

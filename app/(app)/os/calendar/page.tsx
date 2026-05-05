@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { useRequiredUser } from "@/lib/context/user-context"
 import { cn } from "@/lib/utils"
+import { MentionTextarea } from "@/components/byred/mention-textarea"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -413,12 +414,14 @@ function EventFormModal({
             {/* Description */}
             <div>
               <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Notes</label>
-              <textarea
+              <MentionTextarea
                 value={form.description}
-                onChange={(e) => set("description", e.target.value)}
-                rows={2}
+                onChange={(v) => set("description", v)}
+                users={directoryUsers}
+                autoResize
+                maxHeight={120}
                 placeholder="Additional context..."
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 resize-none"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
               />
             </div>
 

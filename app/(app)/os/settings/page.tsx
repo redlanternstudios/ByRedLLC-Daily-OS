@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils"
 const AI_MODES = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"] as const
 
 const INTEGRATIONS = [
-  { name: "Monday.com", connected: false },
-  { name: "Zapier nightly", connected: false },
-  { name: "AI provider", connected: true },
+  { name: "Claude (AI layer)", connected: true },
+  { name: "Supabase", connected: true },
+  { name: "Notion", connected: true },
+  { name: "Google Drive", connected: false },
 ]
 
 const TENANT_COLORS = [

@@ -11,7 +11,6 @@ import {
   ListTodo,
   Calendar,
   Users,
-  Upload,
   FileText,
   Settings,
   MessageSquare,
@@ -24,6 +23,7 @@ import {
   Flame,
   BarChart,
   Radio,
+  ShieldAlert,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
@@ -65,8 +65,9 @@ const NAV_GROUPS = [
   {
     label: "Team",
     items: [
-      { label: "Team",       href: "/os/team",       icon: Users },
-      { label: "Team Pulse", href: "/os/team-pulse", icon: Radio },
+      { label: "Team",       href: "/os/team",        icon: Users },
+      { label: "Team Pulse", href: "/os/team-pulse",  icon: Radio },
+      { label: "Blockers",   href: "/os/blockers",    icon: ShieldAlert },
     ],
   },
   {
@@ -79,10 +80,9 @@ const NAV_GROUPS = [
   {
     label: "Workspace",
     items: [
-      { label: "Docs",    href: "/os/docs",          icon: FileText },
-      { label: "Files",   href: "/os/files",         icon: Folder },
-      { label: "Import",  href: "/os/import/monday", icon: Upload },
-      { label: "Comms",   href: "/os/comms",         icon: MessageSquare },
+      { label: "Docs",  href: "/os/docs",  icon: FileText },
+      { label: "Files", href: "/os/files", icon: Folder },
+      { label: "Comms", href: "/os/comms", icon: MessageSquare },
     ],
   },
   {
