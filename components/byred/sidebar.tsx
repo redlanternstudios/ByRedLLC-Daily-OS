@@ -28,7 +28,6 @@ import {
 import { useRouter } from "next/navigation"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
-import { setActiveTenantAction } from "@/lib/actions/tenant"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Sheet,
@@ -185,18 +184,7 @@ function SidebarContent({
   const { toggleCollapsed } = useSidebar()
   const isMobile = useIsMobile()
 
-  async function handleTenantSwitch() {
-    const tenants = currentUser?.tenants ?? []
-    if (tenants.length < 2) return
-    const idx = tenants.findIndex((t) => t.id === currentUser?.activeTenantId)
-    const next = tenants[(idx + 1) % tenants.length]
-    // Optimistic UI update
-    currentUser?.setActiveTenantId(next.id)
-    // Persist to cookie so server routes pick it up
-    await setActiveTenantAction(next.id)
-    // Re-run all server components on the current page
-    router.refresh()
-  }
+
 
   function isActive(href: string) {
     if (href === "/os/dashboard") {
@@ -212,13 +200,7 @@ function SidebarContent({
   const displayRole = currentUser?.profile?.role ?? "member"
   const initials = getInitials(displayName)
 
-  // Active tenant color dot
-  const tenantIdx = (currentUser?.tenants ?? []).findIndex(
-    (t) => t.id === currentUser?.activeTenantId
-  )
-  const tenantColor = TENANT_COLORS[Math.max(tenantIdx, 0) % TENANT_COLORS.length]
-  const tenantName = activeTenant?.name ?? "No tenant"
-
+  
   return (
     <TooltipProvider>
       <div className="flex flex-col h-full bg-[var(--surface)]">
@@ -244,26 +226,7 @@ function SidebarContent({
           </Link>
         </div>
 
-        {/* Active tenant pill */}
-        {!collapsed && (currentUser?.tenants?.length ?? 0) > 0 && (
-          <div className="px-4 py-2 border-b border-zinc-800/60">
-            <div className="flex items-center gap-1.5">
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: tenantColor }}
-              />
-              <span className="text-[10px] text-zinc-500 truncate">{tenantName}</span>
-              {(currentUser?.tenants?.length ?? 0) > 1 && (
-                <button
-                  className="ml-auto text-[9px] text-zinc-700 hover:text-zinc-400 transition-colors"
-                  onClick={handleTenantSwitch}
-                >
-                  Switch
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+
 
         {/* Nav */}
         <nav className={cn(
