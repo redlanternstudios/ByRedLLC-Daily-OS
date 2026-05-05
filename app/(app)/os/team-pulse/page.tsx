@@ -360,20 +360,39 @@ export default function TeamPulsePage() {
   const [pulses, setPulses] = useState<StoredPulse[]>([])
   const [loading, setLoading] = useState(true)
   const [generatingPulse, setGeneratingPulse] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (showToastOnError = true) => {
     setLoading(true)
+    setLoadError(null)
     try {
       const [teamRes, pulseRes] = await Promise.all([
-        fetch("/api/os/today/team"),
-        fetch("/api/os/team-pulse"),
+        fetch("/api/os/today/team", { signal: AbortSignal.timeout(15000) }),
+        fetch("/api/os/team-pulse", { signal: AbortSignal.timeout(15000) }),
       ])
-      const teamData = teamRes.ok ? await teamRes.json() : { team: [] }
-      const pulseData = pulseRes.ok ? await pulseRes.json() : { pulses: [] }
+      
+      // Parse responses even if not ok — may contain partial data
+      const teamData = await teamRes.json().catch(() => ({ team: [] }))
+      const pulseData = await pulseRes.json().catch(() => ({ pulses: [] }))
+      
+      // Log errors but still use whatever data we got
+      if (!teamRes.ok) console.error("[TeamPulse] Team API error:", teamData.error)
+      if (!pulseRes.ok) console.error("[TeamPulse] Pulse API error:", pulseData.error)
+      
       setTeam(teamData.team ?? [])
       setPulses(pulseData.pulses ?? [])
-    } catch {
-      toast.error("Failed to load Team Pulse data")
+      
+      // Only show error if BOTH failed
+      if (!teamRes.ok && !pulseRes.ok && showToastOnError) {
+        setLoadError("Failed to load data")
+        toast.error("Failed to load Team Pulse data")
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Network error"
+      setLoadError(message)
+      if (showToastOnError) {
+        toast.error(`Failed to load Team Pulse: ${message}`)
+      }
     } finally {
       setLoading(false)
     }
@@ -383,16 +402,47 @@ export default function TeamPulsePage() {
 
   async function generatePulse() {
     setGeneratingPulse(true)
-    try {
-      const res = await fetch("/api/os/generate-pulse", { method: "POST" })
-      if (!res.ok) throw new Error()
-      toast.success("Pulse generated")
-      await loadData()
-    } catch {
-      toast.error("Failed to generate pulse")
-    } finally {
-      setGeneratingPulse(false)
+    
+    // Enterprise-grade: retry up to 2 times on transient failures
+    let attempts = 0
+    const maxAttempts = 2
+    let lastError: Error | null = null
+    
+    while (attempts < maxAttempts) {
+      attempts++
+      try {
+        const res = await fetch("/api/os/generate-pulse", { 
+          method: "POST",
+          signal: AbortSignal.timeout(30000), // 30s timeout
+        })
+        
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          throw new Error(body.error || `HTTP ${res.status}`)
+        }
+        
+        const data = await res.json()
+        
+        // Success — refresh data silently (no separate toast on loadData failure)
+        setGeneratingPulse(false)
+        toast.success(`Pulse generated — ${data.stats?.tasks ?? 0} tasks, ${data.stats?.blockers ?? 0} blockers`)
+        
+        // Refresh silently — don't show error toast since pulse generation succeeded
+        await loadData(false)
+        return
+        
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err))
+        if (attempts < maxAttempts) {
+          // Wait 1s before retry
+          await new Promise((r) => setTimeout(r, 1000))
+        }
+      }
     }
+    
+    // All attempts failed
+    setGeneratingPulse(false)
+    toast.error(`Failed to generate pulse: ${lastError?.message ?? "Unknown error"}`)
   }
 
   const latestPulse = pulses[0] ?? null

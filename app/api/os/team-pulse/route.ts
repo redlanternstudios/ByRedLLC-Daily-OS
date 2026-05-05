@@ -7,19 +7,27 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const today = new Date().toISOString().split("T")[0]
+    // Enterprise: fetch last 7 days of team pulses (user_id IS NULL = team-wide)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const cutoff = sevenDaysAgo.toISOString().split("T")[0]
 
-    // Fetch today's team-wide pulse (user_id IS NULL = cron-generated team brief)
-    const { data: pulses } = await supabase
+    const { data: pulses, error } = await supabase
       .from("byred_daily_briefs")
       .select("*")
       .is("user_id", null)
-      .gte("date", today)
+      .gte("date", cutoff)
       .order("created_at", { ascending: false })
-      .limit(2)
+      .limit(14) // Up to 2 per day (morning + evening) for 7 days
+
+    if (error) {
+      console.error("[team-pulse] GET failed:", error)
+      return NextResponse.json({ pulses: [], error: error.message }, { status: 500 })
+    }
 
     return NextResponse.json({ pulses: pulses ?? [] })
-  } catch {
-    return NextResponse.json({ pulses: [] }, { status: 500 })
+  } catch (err) {
+    console.error("[team-pulse] GET exception:", err)
+    return NextResponse.json({ pulses: [], error: "Internal server error" }, { status: 500 })
   }
 }

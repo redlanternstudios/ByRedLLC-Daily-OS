@@ -1,30 +1,60 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { mapTaskFromDb } from "@/types/db"
-import { createGroq } from "@ai-sdk/groq"
 import { generateText } from "ai"
 import type { ByredTask } from "@/types/database"
 
+// Enterprise-grade: retry wrapper for LLM calls
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+  delayMs = 1000
+): Promise<T> {
+  let lastError: Error | null = null
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err))
+      console.error(`[generate-pulse] Attempt ${attempt}/${maxAttempts} failed:`, lastError.message)
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, delayMs * attempt)) // Exponential backoff
+      }
+    }
+  }
+  throw lastError
+}
+
 export async function POST() {
+  const startTime = Date.now()
+  
   try {
     const supabase = await createClient()
     const sa = supabase as any
 
+    // Fetch data in parallel
     const [usersRes, tasksRes] = await Promise.all([
       sa
         .from("byred_users")
         .select("id, name, role")
         .eq("active", true)
-        .order("name") as Promise<{ data: Array<{ id: string; name: string; role: string }> | null }>,
+        .order("name") as Promise<{ data: Array<{ id: string; name: string; role: string }> | null; error: any }>,
       sa
         .from("byred_tasks")
         .select("*")
-        .not("status", "in", "(done,cancelled)") as Promise<{ data: ByredTask[] | null }>,
+        .not("status", "in", "(done,cancelled)") as Promise<{ data: ByredTask[] | null; error: any }>,
     ])
+
+    if (usersRes.error) throw new Error(`Failed to fetch users: ${usersRes.error.message}`)
+    if (tasksRes.error) throw new Error(`Failed to fetch tasks: ${tasksRes.error.message}`)
 
     const users = usersRes.data ?? []
     const tasks = (tasksRes.data ?? []).map(mapTaskFromDb)
     const blockers = tasks.filter((t) => t.status === "blocked" || t.blocker_flag)
+
+    if (users.length === 0) {
+      return NextResponse.json({ error: "No active team members found" }, { status: 400 })
+    }
 
     const hour = new Date().getHours()
     const timeOfDay = hour < 12 ? "Morning Standup" : hour >= 17 ? "Evening Sync" : "Midday Check"
@@ -32,7 +62,7 @@ export async function POST() {
     const team = users.map((u) => {
       const memberTasks = tasks.filter((t) => t.owner_user_id === u.id)
       const hasBlocker = memberTasks.some((t) => t.status === "blocked" || t.blocker_flag)
-      const hasCritical = memberTasks.some((t) => t.priority === "critical")
+      const hasCritical = memberTasks.some((t) => t.priority === "critical" && t.status !== "done")
       return {
         name: u.name,
         role: u.role,
@@ -40,8 +70,6 @@ export async function POST() {
         status: hasBlocker ? "BLOCKED" : hasCritical ? "AT RISK" : "ON TRACK",
       }
     })
-
-    const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
 
     const prompt = `You are the operations voice for By Red, LLC.
 Generate a concise ${timeOfDay} team pulse for ${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}.
@@ -54,15 +82,27 @@ BLOCKERS: ${blockers.length}${blockers.length > 0 ? "\n" + blockers.map((b) => `
 
 Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag blockers urgently. End with the single most important next action.`
 
-    const { text } = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
-      prompt,
-      maxOutputTokens: 300,
-    })
+    // Enterprise: retry LLM call up to 3 times with exponential backoff
+    const { text } = await withRetry(
+      () => generateText({
+        model: "groq/llama-3.3-70b-versatile",
+        prompt,
+        maxTokens: 300,
+      }),
+      3,
+      1000
+    )
+
+    if (!text || text.trim().length < 20) {
+      throw new Error("LLM returned empty or invalid response")
+    }
 
     const today = new Date().toISOString().split("T")[0]
-    await sa.from("byred_daily_briefs").delete().is("user_id", null).eq("date", today)
-    await sa.from("byred_daily_briefs").insert({
+    const now = new Date().toISOString()
+    
+    // Don't delete old pulse for today — keep history (morning + evening)
+    // Just insert new one
+    const { error: insertError } = await sa.from("byred_daily_briefs").insert({
       user_id: null,
       date: today,
       summary: {
@@ -70,20 +110,31 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
         time_of_day: timeOfDay,
         task_count: tasks.length,
         blocker_count: blockers.length,
-        generated_at: new Date().toISOString(),
+        generated_at: now,
         generated_by: "manual",
         team,
       },
     })
+
+    if (insertError) {
+      console.error("[generate-pulse] Insert failed:", insertError)
+      throw new Error(`Failed to save pulse: ${insertError.message}`)
+    }
+
+    const duration = Date.now() - startTime
+    console.log(`[generate-pulse] Success in ${duration}ms — ${tasks.length} tasks, ${blockers.length} blockers`)
 
     return NextResponse.json({
       ok: true,
       timeOfDay,
       pulse: text,
       stats: { tasks: tasks.length, blockers: blockers.length, team: team.length },
+      duration,
     })
   } catch (err) {
-    console.error("[generate-pulse] POST failed:", err)
-    return NextResponse.json({ error: "Failed to generate pulse" }, { status: 500 })
+    const duration = Date.now() - startTime
+    const message = err instanceof Error ? err.message : "Unknown error"
+    console.error(`[generate-pulse] POST failed after ${duration}ms:`, message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -21,8 +21,9 @@ export async function GET() {
 
     const team = users.map((u) => {
       const memberTasks = tasks.filter((t) => t.owner_user_id === u.id)
-      const hasBlocker = memberTasks.some((t) => t.blocker_flag)
-      const hasCritical = memberTasks.some((t) => t.priority === "critical")
+      // Enterprise: consistent blocker detection — check BOTH status=blocked AND blocker_flag
+      const hasBlocker = memberTasks.some((t) => t.status === "blocked" || t.blocker_flag)
+      const hasCritical = memberTasks.some((t) => t.priority === "critical" && t.status !== "done")
       const status = hasBlocker ? "blocked" : hasCritical ? "at_risk" : "on_track"
       return {
         id: u.id,
