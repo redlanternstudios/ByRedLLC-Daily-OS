@@ -225,30 +225,18 @@ function SidebarContent({
 
         {/* Logo */}
         <div className={cn(
-          "border-b border-zinc-800/60 flex items-center justify-center shrink-0 bg-zinc-900",
-          collapsed ? "h-20" : "h-36"
+          "border-b border-zinc-800/60 shrink-0 bg-zinc-900 overflow-hidden",
+          collapsed ? "h-16" : "h-[200px]"
         )}>
-          <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center justify-center w-full">
-            {collapsed ? (
-              <Image
-                src="/logo-redlantern.png"
-                alt="By Red OS"
-                width={64}
-                height={64}
-                className="object-cover object-left rounded"
-                priority
-              />
-            ) : (
-              <Image
-                src="/logo-redlantern.png"
-                alt="ByRed. RedLantern Studios"
-                width={260}
-                height={130}
-                className="object-contain"
-                style={{ width: "100%", height: "130px" }}
-                priority
-              />
-            )}
+          <Link href="/os/dashboard" onClick={onNavClick} className="block w-full h-full">
+            <Image
+              src="/logo-redlantern.png"
+              alt="ByRed. RedLantern Studios"
+              width={collapsed ? 64 : 440}
+              height={collapsed ? 64 : 200}
+              className="w-full h-full object-cover object-center"
+              priority
+            />
           </Link>
         </div>
 
