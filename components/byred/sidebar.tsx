@@ -226,25 +226,29 @@ function SidebarContent({
         {/* Logo */}
         <div className={cn(
           "border-b border-zinc-800/60 flex items-center shrink-0 bg-zinc-900",
-          collapsed ? "h-14 justify-center px-2" : "h-20 px-2"
+          collapsed ? "h-14 justify-center px-2" : "h-20 px-3"
         )}>
           <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center min-w-0 w-full">
             {collapsed ? (
+              /* Collapsed: show just the lantern portion, cropped left */
               <Image
-                src="/logo-byred.png"
+                src="/logo-redlantern.png"
                 alt="By Red OS"
-                width={38}
-                height={38}
-                className="object-contain"
+                width={44}
+                height={44}
+                className="object-cover object-left"
+                style={{ mixBlendMode: "multiply" }}
                 priority
               />
             ) : (
+              /* Expanded: full horizontal badge — multiply knocks out the white bg */
               <Image
-                src="/logo-byred.png"
-                alt="By Red, LLC. OS"
-                width={160}
+                src="/logo-redlantern.png"
+                alt="ByRed. RedLantern Studios"
+                width={220}
                 height={72}
-                className="w-full h-16 object-contain object-left"
+                className="w-full h-[72px] object-contain object-left"
+                style={{ mixBlendMode: "multiply" }}
                 priority
               />
             )}
