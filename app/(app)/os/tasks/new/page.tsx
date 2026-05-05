@@ -8,7 +8,8 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { MentionTextarea } from "@/components/byred/mention-textarea"
+import { useTeamMembers } from "@/lib/hooks/use-team-members"
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ export default function OSNewTaskPage() {
   const [tenantId, setTenantId] = useState("")
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const teamMembers = useTeamMembers()
   const [status, setStatus] = useState("not_started")
   const [priority, setPriority] = useState("medium")
   const [aiMode, setAiMode] = useState("HUMAN_ONLY")
@@ -133,12 +135,15 @@ export default function OSNewTaskPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="description" className="text-xs text-zinc-500">Description</Label>
-              <Textarea
+              <MentionTextarea
                 id="description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 min-h-[80px]"
-                placeholder="Context, steps, acceptance criteria…"
+                onChange={setDescription}
+                users={teamMembers}
+                autoResize
+                maxHeight={200}
+                className="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-zinc-200 placeholder:text-zinc-600 text-sm min-h-[80px]"
+                placeholder="Context, steps, acceptance criteria… (@name to mention)"
               />
             </div>
 

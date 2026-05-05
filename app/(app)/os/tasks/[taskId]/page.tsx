@@ -9,6 +9,8 @@ import {
 } from "lucide-react"
 import { OSStatusBadge, OSPriorityBadge, OSBlockerBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
+import { MentionTextarea, renderMentions } from "@/components/byred/mention-textarea"
+import { useTeamMembers } from "@/lib/hooks/use-team-members"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import type { ByredTask, ByredTaskComment } from "@/types/database"
@@ -66,7 +68,8 @@ export default function OSTaskDetailPage({
   const [commentInput, setCommentInput] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
   const [savingField, setSavingField] = useState<string | null>(null)
-  const commentRef = useRef<HTMLInputElement>(null)
+  const commentRef = useRef<HTMLTextAreaElement>(null)
+  const teamMembers = useTeamMembers()
 
   const today = new Date().toISOString().split("T")[0]
   const isOverdue = task?.due_date && task.due_date < today && task.status !== "done"
@@ -214,7 +217,7 @@ export default function OSTaskDetailPage({
                             {new Date(c.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                           </span>
                         </div>
-                        <p className="text-sm text-zinc-400 leading-relaxed">{c.comment}</p>
+                        <p className="text-sm text-zinc-400 leading-relaxed">{renderMentions(c.comment)}</p>
                       </div>
                     </div>
                   )
@@ -223,22 +226,23 @@ export default function OSTaskDetailPage({
             )}
 
             <div className="px-5 py-4 bg-black/20">
-              <div className="flex items-center gap-2">
-                <input
+              <div className="flex items-end gap-2">
+                <MentionTextarea
                   ref={commentRef}
                   value={commentInput}
-                  onChange={(e) => setCommentInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitComment() }
-                  }}
-                  placeholder="Add a comment..."
-                  className="flex-1 px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+                  onChange={setCommentInput}
+                  onSubmit={submitComment}
+                  users={teamMembers}
+                  placeholder="Add a comment… (@name to mention)"
+                  autoResize
+                  maxHeight={120}
+                  className="flex-1 px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 min-h-[36px]"
                 />
                 <button
                   onClick={submitComment}
                   disabled={!commentInput.trim() || submittingComment}
                   className={cn(
-                    "w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
+                    "w-9 h-9 rounded-lg flex items-center justify-center transition-colors shrink-0",
                     commentInput.trim() && !submittingComment
                       ? "bg-[#D7261E] text-white hover:bg-[#B51E18]"
                       : "bg-zinc-800 text-zinc-600 border border-zinc-700"
