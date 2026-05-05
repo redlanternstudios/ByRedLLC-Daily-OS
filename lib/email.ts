@@ -1,14 +1,49 @@
 import nodemailer from "nodemailer"
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-})
+function getTransporter() {
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
+}
+
+function isConfigured() {
+  return !!(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD)
+}
+
+const appUrl = () => process.env.NEXT_PUBLIC_APP_URL ?? "https://os.byred.com"
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string | string[]
+  subject: string
+  html: string
+  text?: string
+}) {
+  if (!isConfigured()) return { ok: false, reason: "Email not configured" }
+  try {
+    await getTransporter().sendMail({
+      from: `"By Red OS" <${process.env.GMAIL_USER}>`,
+      to: Array.isArray(to) ? to.join(", ") : to,
+      subject,
+      html,
+      text,
+    })
+    return { ok: true }
+  } catch (err) {
+    console.error("[sendEmail]", err)
+    return { ok: false, reason: String(err) }
+  }
+}
 
 export async function sendMentionEmail({
   toEmail,
@@ -23,13 +58,9 @@ export async function sendMentionEmail({
   snippet: string
   contextUrl?: string | null
 }) {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://os.byred.com"
-  const link = contextUrl ? `${appUrl}${contextUrl}` : appUrl
-
-  await transporter.sendMail({
-    from: `"By Red OS" <${process.env.GMAIL_USER}>`,
+  if (!isConfigured()) return
+  const link = contextUrl ? `${appUrl()}${contextUrl}` : appUrl()
+  await sendEmail({
     to: toEmail,
     subject: `${actorName} mentioned you`,
     html: `

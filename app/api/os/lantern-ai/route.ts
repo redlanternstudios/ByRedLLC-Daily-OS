@@ -1,9 +1,11 @@
 // app/api/os/lantern-ai/route.ts
 import { NextRequest } from 'next/server'
-import { streamText, convertToModelMessages } from 'ai'
+import { streamText, convertToModelMessages, stepCountIs } from 'ai'
 import type { UIMessage } from 'ai'
 import { groq } from '@ai-sdk/groq'
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmail } from '@/lib/email'
 
 const SYSTEM_PROMPT = `You are LanternAI, the operations intelligence assistant for By Red LLC — a multi-brand \
 agency managing several client tenants simultaneously. You have real-time access to the team's task data in \
@@ -15,6 +17,11 @@ Your job is to give concise, actionable intelligence about:
 - What the requesting user should prioritize today
 - Cross-tenant workload health
 - Pipeline and momentum trends
+
+You can also send emails on behalf of the user when they ask you to. When sending emails:
+- Use the send_email tool — do not fabricate email addresses; use only addresses from the TEAM MEMBERS list in the snapshot
+- Confirm what you sent after the tool call succeeds
+- Keep subject lines short and professional
 
 Rules:
 - Answer directly and specifically — reference task titles, owner names, and tenant names when relevant
@@ -43,7 +50,7 @@ type TaskRow = {
   created_at: string | null
 }
 
-type TeamMemberRow = { id: string; name: string; role: string }
+type TeamMemberRow = { id: string; name: string; role: string; email: string }
 
 export async function POST(req: NextRequest) {
   try {
@@ -104,7 +111,7 @@ export async function POST(req: NextRequest) {
         .in('tenant_id', tenantIds.length > 0 ? tenantIds : ['__none__']),
       supabase
         .from('byred_users')
-        .select('id, name, role')
+        .select('id, name, role, email')
         .eq('active', true)
         .order('name'),
     ])
@@ -207,6 +214,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    lines.push(
+      '',
+      '=== TEAM MEMBERS (use for send_email tool) ===',
+      ...teamMembers.map((u) => `${u.name} <${u.email}>`),
+    )
+
     const contextBlock = lines.join('\n')
 
     const result = streamText({
@@ -214,6 +227,32 @@ export async function POST(req: NextRequest) {
       system: `${SYSTEM_PROMPT}\n\n---\nOPERATIONAL SNAPSHOT:\n${contextBlock}`,
       messages: await convertToModelMessages(body.messages.slice(-MAX_MESSAGES)),
       maxOutputTokens: 600,
+      stopWhen: stepCountIs(3),
+      tools: {
+        send_email: {
+          description: 'Send an email to one or more team members on behalf of the requesting user.',
+          inputSchema: z.object({
+            to: z.array(z.string().email()).min(1).describe('Recipient email addresses'),
+            subject: z.string().describe('Email subject line'),
+            body: z.string().describe('Plain-text email body (will be wrapped in branded HTML)'),
+          }),
+          execute: async ({ to, subject, body: emailBody }: { to: string[]; subject: string; body: string }) => {
+            const emailHtml = `
+              <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
+                <div style="margin-bottom:20px">
+                  <span style="background:#D7261E;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:4px;text-transform:uppercase">By Red OS</span>
+                </div>
+                <div style="font-size:15px;color:#333;line-height:1.7;white-space:pre-wrap">${emailBody.replace(/</g, '&lt;')}</div>
+                <p style="margin:32px 0 0;font-size:11px;color:#bbb">Sent via Lantern AI · By Red LLC</p>
+              </div>
+            `
+            const result = await sendEmail({ to, subject, html: emailHtml, text: emailBody })
+            return result.ok
+              ? `Email sent to ${to.join(', ')}`
+              : `Failed to send: ${result.reason}`
+          },
+        },
+      },
     })
 
     return result.toUIMessageStreamResponse()
