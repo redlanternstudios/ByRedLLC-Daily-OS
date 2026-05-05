@@ -106,10 +106,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ChatGPT%20Image%20Apr%2028%2C%202026%2C%2009_32_39%20AM-x3FJDIpEVCK0sy9RmbGiMlhyKPNdec.png"
-          alt="By Red, LLC."
-          width={240}
-          height={96}
+          src="/logo-redlantern.png"
+          alt="ByRed. RedLantern Studios"
+          width={320}
+          height={106}
           className="object-contain mb-1 select-none drop-shadow-[0_0_40px_rgba(200,16,46,0.6)]"
         />
         <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
