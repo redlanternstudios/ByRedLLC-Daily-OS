@@ -348,13 +348,30 @@ function StandUpAgenda({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function TeamPulsePage() {
-  const hour = new Date().getHours()
-  const isMorning = hour < 12
-  const timeOfDay = isMorning ? "Morning Standup" : hour >= 17 ? "Evening Sync" : "Midday Check"
+  // Client-only date values to prevent hydration mismatch (server=UTC, client=local TZ)
+  const [dateInfo, setDateInfo] = useState<{
+    hour: number
+    isMorning: boolean
+    timeOfDay: string
+    today: string
+  } | null>(null)
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric", year: "numeric",
-  })
+  useEffect(() => {
+    const hour = new Date().getHours()
+    const isMorning = hour < 12
+    setDateInfo({
+      hour,
+      isMorning,
+      timeOfDay: isMorning ? "Morning Standup" : hour >= 17 ? "Evening Sync" : "Midday Check",
+      today: new Date().toLocaleDateString("en-US", {
+        weekday: "long", month: "long", day: "numeric", year: "numeric",
+      }),
+    })
+  }, [])
+
+  const isMorning = dateInfo?.isMorning ?? true
+  const timeOfDay = dateInfo?.timeOfDay ?? "Standup"
+  const today = dateInfo?.today ?? ""
 
   const [team, setTeam] = useState<TeamMember[]>([])
   const [pulses, setPulses] = useState<StoredPulse[]>([])
