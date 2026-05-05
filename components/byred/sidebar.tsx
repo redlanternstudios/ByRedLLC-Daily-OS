@@ -28,7 +28,6 @@ import {
 import { useRouter } from "next/navigation"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
 import { useSidebar } from "@/lib/context/sidebar-context"
-import { setActiveTenantAction } from "@/lib/actions/tenant"
 import { useIsMobile } from "@/hooks/use-mobile"
 import {
   Sheet,
@@ -185,18 +184,7 @@ function SidebarContent({
   const { toggleCollapsed } = useSidebar()
   const isMobile = useIsMobile()
 
-  async function handleTenantSwitch() {
-    const tenants = currentUser?.tenants ?? []
-    if (tenants.length < 2) return
-    const idx = tenants.findIndex((t) => t.id === currentUser?.activeTenantId)
-    const next = tenants[(idx + 1) % tenants.length]
-    // Optimistic UI update
-    currentUser?.setActiveTenantId(next.id)
-    // Persist to cookie so server routes pick it up
-    await setActiveTenantAction(next.id)
-    // Re-run all server components on the current page
-    router.refresh()
-  }
+
 
   function isActive(href: string) {
     if (href === "/os/dashboard") {
@@ -212,65 +200,29 @@ function SidebarContent({
   const displayRole = currentUser?.profile?.role ?? "member"
   const initials = getInitials(displayName)
 
-  // Active tenant color dot
-  const tenantIdx = (currentUser?.tenants ?? []).findIndex(
-    (t) => t.id === currentUser?.activeTenantId
-  )
-  const tenantColor = TENANT_COLORS[Math.max(tenantIdx, 0) % TENANT_COLORS.length]
-  const tenantName = activeTenant?.name ?? "No tenant"
-
+  
   return (
     <TooltipProvider>
       <div className="flex flex-col h-full bg-[var(--surface)]">
 
         {/* Logo */}
         <div className={cn(
-          "border-b border-zinc-800/60 flex items-center shrink-0 bg-zinc-900",
-          collapsed ? "h-14 justify-center px-2" : "h-20 px-2"
+          "shrink-0 flex items-center justify-center border-b border-zinc-800/60",
+          collapsed ? "h-16 px-2" : "h-24 px-3"
         )}>
-          <Link href="/os/dashboard" onClick={onNavClick} className="flex items-center min-w-0 w-full">
-            {collapsed ? (
-              <Image
-                src="/logo-byred.png"
-                alt="By Red OS"
-                width={38}
-                height={38}
-                className="object-contain"
-                priority
-              />
-            ) : (
-              <Image
-                src="/logo-byred.png"
-                alt="By Red, LLC. OS"
-                width={160}
-                height={72}
-                className="w-full h-16 object-contain object-left"
-                priority
-              />
-            )}
+          <Link href="/os/dashboard" onClick={onNavClick} className="block w-full">
+            <Image
+              src="/logo-redlantern.png"
+              alt="ByRed. RedLantern Studios"
+              width={440}
+              height={148}
+              className="w-full h-auto object-contain"
+              priority
+            />
           </Link>
         </div>
 
-        {/* Active tenant pill */}
-        {!collapsed && (currentUser?.tenants?.length ?? 0) > 0 && (
-          <div className="px-4 py-2 border-b border-zinc-800/60">
-            <div className="flex items-center gap-1.5">
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: tenantColor }}
-              />
-              <span className="text-[10px] text-zinc-500 truncate">{tenantName}</span>
-              {(currentUser?.tenants?.length ?? 0) > 1 && (
-                <button
-                  className="ml-auto text-[9px] text-zinc-700 hover:text-zinc-400 transition-colors"
-                  onClick={handleTenantSwitch}
-                >
-                  Switch
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+
 
         {/* Nav */}
         <nav className={cn(
