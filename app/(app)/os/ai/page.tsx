@@ -5,6 +5,8 @@ import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, isTextUIPart } from "ai"
 import { Send } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { MentionTextarea } from "@/components/byred/mention-textarea"
+import { useTeamMembers } from "@/lib/hooks/use-team-members"
 
 const SUGGESTIONS = [
   "What are the highest-priority blockers right now?",
@@ -30,6 +32,7 @@ const transport = new DefaultChatTransport({ api: "/api/os/lantern-ai" })
 export default function OSAIPage() {
   const [input, setInput] = useState("")
   const bottomRef = useRef<HTMLDivElement>(null)
+  const teamMembers = useTeamMembers()
 
   const { messages, sendMessage, status, error } = useChat({ transport })
 
@@ -139,13 +142,16 @@ export default function OSAIPage() {
           onSubmit={handleSubmit}
           className="flex gap-2 items-center bg-zinc-900 border border-white/10 rounded-lg px-3.5 py-2"
         >
-          <input
-            type="text"
-            placeholder="Ask LanternAI anything…"
+          <MentionTextarea
+            placeholder="Ask LanternAI anything… (@name to mention)"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={setInput}
+            users={teamMembers}
+            onSubmit={() => { const text = input.trim(); if (!text || isActive) return; setInput(""); sendMessage({ text }) }}
             disabled={isActive}
-            className="flex-1 bg-transparent border-none outline-none text-zinc-50 text-[13px] placeholder-zinc-600 disabled:opacity-50"
+            className="flex-1 text-zinc-50 text-[13px] placeholder-zinc-600 disabled:opacity-50 min-h-[20px] max-h-[120px]"
+            autoResize
+            maxHeight={120}
           />
           <button
             type="submit"

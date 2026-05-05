@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { MentionTextarea } from '@/components/byred/mention-textarea'
+import { useTeamMembers } from '@/lib/hooks/use-team-members'
 
 const STATUS_OPTIONS = ['not_started', 'in_progress', 'blocked', 'overdue', 'done', 'cancelled']
 const PRIORITY_OPTIONS = ['critical', 'high', 'medium', 'low']
@@ -75,6 +77,8 @@ type Patch = Partial<Pick<TaskRow, 'status' | 'priority' | 'due_date' | 'title' 
 export function TaskDetailClient({ task: initial, directory = [] }: { task: TaskRow; directory?: DirectoryUser[] }) {
   const [task, setTask] = useState(initial)
   const [saving, setSaving] = useState(false)
+  const [description, setDescription] = useState(initial.description ?? '')
+  const teamMembers = useTeamMembers()
 
   async function patch(update: Patch) {
     setSaving(true)
@@ -147,19 +151,19 @@ export function TaskDetailClient({ task: initial, directory = [] }: { task: Task
         </div>
 
         {/* Editable description */}
-        <textarea
-          defaultValue={task.description ?? ''}
-          onBlur={(e) => {
-            const v = e.target.value.trim()
+        <MentionTextarea
+          value={description}
+          onChange={setDescription}
+          users={teamMembers}
+          onBlur={() => {
+            const v = description.trim()
             if (v !== (task.description ?? '')) void patch({ description: v || null })
           }}
-          placeholder="Add description…"
-          rows={3}
-          style={{
-            width: '100%', background: 'transparent', border: 'none', outline: 'none',
-            color: '#71717A', fontSize: 13, lineHeight: 1.6, resize: 'vertical',
-            fontFamily: 'inherit',
-          }}
+          placeholder="Add description… (@name to mention)"
+          autoResize
+          maxHeight={300}
+          className="text-zinc-500 text-[13px] leading-relaxed"
+          style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontFamily: 'inherit' } as React.CSSProperties}
         />
       </div>
 

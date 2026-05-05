@@ -5,8 +5,9 @@ import { formatDistanceToNow, parseISO } from "date-fns"
 import { Send } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { MentionTextarea, renderMentions } from "@/components/byred/mention-textarea"
 import { useUser } from "@/lib/context/user-context"
+import { useTeamMembers } from "@/lib/hooks/use-team-members"
 
 type CommentUser = {
   id: string
@@ -67,8 +68,8 @@ interface TaskCommentsProps {
 
 export function TaskComments({ taskId }: TaskCommentsProps) {
   const currentUser = useUser()
-  const displayName =
-    currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "You"
+  const displayName = currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "You"
+  const teamMembers = useTeamMembers()
 
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
@@ -146,7 +147,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
                 </span>
               </div>
               <p className="text-xs text-zinc-600 leading-relaxed whitespace-pre-wrap break-words">
-                {c.comment}
+                {renderMentions(c.comment)}
               </p>
             </div>
           </div>
@@ -158,13 +159,16 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
       <form onSubmit={handleSubmit} className="flex gap-3 items-start">
         <UserAvatar name={displayName} avatarUrl={null} />
         <div className="flex-1 space-y-2">
-          <Textarea
+          <MentionTextarea
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Add a comment… (⌘↵ to send)"
-            className="text-xs bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 focus-visible:ring-byred-red min-h-[64px] resize-none"
+            onChange={setDraft}
+            users={teamMembers}
+            onSubmit={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
+            placeholder="Add a comment… (@name to mention, ⌘↵ to send)"
+            className="text-xs bg-white border border-zinc-300 rounded-md px-3 py-2 text-zinc-700 placeholder:text-zinc-400 min-h-[64px]"
             disabled={submitting}
+            autoResize
+            maxHeight={200}
           />
           <Button
             type="submit"
