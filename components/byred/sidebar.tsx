@@ -223,18 +223,22 @@ function SidebarContent({
     <TooltipProvider>
       <div className="flex flex-col h-full bg-[var(--surface)]">
 
-        {/* Logo */}
+        {/* Logo — no background, floats freely over the sidebar */}
         <div className={cn(
-          "border-b border-zinc-800/60 shrink-0 bg-zinc-900 overflow-hidden",
-          collapsed ? "h-16" : "h-[200px]"
+          "shrink-0 overflow-visible",
+          collapsed ? "h-16 px-2 flex items-center" : "h-[160px]"
         )}>
           <Link href="/os/dashboard" onClick={onNavClick} className="block w-full h-full">
             <Image
               src="/logo-redlantern.png"
               alt="ByRed. RedLantern Studios"
-              width={collapsed ? 64 : 440}
-              height={collapsed ? 64 : 200}
-              className="w-full h-full object-cover object-center"
+              width={collapsed ? 56 : 440}
+              height={collapsed ? 56 : 160}
+              className={cn(
+                collapsed
+                  ? "object-cover object-left w-14 h-14 rounded"
+                  : "w-full h-full object-cover object-center"
+              )}
               priority
             />
           </Link>
