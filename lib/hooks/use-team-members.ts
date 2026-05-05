@@ -1,23 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useUser } from "@/lib/context/user-context"
 import type { MentionUser } from "@/components/byred/mention-textarea"
 
-let cache: MentionUser[] | null = null
-
+// Returns team members from the already-loaded UserContext (no extra fetch)
 export function useTeamMembers(): MentionUser[] {
-  const [members, setMembers] = useState<MentionUser[]>(cache ?? [])
-
-  useEffect(() => {
-    if (cache) { setMembers(cache); return }
-    fetch("/api/os/members")
-      .then(r => r.json())
-      .then((d: { members: MentionUser[] }) => {
-        cache = d.members ?? []
-        setMembers(cache)
-      })
-      .catch(() => {})
-  }, [])
-
-  return members
+  const user = useUser()
+  return user?.directory ?? []
 }

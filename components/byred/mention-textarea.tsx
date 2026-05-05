@@ -4,6 +4,7 @@ import React, {
   useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle,
   type KeyboardEvent, type ChangeEvent, type TextareaHTMLAttributes,
 } from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 
 export type MentionUser = {
@@ -12,11 +13,12 @@ export type MentionUser = {
   avatar_url?: string | null
 }
 
-type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange" | "value"> & {
+type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange" | "value" | "onKeyDown"> & {
   value: string
   onChange: (value: string) => void
   users: MentionUser[]
   onSubmit?: () => void
+  onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void
   autoResize?: boolean
   maxHeight?: number
   className?: string
@@ -24,7 +26,7 @@ type Props = Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "onChange" | "val
 
 export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(
   function MentionTextarea(
-    { value, onChange, users, onSubmit, autoResize, maxHeight = 120, className, ...rest },
+    { value, onChange, users, onSubmit, onKeyDown: externalOnKeyDown, autoResize, maxHeight = 120, className, ...rest },
     forwardedRef,
   ) {
     const innerRef = useRef<HTMLTextAreaElement>(null)
@@ -33,12 +35,15 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(
     const [query, setQuery] = useState<string | null>(null)
     const [atIndex, setAtIndex] = useState(-1)
     const [focused, setFocused] = useState(0)
+    // Portal dropdown position
+    const [dropPos, setDropPos] = useState<{ top: number; left: number; width: number } | null>(null)
 
     const filtered = query === null
       ? []
       : users.filter((u) => u.name.toLowerCase().startsWith(query.toLowerCase())).slice(0, 6)
     const isOpen = query !== null && filtered.length > 0
 
+    // Auto-resize
     useEffect(() => {
       if (autoResize && innerRef.current) {
         const el = innerRef.current
@@ -46,6 +51,17 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(
         el.style.height = Math.min(el.scrollHeight, maxHeight) + "px"
       }
     }, [value, autoResize, maxHeight])
+
+    // Position the portal dropdown above the textarea
+    useEffect(() => {
+      if (!isOpen || !innerRef.current) { setDropPos(null); return }
+      const rect = innerRef.current.getBoundingClientRect()
+      setDropPos({
+        top: rect.top + window.scrollY - 4,  // 4px gap above
+        left: rect.left + window.scrollX,
+        width: Math.max(rect.width, 224),     // min 224px (w-56)
+      })
+    }, [isOpen, value])
 
     const pick = useCallback((user: MentionUser) => {
       if (!innerRef.current) return
@@ -90,10 +106,42 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(
       if (!isOpen && e.key === "Enter" && !e.shiftKey) {
         e.preventDefault()
         onSubmit?.()
+        return
       }
+      externalOnKeyDown?.(e)
     }
 
     useEffect(() => { setFocused(0) }, [query])
+
+    const dropdown = isOpen && dropPos ? createPortal(
+      <div
+        className="absolute z-[9999] -translate-y-full"
+        style={{ top: dropPos.top, left: dropPos.left, width: dropPos.width }}
+      >
+        <div className="rounded-lg border border-zinc-700 bg-zinc-900 shadow-2xl overflow-hidden">
+          <div className="px-2 pt-1.5 pb-0.5">
+            <span className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600">Mention</span>
+          </div>
+          {filtered.map((u, i) => (
+            <button
+              key={u.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); pick(u) }}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors",
+                i === focused ? "bg-zinc-700/60 text-white" : "text-zinc-300 hover:bg-zinc-800",
+              )}
+            >
+              <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 bg-[#D7261E]/[0.13] text-[#D7261E]">
+                {u.name.charAt(0).toUpperCase()}
+              </span>
+              {u.name}
+            </button>
+          ))}
+        </div>
+      </div>,
+      document.body
+    ) : null
 
     return (
       <div className="relative w-full">
@@ -105,29 +153,7 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(
           onKeyDown={handleKey}
           className={cn("w-full resize-none bg-transparent outline-none", className)}
         />
-        {isOpen && (
-          <div className="absolute z-50 bottom-full mb-1 left-0 w-56 max-h-60 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl overflow-hidden">
-            <div className="px-2 pt-1.5 pb-0.5">
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600">Mention</span>
-            </div>
-            {filtered.map((u, i) => (
-              <button
-                key={u.id}
-                type="button"
-                onMouseDown={(e) => { e.preventDefault(); pick(u) }}
-                className={cn(
-                  "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors",
-                  i === focused ? "bg-zinc-700/60 text-white" : "text-zinc-300 hover:bg-zinc-800",
-                )}
-              >
-                <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 bg-[#D7261E]/[0.13] text-[#D7261E]">
-                  {u.name.charAt(0).toUpperCase()}
-                </span>
-                {u.name}
-              </button>
-            ))}
-          </div>
-        )}
+        {dropdown}
       </div>
     )
   }
