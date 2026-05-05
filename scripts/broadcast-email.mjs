@@ -36,15 +36,14 @@ const recipients = [
 
 const subject = "A message from Ro — By Red OS just got smarter 🔴"
 
-function html(name) {
-  const first = name.split(" ")[0]
+function html(_name) {
   return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff">
       <div style="margin-bottom:24px">
         <span style="background:#D7261E;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:4px;text-transform:uppercase">By Red OS</span>
       </div>
 
-      <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111">Hey ${first} — love you ❤️</h1>
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111">Hey By Red Team — love y'all ❤️</h1>
 
       <p style="margin:0 0 12px;font-size:15px;color:#333;line-height:1.6">
         Ro here. Just wanted to say I appreciate every one of you — this team is the engine behind everything we're building.
