@@ -126,7 +126,30 @@ You are an operational system. You use tools. When tools fail, you report the fa
 - Only reference data from the operational snapshot below.
 - Never fabricate task names, owners, or dates.
 - When sending email, only use addresses from the TEAM MEMBERS list in the snapshot.
-- Flag blockers with urgency. Surface the single most important action when asked.`
+- Flag blockers with urgency. Surface the single most important action when asked.
+
+━━━ WEEKLY TASK BREAKDOWN ━━━
+
+When asked about "this week", "weekly tasks", "what does [name] need to do", or team workload:
+- Reference the "THIS WEEK'S TASKS BY TEAM MEMBER" section
+- Tasks are grouped by team member, then by due date
+- OVERDUE tasks appear first with days late
+- Each task shows: title, project, priority, blocked status
+- Format response as a clear breakdown per person
+- Lead with blockers and overdue items — they need attention first
+- For individual team members, give a focused list they can act on today
+
+Example response format for "what does the team need to do this week":
+  **Rory (CEO)** — 5 tasks
+  - [OVERDUE] "Fix login bug" (HireWire) — 2d late, critical
+  - Mon: "Review contracts" (Paradise)
+  - Wed: "Client call prep" (OfficeSpace)
+
+  **Keymon (CTO)** — 3 tasks
+  - Tue: "Deploy API update" (HireWire) — blocked
+  - Fri: "Code review" (HireWire)
+
+Be concise. Don't repeat the snapshot verbatim — synthesize it for the user.`
 
 const MAX_MESSAGES = 20
 
@@ -192,6 +215,18 @@ export async function POST(req: NextRequest) {
 
     const today = new Date().toISOString().split('T')[0]
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    
+    // Calculate end of current week (Sunday)
+    const now = new Date()
+    const dayOfWeek = now.getDay() // 0 = Sunday
+    const endOfWeek = new Date(now)
+    endOfWeek.setDate(now.getDate() + (7 - dayOfWeek)) // Next Sunday
+    const endOfWeekStr = endOfWeek.toISOString().split('T')[0]
+    
+    // Start of current week (Monday)
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+    const startOfWeekStr = startOfWeek.toISOString().split('T')[0]
 
     const [tasksRes, teamRes] = await Promise.all([
       supabase.from('byred_tasks')
@@ -215,6 +250,11 @@ export async function POST(req: NextRequest) {
     const myOverdue = myActiveTasks.filter(t => t.due_date && t.due_date < today)
     const myDueToday = myActiveTasks.filter(t => t.due_date === today)
     const myCritical = myActiveTasks.filter(t => t.priority === 'critical')
+    
+    // Tasks due this week (Monday through Sunday)
+    const dueThisWeek = activeTasks.filter(t => 
+      t.due_date && t.due_date >= startOfWeekStr && t.due_date <= endOfWeekStr
+    )
 
     function taskLine(t: TaskRow) {
       const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
@@ -262,6 +302,68 @@ export async function POST(req: NextRequest) {
     if (overdueTasks.length) lines.push(`Most overdue: ${overdueTasks.slice(0, 6).map(taskLine).join('; ')}`)
     if (byTenant.length) lines.push('', '=== BY PROJECT ===', ...byTenant.map(t => `${t.name}: ${t.active} active, ${t.done} done, ${t.blocked} blocked, ${t.overdue} overdue`))
     if (teamLoad.length) lines.push('', '=== TEAM LOAD ===', ...teamLoad.map(u => `${u.name} (${u.role}): ${u.count} tasks — ${u.status}`))
+    
+    // Weekly task breakdown by team member
+    const weeklyByMember = teamMembers.map(member => {
+      const memberTasksThisWeek = dueThisWeek.filter(t => t.owner_user_id === member.id)
+      const memberOverdue = activeTasks.filter(t => t.owner_user_id === member.id && t.due_date && t.due_date < today)
+      const memberBlocked = activeTasks.filter(t => t.owner_user_id === member.id && t.blocker_flag)
+      
+      if (memberTasksThisWeek.length === 0 && memberOverdue.length === 0) return null
+      
+      const tasksByDay: Record<string, TaskRow[]> = {}
+      memberTasksThisWeek.forEach(t => {
+        const day = t.due_date!
+        if (!tasksByDay[day]) tasksByDay[day] = []
+        tasksByDay[day].push(t)
+      })
+      
+      return {
+        name: member.name,
+        role: member.role,
+        totalThisWeek: memberTasksThisWeek.length,
+        overdue: memberOverdue.length,
+        blocked: memberBlocked.length,
+        tasksByDay,
+        tasks: memberTasksThisWeek,
+        overdueTasks: memberOverdue,
+      }
+    }).filter(Boolean) as Array<{
+      name: string; role: string; totalThisWeek: number; overdue: number; blocked: number
+      tasksByDay: Record<string, TaskRow[]>; tasks: TaskRow[]; overdueTasks: TaskRow[]
+    }>
+    
+    if (weeklyByMember.length) {
+      lines.push('', `=== THIS WEEK'S TASKS BY TEAM MEMBER (${startOfWeekStr} to ${endOfWeekStr}) ===`)
+      
+      weeklyByMember.forEach(member => {
+        lines.push('')
+        lines.push(`▸ ${member.name} (${member.role}) — ${member.totalThisWeek} tasks this week${member.overdue ? `, ${member.overdue} overdue` : ''}${member.blocked ? `, ${member.blocked} blocked` : ''}`)
+        
+        // Show overdue first
+        if (member.overdueTasks.length) {
+          lines.push(`  [OVERDUE]`)
+          member.overdueTasks.slice(0, 5).forEach(t => {
+            const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
+            const daysLate = Math.floor((Date.now() - new Date(t.due_date! + 'T00:00:00').getTime()) / 86400000)
+            lines.push(`    - "${t.title}" [${tenant}] — ${daysLate}d late, ${t.priority}${t.blocker_flag ? ' [BLOCKED]' : ''}`)
+          })
+        }
+        
+        // Then show tasks by day
+        const sortedDays = Object.keys(member.tasksByDay).sort()
+        sortedDays.forEach(day => {
+          const dayName = new Date(day + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+          const isToday = day === today
+          lines.push(`  [${dayName}]${isToday ? ' ← TODAY' : ''}`)
+          member.tasksByDay[day].forEach(t => {
+            const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
+            lines.push(`    - "${t.title}" [${tenant}] — ${t.priority}${t.blocker_flag ? ' [BLOCKED]' : ''}`)
+          })
+        })
+      })
+    }
+    
     lines.push('', '=== TEAM MEMBERS ===', ...teamMembers.map(u => `${u.name} <${u.email}>`))
 
     const contextBlock = lines.filter(Boolean).join('\n')
