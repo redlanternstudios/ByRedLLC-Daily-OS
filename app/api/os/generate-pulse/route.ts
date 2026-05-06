@@ -30,7 +30,32 @@ export async function POST() {
   
   try {
     const supabase = await createClient()
+    
+    // Enterprise: Authentication check - only authenticated users can generate pulses
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      console.error("[generate-pulse] Auth failed:", authError?.message)
+      return NextResponse.json({ error: "Unauthorized — please sign in" }, { status: 401 })
+    }
+    
     const sa = supabase as any
+
+    // Enterprise: Check for recent pulse to prevent spam (rate limit: 1 per 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    const { data: recentPulses } = await sa
+      .from("byred_daily_briefs")
+      .select("id, created_at")
+      .is("user_id", null)
+      .gte("created_at", fiveMinutesAgo)
+      .limit(1)
+    
+    if (recentPulses?.length > 0) {
+      const lastPulseTime = new Date(recentPulses[0].created_at)
+      const waitSeconds = Math.ceil((5 * 60 * 1000 - (Date.now() - lastPulseTime.getTime())) / 1000)
+      return NextResponse.json({ 
+        error: `Rate limited — a pulse was generated recently. Please wait ${waitSeconds}s.` 
+      }, { status: 429 })
+    }
 
     // Fetch data in parallel
     const [usersRes, tasksRes] = await Promise.all([
@@ -101,6 +126,15 @@ Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag bloc
     const now = new Date().toISOString()
     
     // Use admin client to bypass RLS for team-wide pulse insert (user_id = NULL)
+    // Enterprise: Pre-check for service role key before attempting insert
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("[generate-pulse] SUPABASE_SERVICE_ROLE_KEY is not configured")
+      return NextResponse.json({ 
+        error: "Server configuration error — admin key not set. Contact administrator.",
+        pulse: text, // Still return the generated text so it's not wasted
+      }, { status: 503 })
+    }
+    
     const adminClient = createAdminClient()
     
     const { error: insertError } = await adminClient.from("byred_daily_briefs").insert({
