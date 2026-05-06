@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { streamText, convertToModelMessages, stepCountIs } from 'ai'
 import type { UIMessage } from 'ai'
-import { anthropic } from '@ai-sdk/anthropic'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -140,11 +139,40 @@ type TaskRow = {
 }
 type TeamMemberRow = { id: string; name: string; role: string; email: string }
 
+// Enterprise: Centralized error response
+function errorResponse(message: string, status: number) {
+  return new Response(
+    JSON.stringify({ error: message }),
+    { status, headers: { 'Content-Type': 'application/json' } }
+  )
+}
+
 export async function POST(req: NextRequest) {
+  const startTime = Date.now()
+  
   try {
+    // Validate request body early
+    let body: { messages: UIMessage[] }
+    try {
+      body = await req.json()
+    } catch {
+      return errorResponse('Invalid JSON in request body', 400)
+    }
+    
+    if (!body.messages?.length) {
+      return errorResponse('messages array is required and must not be empty', 400)
+    }
+    
+    if (body.messages.length > 50) {
+      return errorResponse('Too many messages — limit is 50', 400)
+    }
+
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      console.error('[lantern-ai] Auth failed:', authError?.message)
+      return errorResponse('Unauthorized — please sign in again', 401)
+    }
 
     const sa = supabase as any
     const { data: byredUserRaw } = await supabase
@@ -160,8 +188,7 @@ export async function POST(req: NextRequest) {
     const tenantIds = tenantRows.map(t => t.id)
     const tenantMap = new Map(tenantRows.map(t => [t.id, t]))
 
-    const body = (await req.json()) as { messages: UIMessage[] }
-    if (!body.messages?.length) return new Response(JSON.stringify({ error: 'messages required' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+    // Body already parsed and validated above
 
     const today = new Date().toISOString().split('T')[0]
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -247,10 +274,11 @@ export async function POST(req: NextRequest) {
     }
 
     const result = streamText({
-      model: anthropic('claude-haiku-4-5-20251001'),
+      // Enterprise: Use Vercel AI Gateway (zero config, no API key needed)
+      model: "anthropic/claude-sonnet-4-20250514",
       system: `${SYSTEM_PROMPT}\n\n---\nOPERATIONAL SNAPSHOT:\n${contextBlock}`,
       messages: await convertToModelMessages(body.messages.slice(-MAX_MESSAGES)),
-      maxOutputTokens: 800,
+      maxTokens: 800,
       stopWhen: stepCountIs(5),
       tools: {
         // Draft an email — shows preview, does NOT send. Always call this before send_email.
@@ -341,9 +369,23 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    const duration = Date.now() - startTime
+    console.log(`[lantern-ai] Stream started in ${duration}ms`)
+    
     return result.toUIMessageStreamResponse()
   } catch (err) {
-    console.error('[lantern-ai]', err)
-    return new Response(JSON.stringify({ error: 'Internal error' }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    const duration = Date.now() - startTime
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error(`[lantern-ai] Failed after ${duration}ms:`, message)
+    
+    // Return user-friendly error messages
+    if (message.includes('rate limit')) {
+      return errorResponse('Rate limit exceeded — please wait a moment and try again', 429)
+    }
+    if (message.includes('timeout')) {
+      return errorResponse('Request timed out — please try again', 504)
+    }
+    
+    return errorResponse('Something went wrong — please try again', 500)
   }
 }

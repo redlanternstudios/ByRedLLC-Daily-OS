@@ -128,8 +128,23 @@ export default function OSAIPage() {
         )}
 
         {error && (
-          <div className="text-center py-2 text-xs text-red-500">
-            Something went wrong. Try again.
+          <div className="flex flex-col items-center gap-2 py-4">
+            <p className="text-xs text-red-500">
+              {error.message || "Something went wrong"}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                const lastUserMsg = messages.findLast(m => m.role === "user")
+                if (lastUserMsg) {
+                  const text = lastUserMsg.parts.filter(isTextUIPart).map(p => p.text).join("")
+                  if (text) sendMessage({ text })
+                }
+              }}
+              className="text-[11px] text-zinc-400 bg-zinc-900 border border-white/10 rounded-md px-3 py-1.5 cursor-pointer transition-colors hover:border-red-500/40 hover:text-zinc-200"
+            >
+              Retry
+            </button>
           </div>
         )}
 
