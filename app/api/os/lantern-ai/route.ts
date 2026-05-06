@@ -154,78 +154,89 @@ FORMAT RULES:
 - Include status tags: [IN PROGRESS], [BLOCKED], etc.
 - For overdue, show days late: "2d late"
 
-VISUAL FORMATTING RULES:
-- Use clear section headers with spacing between them
-- Add blank lines between different categories (blockers, overdue, scheduled)
-- Each task on its own line with project/priority on a sub-line
-- Use bullet points (•) for task lists
-- Group related information together
+VISUAL FORMATTING RULES (CRITICAL):
+- ALWAYS add a blank line before and after each section
+- NEVER crowd information together - readability is paramount
+- Use consistent indentation: 2 spaces for sections, 4 spaces for tasks
+- Each task gets its own block with clear separation
+- Use horizontal rules to separate team members
+- Keep metadata on same line as task when possible for scannability
 
 Example response for "what does the team need to do this week":
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**BLOCKERS (2)**
-Must resolve before progress
+**BLOCKERS (2)** - Resolve First
 
-  • "API rate limit issue"
-    HireWire | Rory | critical
+    "API rate limit issue"
+    Project: HireWire  |  Owner: Rory  |  Priority: critical
 
-  • "Invoice sync failing"
-    Paradise | Keymon | high
+    "Invoice sync failing"
+    Project: Paradise  |  Owner: Keymon  |  Priority: high
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**RORY (CEO)**
-5 tasks this week | 1 overdue | 1 blocked
+---
 
-  OVERDUE:
-  
-  • "Fix login bug"
-    HireWire | 2d late | critical [IN PROGRESS]
 
-  SCHEDULED:
-  
-  Tuesday, May 6
-  • "Review contracts"
-    Paradise | high
+**RORY SEMEAH (CEO)**
+5 tasks  |  1 overdue  |  1 blocked
 
-  Thursday, May 8
-  • "Client call prep"
-    OfficeSpace | medium
+OVERDUE:
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    "Fix login bug"
+    HireWire  |  2d late  |  critical  |  IN PROGRESS
 
-**KEYMON (CTO)**
+
+SCHEDULED:
+
+    Tuesday, May 6
+    
+    "Review contracts"
+    Paradise  |  high
+
+    Thursday, May 8
+    
+    "Client call prep"
+    OfficeSpace  |  medium
+
+
+---
+
+
+**KEYMON PENN (CTO)**
 3 tasks this week
 
-  SCHEDULED:
-  
-  Wednesday, May 7
-  • "Deploy API update"
-    HireWire | critical [BLOCKED]
+SCHEDULED:
 
-  Friday, May 9
-  • "Code review"
-    HireWire | medium
+    Wednesday, May 7
+    
+    "Deploy API update"
+    HireWire  |  critical  |  BLOCKED
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    Friday, May 9
+    
+    "Code review"
+    HireWire  |  medium
 
-**UNASSIGNED (1)**
-Need owner assigned
 
-  Friday, May 9
-  • "Update documentation"
-    HireWire | low | NEEDS OWNER
+---
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**UNASSIGNED (1)** - Need Owner
+
+    Friday, May 9
+    
+    "Update documentation"
+    HireWire  |  low  |  NEEDS OWNER
+
+
+---
 
 When asked about a SPECIFIC person:
 - Give ONLY their tasks in a focused, actionable list
 - Use the same clear spacing and formatting
 - Lead with "Here's what [Name] needs to complete this week:"
 - Sort by urgency: blockers > overdue > today > this week
-- If they have blockers, call them out first with resolution needed`
+- Add blank lines between each task for clarity`
 
 const MAX_MESSAGES = 20
 
@@ -448,35 +459,49 @@ export async function POST(req: NextRequest) {
     const weekTotalCritical = dueThisWeek.filter(t => t.priority === 'critical').length
     
     if (weeklyByMember.length || unassignedThisWeek.length) {
+      // Header section with clear borders
       lines.push('')
-      lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      lines.push(`THIS WEEK'S TASKS BY TEAM MEMBER`)
-      lines.push(`${startOfWeekStr} to ${endOfWeekStr}`)
-      lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       lines.push('')
-      lines.push(`WEEK TOTALS:`)
-      lines.push(`  • ${weekTotalTasks} tasks due`)
-      lines.push(`  • ${weekTotalOverdue} overdue`)
-      lines.push(`  • ${weekTotalBlocked} blocked`)
-      lines.push(`  • ${weekTotalCritical} critical`)
+      lines.push('╔══════════════════════════════════════════════════════════╗')
+      lines.push(`║  THIS WEEK'S TASKS BY TEAM MEMBER                        ║`)
+      lines.push(`║  ${startOfWeekStr} to ${endOfWeekStr}                                  ║`)
+      lines.push('╚══════════════════════════════════════════════════════════╝')
+      lines.push('')
+      lines.push('')
+      
+      // Week totals in a clean box
+      lines.push('┌─────────────────────────────────────┐')
+      lines.push('│  WEEK TOTALS                        │')
+      lines.push('├─────────────────────────────────────┤')
+      lines.push(`│  Tasks Due:     ${String(weekTotalTasks).padEnd(18)}  │`)
+      lines.push(`│  Overdue:       ${String(weekTotalOverdue).padEnd(18)}  │`)
+      lines.push(`│  Blocked:       ${String(weekTotalBlocked).padEnd(18)}  │`)
+      lines.push(`│  Critical:      ${String(weekTotalCritical).padEnd(18)}  │`)
+      lines.push('└─────────────────────────────────────┘')
+      lines.push('')
+      lines.push('')
       
       // Show blocked tasks first as EXECUTION BLOCKERS section
       const allBlockedThisWeek = weeklyByMember.flatMap(m => m.blockedTasks).concat(unassignedBlocked)
       if (allBlockedThisWeek.length) {
+        lines.push('┌─────────────────────────────────────────────────────────┐')
+        lines.push(`│  EXECUTION BLOCKERS (${allBlockedThisWeek.length})                                   │`)
+        lines.push('│  These need resolution before progress can continue     │')
+        lines.push('└─────────────────────────────────────────────────────────┘')
         lines.push('')
-        lines.push('──────────────────────────────────────────────────────────')
-        lines.push(`⚠️  EXECUTION BLOCKERS (${allBlockedThisWeek.length})`)
-        lines.push(`    These need resolution before progress can continue`)
-        lines.push('──────────────────────────────────────────────────────────')
-        lines.push('')
-        allBlockedThisWeek.forEach(t => {
+        
+        allBlockedThisWeek.forEach((t, idx) => {
           const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
           const owner = t.owner_user_id ? userMap.get(t.owner_user_id)?.name ?? 'unassigned' : 'UNASSIGNED'
-          lines.push(`  • "${t.title}"`)
-          lines.push(`    Project: ${tenant}`)
-          lines.push(`    Owner: ${owner}`)
-          lines.push(`    Priority: ${t.priority}`)
-          if (t.blocker_reason) lines.push(`    Reason: ${t.blocker_reason}`)
+          lines.push(`    ${idx + 1}. "${t.title}"`)
+          lines.push('')
+          lines.push(`       Project:   ${tenant}`)
+          lines.push(`       Owner:     ${owner}`)
+          lines.push(`       Priority:  ${t.priority.toUpperCase()}`)
+          if (t.blocker_reason) {
+            lines.push(`       Reason:    ${t.blocker_reason}`)
+          }
+          lines.push('')
           lines.push('')
         })
       }
@@ -484,73 +509,91 @@ export async function POST(req: NextRequest) {
       // Then team members
       weeklyByMember.forEach(member => {
         lines.push('')
-        lines.push('──────────────────────────────────────────────────────────')
-        lines.push(`▸ ${member.name.toUpperCase()} (${member.role})`)
-        lines.push(`  ${member.totalThisWeek} tasks this week`)
+        lines.push('═══════════════════════════════════════════════════════════')
+        lines.push(`  ${member.name.toUpperCase()} (${member.role})`)
+        lines.push('═══════════════════════════════════════════════════════════')
+        lines.push('')
         
-        const statusFlags = []
-        if (member.blocked) statusFlags.push(`${member.blocked} blocked`)
-        if (member.overdue) statusFlags.push(`${member.overdue} overdue`)
-        if (member.inProgress) statusFlags.push(`${member.inProgress} in progress`)
-        if (statusFlags.length) lines.push(`  Status: ${statusFlags.join(' | ')}`)
-        lines.push('──────────────────────────────────────────────────────────')
+        // Stats line
+        const stats = [`${member.totalThisWeek} tasks this week`]
+        if (member.blocked) stats.push(`${member.blocked} blocked`)
+        if (member.overdue) stats.push(`${member.overdue} overdue`)
+        if (member.inProgress) stats.push(`${member.inProgress} in progress`)
+        lines.push(`    ${stats.join('  |  ')}`)
+        lines.push('')
         
         // Show overdue first (all of them, not capped)
         if (member.overdueTasks.length) {
           lines.push('')
-          lines.push(`  🔴 OVERDUE — NEEDS IMMEDIATE ATTENTION`)
+          lines.push('    ┌───────────────────────────────────────────────────┐')
+          lines.push('    │  OVERDUE - NEEDS IMMEDIATE ATTENTION              │')
+          lines.push('    └───────────────────────────────────────────────────┘')
           lines.push('')
+          
           member.overdueTasks.forEach(t => {
             const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
             const daysLate = Math.floor((Date.now() - new Date(t.due_date! + 'T00:00:00').getTime()) / 86400000)
-            const statusTag = t.status === 'in_progress' ? ' [IN PROGRESS]' : t.status === 'blocked' ? ' [BLOCKED]' : ''
-            lines.push(`     • "${t.title}"`)
-            lines.push(`       ${tenant} | ${daysLate}d late | ${t.priority}${statusTag}`)
+            const statusTag = t.status === 'in_progress' ? '  [IN PROGRESS]' : t.status === 'blocked' ? '  [BLOCKED]' : ''
+            lines.push(`        "${t.title}"`)
+            lines.push(`        ${tenant}  |  ${daysLate}d late  |  ${t.priority}${statusTag}`)
             lines.push('')
           })
+          lines.push('')
         }
         
         // Then show tasks by day with status
         const sortedDays = Object.keys(member.tasksByDay).sort()
         if (sortedDays.length) {
           lines.push('')
-          lines.push(`  📅 SCHEDULED THIS WEEK`)
+          lines.push('    ┌───────────────────────────────────────────────────┐')
+          lines.push('    │  SCHEDULED THIS WEEK                              │')
+          lines.push('    └───────────────────────────────────────────────────┘')
           lines.push('')
         }
+        
         sortedDays.forEach(day => {
           const dayName = new Date(day + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
           const isToday = day === today
-          lines.push(`     ${dayName}${isToday ? ' ← TODAY' : ''}`)
+          lines.push(`        ${dayName}${isToday ? '  <-- TODAY' : ''}`)
+          lines.push('        ─────────────────────────────────')
           lines.push('')
+          
           member.tasksByDay[day].forEach(t => {
             const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
-            const statusTag = t.status === 'in_progress' ? ' [IN PROGRESS]' : t.status === 'blocked' ? ' [BLOCKED]' : ''
-            lines.push(`       • "${t.title}"`)
-            lines.push(`         ${tenant} | ${t.priority}${statusTag}`)
+            const statusTag = t.status === 'in_progress' ? '  [IN PROGRESS]' : t.status === 'blocked' ? '  [BLOCKED]' : ''
+            lines.push(`            "${t.title}"`)
+            lines.push(`            ${tenant}  |  ${t.priority}${statusTag}`)
             lines.push('')
           })
+          lines.push('')
         })
       })
       
       // Show unassigned tasks (critical gap — these need owners)
       if (unassignedThisWeek.length || unassignedOverdue.length) {
         lines.push('')
-        lines.push('──────────────────────────────────────────────────────────')
-        lines.push(`⚠️  UNASSIGNED TASKS (${unassignedThisWeek.length + unassignedOverdue.length})`)
-        lines.push(`    These tasks need an owner assigned`)
-        lines.push('──────────────────────────────────────────────────────────')
+        lines.push('═══════════════════════════════════════════════════════════')
+        lines.push('  UNASSIGNED TASKS - NEED OWNER')
+        lines.push('═══════════════════════════════════════════════════════════')
+        lines.push('')
+        lines.push(`    ${unassignedThisWeek.length + unassignedOverdue.length} tasks without an assigned owner`)
+        lines.push('')
         
         if (unassignedOverdue.length) {
           lines.push('')
-          lines.push(`  🔴 OVERDUE — UNASSIGNED`)
+          lines.push('    ┌───────────────────────────────────────────────────┐')
+          lines.push('    │  OVERDUE - UNASSIGNED                             │')
+          lines.push('    └───────────────────────────────────────────────────┘')
           lines.push('')
+          
           unassignedOverdue.forEach(t => {
             const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
             const daysLate = Math.floor((Date.now() - new Date(t.due_date! + 'T00:00:00').getTime()) / 86400000)
-            lines.push(`     • "${t.title}"`)
-            lines.push(`       ${tenant} | ${daysLate}d late | ${t.priority}`)
+            lines.push(`        "${t.title}"`)
+            lines.push(`        ${tenant}  |  ${daysLate}d late  |  ${t.priority}`)
             lines.push('')
           })
+          lines.push('')
         }
         
         const unassignedByDay: Record<string, TaskRow[]> = {}
@@ -562,24 +605,33 @@ export async function POST(req: NextRequest) {
         
         if (Object.keys(unassignedByDay).length) {
           lines.push('')
-          lines.push(`  📅 SCHEDULED — NEEDS OWNER`)
+          lines.push('    ┌───────────────────────────────────────────────────┐')
+          lines.push('    │  SCHEDULED - NEEDS OWNER                          │')
+          lines.push('    └───────────────────────────────────────────────────┘')
           lines.push('')
         }
+        
         Object.keys(unassignedByDay).sort().forEach(day => {
           const dayName = new Date(day + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-          lines.push(`     ${dayName}`)
+          lines.push(`        ${dayName}`)
+          lines.push('        ─────────────────────────────────')
           lines.push('')
+          
           unassignedByDay[day].forEach(t => {
             const tenant = tenantMap.get(t.tenant_id)?.name ?? t.tenant_id
-            lines.push(`       • "${t.title}"`)
-            lines.push(`         ${tenant} | ${t.priority} | NEEDS OWNER`)
+            lines.push(`            "${t.title}"`)
+            lines.push(`            ${tenant}  |  ${t.priority}  |  NEEDS OWNER`)
             lines.push('')
           })
+          lines.push('')
         })
       }
       
       lines.push('')
-      lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      lines.push('╔══════════════════════════════════════════════════════════╗')
+      lines.push('║  END OF WEEKLY TASK BREAKDOWN                            ║')
+      lines.push('╚══════════════════════════════════════════════════════════╝')
+      lines.push('')
     }
     
     lines.push('', '=== TEAM MEMBERS ===', ...teamMembers.map(u => `${u.name} <${u.email}>`))
