@@ -67,8 +67,8 @@ export function LoginForm() {
         return
       }
 
-      router.push("/dashboard")
       router.refresh()
+      router.push("/os/dashboard")
     } catch (authException) {
       const message =
         authException instanceof Error
