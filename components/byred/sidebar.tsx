@@ -210,13 +210,16 @@ function SidebarContent({
           "shrink-0 flex items-center justify-center border-b border-zinc-800/60",
           collapsed ? "h-16 px-2" : "h-24 px-3"
         )}>
-          <Link href="/os/dashboard" onClick={onNavClick} className="block w-full">
+          <Link href="/os/dashboard" onClick={onNavClick} className="block">
             <Image
-              src="/logo-redlantern.png"
-              alt="ByRed. RedLantern Studios"
-              width={440}
+              src="/logo-byredlantern.png"
+              alt="By Red, LLC. – RedLantern Studios"
+              width={148}
               height={148}
-              className="w-full h-auto object-contain"
+              className={cn(
+                "h-auto object-contain drop-shadow-[0_4px_12px_rgba(200,16,46,0.25)]",
+                collapsed ? "w-10" : "w-16"
+              )}
               priority
             />
           </Link>
