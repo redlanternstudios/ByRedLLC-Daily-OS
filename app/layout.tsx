@@ -55,7 +55,7 @@ export default function RootLayout({
       lang="en"
       // "dark" applied by default — ThemeProvider will read localStorage on mount
       // and remove it if the user picked light. The class ensures no FOUC on dark users.
-      className={`dark ${barlowCondensed.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`dark bg-black ${barlowCondensed.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <body className="font-sans antialiased">
         <ThemeProvider>
