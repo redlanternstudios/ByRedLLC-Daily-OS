@@ -110,8 +110,8 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           alt="By Red, LLC. – RedLantern Studios"
           className="w-[240px] max-w-[65vw] h-auto select-none"
           style={{
-            mixBlendMode: "screen",
-            filter: "drop-shadow(0 6px 32px rgba(200,16,46,0.7)) brightness(1.08)",
+            filter: "drop-shadow(0 6px 32px rgba(200,16,46,0.8))",
+            imageRendering: "crisp-edges",
           }}
         />
         <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
