@@ -108,8 +108,8 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         <img
           src="/logo-byredlantern.png"
           alt="By Red, LLC. – RedLantern Studios"
-          className="w-[280px] max-w-[70vw] h-auto object-contain select-none drop-shadow-[0_8px_32px_rgba(200,16,46,0.5)]"
-          style={{ filter: "drop-shadow(0 8px 32px rgba(200,16,46,0.5))" }}
+          className="w-[220px] max-w-[60vw] h-auto select-none"
+          style={{ filter: "drop-shadow(0 6px 24px rgba(200,16,46,0.6))" }}
         />
         <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
           Internal operations · execution only
