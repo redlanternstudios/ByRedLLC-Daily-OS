@@ -64,7 +64,6 @@ export async function getCurrentUser(): Promise<SerializedUser | null> {
     name: u.name,
     email: u.email,
     role: u.role,
-    monday_user_id: null,
     avatar_url: u.avatar_url,
   }))
 
