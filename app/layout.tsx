@@ -42,7 +42,11 @@ export const metadata: Metadata = {
   title: "byred_os — By Red, LLC.",
   description: "Internal operations. Execution, not ambition.",
   robots: { index: false, follow: false },
-  icons: { icon: "/favicon.ico" },
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
 }
 
 export default function RootLayout({
