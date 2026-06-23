@@ -242,21 +242,6 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               <dl className="space-y-3 text-sm">
-                {task.monday_item_id && (
-                  <div className="flex justify-between">
-                    <dt className="text-zinc-400">Monday ID</dt>
-                    <dd>
-                      <a
-                        href={`https://monday.com/boards/item/${task.monday_item_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-mono text-byred-red hover:underline"
-                      >
-                        {task.monday_item_id}
-                      </a>
-                    </dd>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <dt className="text-zinc-400">Estimated</dt>
                   <dd className="text-zinc-600 font-mono text-xs">
