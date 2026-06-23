@@ -212,13 +212,13 @@ function SidebarContent({
         )}>
           <Link href="/os/dashboard" onClick={onNavClick} className="block">
             <Image
-              src="/by-red-logo-cropped.png"
+              src="/by-red-logo.png"
               alt="By Red, LLC. – RedLantern Studios"
               width={148}
-              height={148}
+              height={164}
               className={cn(
                 "h-auto w-auto drop-shadow-[0_4px_12px_rgba(200,16,46,0.25)]",
-                collapsed ? "max-h-10" : "max-h-16"
+                collapsed ? "max-h-10 max-w-10" : "max-h-16 max-w-16"
               )}
               priority
             />
