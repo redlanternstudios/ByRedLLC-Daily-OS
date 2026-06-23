@@ -32,16 +32,16 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors group"
+      className="flex items-center gap-4 p-4 rounded-lg bg-zinc-900/80 border border-white/[0.08] hover:border-white/[0.15] hover:bg-zinc-900 transition-all group"
     >
       <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", accent)}>
         <Icon className="w-5 h-5" strokeWidth={1.75} />
       </div>
       <div>
-        <p className="text-2xl font-bold text-white font-condensed leading-none">{value}</p>
-        <p className="text-xs text-zinc-500 mt-0.5">{label}</p>
+        <p className="text-3xl font-bold text-[#D7261E] font-condensed leading-none tabular-nums">{value}</p>
+        <p className="text-[11px] text-zinc-500 mt-1 uppercase tracking-wider font-condensed">{label}</p>
       </div>
-      <ArrowRight className="w-4 h-4 text-zinc-700 ml-auto group-hover:text-zinc-400 transition-colors" strokeWidth={1.75} />
+      <ArrowRight className="w-4 h-4 text-zinc-700 ml-auto group-hover:text-[#D7261E] transition-colors" strokeWidth={1.75} />
     </Link>
   )
 }
@@ -103,13 +103,18 @@ export default async function OSDashboardPage() {
   return (
     <div className="space-y-8 max-w-6xl">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">
-          Operations Dashboard
-        </h1>
-        <p className="text-sm text-zinc-500 mt-1">
+      <div className="flex items-end justify-between border-b border-white/[0.06] pb-5">
+        <div>
+          <p className="text-[10px] font-condensed font-semibold tracking-widest text-[#D7261E]/70 uppercase mb-1">
+            By Red, LLC. — Internal Operations
+          </p>
+          <h1 className="text-3xl font-bold text-white font-condensed tracking-tight uppercase">
+            Command Center
+          </h1>
+        </div>
+        <p className="text-xs text-zinc-600 font-condensed tabular-nums">
           {new Date().toLocaleDateString("en-US", {
-            weekday: "long", month: "long", day: "numeric", year: "numeric",
+            weekday: "short", month: "short", day: "numeric", year: "numeric",
           })}
         </p>
       </div>
@@ -148,15 +153,15 @@ export default async function OSDashboardPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Tenant workload breakdown */}
-        <div className="xl:col-span-2 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+        <div className="xl:col-span-2 rounded-lg bg-zinc-900/60 border border-white/[0.08] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.07] bg-white/[0.02]">
             <div className="flex items-center gap-2">
-              <FolderKanban className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
-              <span className="text-sm font-medium text-white">Active Work</span>
+              <FolderKanban className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
+              <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Active Work</span>
             </div>
             <Link
               href="/os/tasks"
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1"
+              className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors flex items-center gap-1 font-condensed uppercase tracking-wider"
             >
               All tasks <ArrowRight className="w-3 h-3" />
             </Link>
@@ -209,12 +214,12 @@ export default async function OSDashboardPage() {
         {/* Right column */}
         <div className="space-y-4">
           {/* Blockers */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
-              <AlertTriangle className="w-4 h-4 text-red-400" strokeWidth={1.75} />
-              <span className="text-sm font-medium text-white">Blockers</span>
+          <div className="rounded-lg bg-zinc-900/60 border border-white/[0.08] overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.07] bg-white/[0.02]">
+              <AlertTriangle className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
+              <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Blockers</span>
               {blockedTasks.length > 0 && (
-                <span className="ml-auto text-[10px] font-bold text-red-400 bg-red-950 border border-red-800 px-1.5 py-0.5 rounded">
+                <span className="ml-auto text-[10px] font-bold text-[#D7261E] bg-[#D7261E]/10 border border-[#D7261E]/30 px-1.5 py-0.5 rounded">
                   {blockedTasks.length}
                 </span>
               )}
@@ -243,10 +248,10 @@ export default async function OSDashboardPage() {
           </div>
 
           {/* Team */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
-              <Users className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
-              <span className="text-sm font-medium text-white">Team</span>
+          <div className="rounded-lg bg-zinc-900/60 border border-white/[0.08] overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-white/[0.07] bg-white/[0.02]">
+              <Users className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
+              <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Team</span>
             </div>
             <div className="px-4 py-3 space-y-2.5">
               {team.slice(0, 5).map((member) => (
@@ -274,15 +279,15 @@ export default async function OSDashboardPage() {
       </div>
 
       {/* Recent tasks */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+      <div className="rounded-lg bg-zinc-900/60 border border-white/[0.08] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.07] bg-white/[0.02]">
           <div className="flex items-center gap-2">
-            <CheckSquare className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
-            <span className="text-sm font-medium text-white">Recent Tasks</span>
+            <CheckSquare className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
+            <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Recent Tasks</span>
           </div>
           <Link
             href="/os/tasks"
-            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1"
+            className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors flex items-center gap-1 font-condensed uppercase tracking-wider"
           >
             All tasks <ArrowRight className="w-3 h-3" />
           </Link>

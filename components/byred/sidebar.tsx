@@ -134,7 +134,7 @@ function NavItem({
         "flex items-center gap-2.5 rounded-md text-xs transition-colors relative group",
         collapsed ? "justify-center p-2.5" : "px-3 py-1.5",
         active
-          ? "bg-white/10 text-white font-medium"
+          ? "bg-[#D7261E]/10 text-white font-medium border-l-2 border-[#D7261E] rounded-l-none pl-[10px]"
           : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5",
         placeholder && !active && "opacity-40 pointer-events-none"
       )}
@@ -203,7 +203,7 @@ function SidebarContent({
   
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full bg-[var(--surface)]">
+      <div className="flex flex-col h-full bg-[#0D0D0F]">
 
         {/* Logo */}
         <div className={cn(
@@ -235,7 +235,7 @@ function SidebarContent({
           {NAV_GROUPS.map((group, gi) => (
             <div key={group.label ?? gi}>
               {!collapsed && group.label && (
-                <p className="text-[9px] font-semibold tracking-widest text-zinc-700 uppercase px-3 mb-1">
+                <p className="text-[9px] font-semibold tracking-widest text-[#D7261E]/60 uppercase px-3 mb-1 font-condensed">
                   {group.label}
                 </p>
               )}
@@ -344,7 +344,7 @@ export function AppSidebar() {
     <aside
       style={{ zIndex: 50, pointerEvents: "auto", isolation: "isolate" }}
       className={cn(
-        "shrink-0 flex flex-col h-screen bg-[var(--surface)] border-r border-[var(--border-default)] fixed left-0 top-0 transition-all duration-300",
+        "shrink-0 flex flex-col h-screen bg-[#0D0D0F] border-r border-white/[0.07] fixed left-0 top-0 transition-all duration-300",
         isCollapsed ? "w-14" : "w-56"
       )}
     >

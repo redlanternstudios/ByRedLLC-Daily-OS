@@ -118,7 +118,7 @@ export function AppTopbar() {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-14 z-30 bg-[var(--surface)] border-b border-[var(--border-default)] flex items-center justify-between px-4 md:px-6 transition-all duration-300",
+        "fixed top-0 right-0 h-14 z-30 bg-[#0D0D0F] border-b border-white/[0.07] flex items-center justify-between px-4 md:px-6 transition-all duration-300",
         isMobile ? "left-0" : isCollapsed ? "left-14" : "left-56"
       )}
     >
@@ -151,13 +151,13 @@ export function AppTopbar() {
                 />
               )}
               {i === breadcrumbs.length - 1 ? (
-                <span className="text-[var(--text-primary)] font-medium truncate max-w-[150px] md:max-w-none">
+                <span className="text-white font-semibold tracking-tight truncate max-w-[150px] md:max-w-none font-condensed text-base uppercase">
                   {crumb.label}
                 </span>
               ) : (
                 <Link
                   href={crumb.href}
-                  className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors hidden md:inline"
+                  className="text-zinc-600 hover:text-zinc-400 transition-colors hidden md:inline text-xs"
                 >
                   {crumb.label}
                 </Link>
