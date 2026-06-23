@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 const AI_MODE_CONFIG: Record<string, { label: string; classes: string }> = {
-  HUMAN_ONLY: { label: 'Human',   classes: 'bg-zinc-800 text-zinc-400' },
+  HUMAN_ONLY: { label: 'Human',   classes: 'bg-[#1A1D24] text-[#9CA3AF]' },
   AI_ASSIST:  { label: 'Assist',  classes: 'bg-sky-500/10 text-sky-400' },
   AI_DRAFT:   { label: 'Draft',   classes: 'bg-amber-500/10 text-amber-400' },
   AI_EXECUTE: { label: 'Execute', classes: 'bg-emerald-500/10 text-emerald-400' },
@@ -14,7 +14,7 @@ interface AiModeChipProps {
 
 export function AiModeChip({ mode, className }: AiModeChipProps) {
   if (!mode) return null
-  const config = AI_MODE_CONFIG[mode] ?? { label: mode, classes: 'bg-zinc-800 text-zinc-400' }
+  const config = AI_MODE_CONFIG[mode] ?? { label: mode, classes: 'bg-[#1A1D24] text-[#9CA3AF]' }
 
   return (
     <span

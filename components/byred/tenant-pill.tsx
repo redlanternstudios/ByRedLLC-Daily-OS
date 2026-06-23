@@ -8,8 +8,8 @@ interface TenantPillProps {
 
 export function TenantPill({ tenantId, className }: TenantPillProps) {
   const colors = TENANT_COLORS[tenantId] ?? {
-    bg: 'bg-zinc-800',
-    text: 'text-zinc-400',
+    bg: 'bg-[#1A1D24]',
+    text: 'text-[#9CA3AF]',
     dot: 'bg-zinc-400',
   }
   const name = TENANT_NAMES[tenantId] ?? tenantId

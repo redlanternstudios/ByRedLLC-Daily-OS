@@ -134,8 +134,8 @@ function NavItem({
         "flex items-center gap-2.5 rounded-md text-xs transition-colors relative group",
         collapsed ? "justify-center p-2.5" : "px-3 py-1.5",
         active
-          ? "bg-white/10 text-white font-medium"
-          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5",
+          ? "bg-[#D7261E]/10 text-white font-medium border-l-2 border-[#D7261E] rounded-l-none pl-[10px]"
+          : "text-[#9CA3AF] hover:text-[#9CA3AF] hover:bg-white/5",
         placeholder && !active && "opacity-40 pointer-events-none"
       )}
     >
@@ -144,7 +144,7 @@ function NavItem({
         <>
           <span className="truncate">{label}</span>
           {placeholder && (
-            <span className="ml-auto text-[9px] text-zinc-700 font-medium tracking-widest uppercase">
+            <span className="ml-auto text-[9px] text-[#6B7280] font-medium tracking-widest uppercase">
               Soon
             </span>
           )}
@@ -157,7 +157,7 @@ function NavItem({
     return (
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>{inner}</TooltipTrigger>
-        <TooltipContent side="right" className="text-xs bg-zinc-900 border-zinc-700 text-zinc-200">
+        <TooltipContent side="right" className="text-xs bg-[#111318] border-[#2A2D35] text-white">
           {label}{placeholder ? " (Soon)" : ""}
         </TooltipContent>
       </Tooltip>
@@ -203,20 +203,23 @@ function SidebarContent({
   
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full bg-[var(--surface)]">
+      <div className="flex flex-col h-full bg-[#0D0D0F]">
 
         {/* Logo */}
         <div className={cn(
-          "shrink-0 flex items-center justify-center border-b border-zinc-800/60",
-          collapsed ? "h-16 px-2" : "h-24 px-3"
+          "shrink-0 flex items-center justify-center border-b border-[#2A2D35]/60 py-2",
+          collapsed ? "px-2" : "px-3"
         )}>
-          <Link href="/os/dashboard" onClick={onNavClick} className="block w-full">
+          <Link href="/os/dashboard" onClick={onNavClick} className="block">
             <Image
-              src="/logo-redlantern.png"
-              alt="ByRed. RedLantern Studios"
-              width={440}
-              height={148}
-              className="w-full h-auto object-contain"
+              src="/by-red-logo.png"
+              alt="By Red, LLC. – RedLantern Studios"
+              width={148}
+              height={164}
+              className={cn(
+                "h-auto w-auto drop-shadow-[0_4px_12px_rgba(200,16,46,0.25)]",
+                collapsed ? "max-h-10 max-w-10" : "max-h-16 max-w-16"
+              )}
               priority
             />
           </Link>
@@ -232,7 +235,7 @@ function SidebarContent({
           {NAV_GROUPS.map((group, gi) => (
             <div key={group.label ?? gi}>
               {!collapsed && group.label && (
-                <p className="text-[9px] font-semibold tracking-widest text-zinc-700 uppercase px-3 mb-1">
+                <p className="text-[9px] font-semibold tracking-widest text-[#D7261E]/60 uppercase px-3 mb-1 font-condensed">
                   {group.label}
                 </p>
               )}
@@ -269,11 +272,11 @@ function SidebarContent({
 
         {/* Collapse toggle (desktop) */}
         {!isMobile && (
-          <div className="px-3 py-2 border-t border-zinc-800/60">
+          <div className="px-3 py-2 border-t border-[#2A2D35]/60">
             <button
               onClick={toggleCollapsed}
               className={cn(
-                "w-full flex items-center text-zinc-600 hover:text-zinc-400 hover:bg-white/5 rounded-md transition-colors text-xs py-1.5",
+                "w-full flex items-center text-[#6B7280] hover:text-[#9CA3AF] hover:bg-white/5 rounded-md transition-colors text-xs py-1.5",
                 collapsed ? "justify-center px-2" : "gap-2 px-2"
               )}
             >
@@ -291,7 +294,7 @@ function SidebarContent({
 
         {/* User block */}
         <div className={cn(
-          "border-t border-zinc-800/60",
+          "border-t border-[#2A2D35]/60",
           collapsed ? "p-2" : "p-3"
         )}>
           <Link
@@ -307,8 +310,8 @@ function SidebarContent({
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-medium text-zinc-300 truncate">{displayName}</p>
-                <p className="text-[10px] text-zinc-600 truncate capitalize">{displayRole}</p>
+                <p className="text-xs font-medium text-[#9CA3AF] truncate">{displayName}</p>
+                <p className="text-[10px] text-[#6B7280] truncate capitalize">{displayRole}</p>
               </div>
             )}
           </Link>
@@ -329,7 +332,7 @@ export function AppSidebar() {
   if (isMobile) {
     return (
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent side="left" className="w-60 p-0 bg-zinc-950 border-r border-zinc-800">
+        <SheetContent side="left" className="w-60 p-0 bg-[#07080D] border-r border-[#2A2D35]">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <SidebarContent collapsed={false} onNavClick={() => setIsMobileOpen(false)} />
         </SheetContent>
@@ -341,7 +344,7 @@ export function AppSidebar() {
     <aside
       style={{ zIndex: 50, pointerEvents: "auto", isolation: "isolate" }}
       className={cn(
-        "shrink-0 flex flex-col h-screen bg-[var(--surface)] border-r border-[var(--border-default)] fixed left-0 top-0 transition-all duration-300",
+        "shrink-0 flex flex-col h-screen bg-[#0D0D0F] border-r border-white/[0.07] fixed left-0 top-0 transition-all duration-300 overflow-visible",
         isCollapsed ? "w-14" : "w-56"
       )}
     >
@@ -356,7 +359,7 @@ export function MobileMenuButton() {
   return (
     <button
       onClick={toggleMobile}
-      className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-md transition-colors"
+      className="w-8 h-8 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:bg-white/5 rounded-md transition-colors"
       aria-label="Open menu"
     >
       <Menu className="w-5 h-5" strokeWidth={1.75} />

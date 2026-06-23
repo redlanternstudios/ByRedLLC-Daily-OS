@@ -84,34 +84,34 @@ export default function OSNewTaskPage() {
 
   return (
     <div className="max-w-xl space-y-6">
-      <nav className="flex items-center gap-1.5 text-xs text-zinc-500" aria-label="Breadcrumb">
-        <Link href="/os/tasks" className="hover:text-zinc-300 transition-colors">Tasks</Link>
+      <nav className="flex items-center gap-1.5 text-xs text-[#9CA3AF]" aria-label="Breadcrumb">
+        <Link href="/os/tasks" className="hover:text-[#9CA3AF] transition-colors">Tasks</Link>
         <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-        <span className="text-zinc-400">New task</span>
+        <span className="text-[#9CA3AF]">New task</span>
       </nav>
 
       <div>
         <h1 className="text-3xl font-condensed font-bold text-white tracking-tight">New task</h1>
-        <p className="text-sm text-zinc-500 mt-1">Status defaults to not started.</p>
+        <p className="text-sm text-[#9CA3AF] mt-1">Status defaults to not started.</p>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800 shadow-sm">
+      <Card className="bg-[#111318] border-[#2A2D35] shadow-sm">
         <CardHeader className="pb-3">
-          <p className="text-sm font-medium text-zinc-400">Task details</p>
+          <p className="text-sm font-medium text-[#9CA3AF]">Task details</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="tenant" className="text-xs text-zinc-500">
+              <Label htmlFor="tenant" className="text-xs text-[#9CA3AF]">
                 Project <span className="text-[#D7261E]">*</span>
               </Label>
               <Select value={tenantId} onValueChange={setTenantId}>
-                <SelectTrigger id="tenant" className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm">
+                <SelectTrigger id="tenant" className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm">
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectContent className="bg-[#111318] border-[#2A2D35]">
                   {tenants.map((t) => (
-                    <SelectItem key={t.id} value={t.id} className="text-zinc-300 text-sm">
+                    <SelectItem key={t.id} value={t.id} className="text-[#9CA3AF] text-sm">
                       {t.name}
                     </SelectItem>
                   ))}
@@ -120,7 +120,7 @@ export default function OSNewTaskPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="title" className="text-xs text-zinc-500">
+              <Label htmlFor="title" className="text-xs text-[#9CA3AF]">
                 Title <span className="text-[#D7261E]">*</span>
               </Label>
               <Input
@@ -128,13 +128,13 @@ export default function OSNewTaskPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="bg-zinc-800 border-zinc-700 text-zinc-200 placeholder:text-zinc-600"
+                className="bg-[#1A1D24] border-[#2A2D35] text-white placeholder:text-[#6B7280]"
                 placeholder="What needs to get done?"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs text-zinc-500">Description</Label>
+              <Label htmlFor="description" className="text-xs text-[#9CA3AF]">Description</Label>
               <MentionTextarea
                 id="description"
                 value={description}
@@ -142,21 +142,21 @@ export default function OSNewTaskPage() {
                 users={teamMembers}
                 autoResize
                 maxHeight={200}
-                className="bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-zinc-200 placeholder:text-zinc-600 text-sm min-h-[80px]"
+                className="bg-[#1A1D24] border border-[#2A2D35] rounded-md px-3 py-2 text-white placeholder:text-[#6B7280] text-sm min-h-[80px]"
                 placeholder="Context, steps, acceptance criteria… (@name to mention)"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Status</Label>
+                <Label className="text-xs text-[#9CA3AF]">Status</Label>
                 <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm">
+                  <SelectTrigger className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-700">
+                  <SelectContent className="bg-[#111318] border-[#2A2D35]">
                     {["not_started", "in_progress", "done", "blocked"].map((s) => (
-                      <SelectItem key={s} value={s} className="text-zinc-300 text-sm capitalize">
+                      <SelectItem key={s} value={s} className="text-[#9CA3AF] text-sm capitalize">
                         {s.replace("_", " ")}
                       </SelectItem>
                     ))}
@@ -164,14 +164,14 @@ export default function OSNewTaskPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-500">Priority</Label>
+                <Label className="text-xs text-[#9CA3AF]">Priority</Label>
                 <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm">
+                  <SelectTrigger className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-700">
+                  <SelectContent className="bg-[#111318] border-[#2A2D35]">
                     {["critical", "high", "medium", "low"].map((p) => (
-                      <SelectItem key={p} value={p} className="text-zinc-300 text-sm capitalize">{p}</SelectItem>
+                      <SelectItem key={p} value={p} className="text-[#9CA3AF] text-sm capitalize">{p}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -179,14 +179,14 @@ export default function OSNewTaskPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-500">AI Mode</Label>
+              <Label className="text-xs text-[#9CA3AF]">AI Mode</Label>
               <Select value={aiMode} onValueChange={setAiMode}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm">
+                <SelectTrigger className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectContent className="bg-[#111318] border-[#2A2D35]">
                   {["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"].map((m) => (
-                    <SelectItem key={m} value={m} className="text-zinc-300 text-sm">{m}</SelectItem>
+                    <SelectItem key={m} value={m} className="text-[#9CA3AF] text-sm">{m}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -194,17 +194,17 @@ export default function OSNewTaskPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="due_date" className="text-xs text-zinc-500">Due date</Label>
+                <Label htmlFor="due_date" className="text-xs text-[#9CA3AF]">Due date</Label>
                 <Input
                   id="due_date"
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-zinc-800 border-zinc-700 text-zinc-200"
+                  className="bg-[#1A1D24] border-[#2A2D35] text-white"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="estimated" className="text-xs text-zinc-500">Estimated (min)</Label>
+                <Label htmlFor="estimated" className="text-xs text-[#9CA3AF]">Estimated (min)</Label>
                 <Input
                   id="estimated"
                   type="number"
@@ -212,7 +212,7 @@ export default function OSNewTaskPage() {
                   step="5"
                   value={estimatedMinutes}
                   onChange={(e) => setEstimatedMinutes(e.target.value)}
-                  className="bg-zinc-800 border-zinc-700 text-zinc-200"
+                  className="bg-[#1A1D24] border-[#2A2D35] text-white"
                 />
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function OSNewTaskPage() {
               <Button type="submit" disabled={loading} className="bg-[#D7261E] hover:bg-[#B51E18] text-white">
                 {loading ? "Creating…" : "Create task"}
               </Button>
-              <Button type="button" variant="ghost" className="text-zinc-500 hover:text-zinc-300" onClick={() => router.back()}>
+              <Button type="button" variant="ghost" className="text-[#9CA3AF] hover:text-[#9CA3AF]" onClick={() => router.back()}>
                 Cancel
               </Button>
             </div>

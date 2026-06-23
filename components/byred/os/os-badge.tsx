@@ -8,16 +8,16 @@ import { ChevronDown } from "lucide-react"
 const TASK_STATUSES = ["not_started", "in_progress", "blocked", "done", "cancelled"] as const
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  not_started:  { label: "Not Started",  className: "bg-zinc-800 text-zinc-300 border border-zinc-700" },
+  not_started:  { label: "Not Started",  className: "bg-[#1A1D24] text-[#9CA3AF] border border-[#2A2D35]" },
   in_progress:  { label: "In Progress",  className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   blocked:      { label: "Blocked",      className: "bg-red-950 text-red-300 border border-red-800" },
   done:         { label: "Done",         className: "bg-green-950 text-green-300 border border-green-800" },
   active:       { label: "Active",       className: "bg-green-950 text-green-300 border border-green-800" },
   paused:       { label: "Paused",       className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   completed:    { label: "Completed",    className: "bg-green-950 text-green-300 border border-green-800" },
-  archived:     { label: "Archived",     className: "bg-zinc-900 text-zinc-500 border border-zinc-800" },
-  upcoming:     { label: "Upcoming",     className: "bg-zinc-800 text-zinc-300 border border-zinc-700" },
-  cancelled:    { label: "Cancelled",    className: "bg-zinc-900 text-zinc-500 border border-zinc-800" },
+  archived:     { label: "Archived",     className: "bg-[#111318] text-[#9CA3AF] border border-[#2A2D35]" },
+  upcoming:     { label: "Upcoming",     className: "bg-[#1A1D24] text-[#9CA3AF] border border-[#2A2D35]" },
+  cancelled:    { label: "Cancelled",    className: "bg-[#111318] text-[#9CA3AF] border border-[#2A2D35]" },
   pending:      { label: "Pending",      className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   processing:   { label: "Processing",   className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   failed:       { label: "Failed",       className: "bg-red-950 text-red-300 border border-red-800" },
@@ -48,7 +48,7 @@ export function OSStatusBadge({ status, className, taskId, onStatusChange }: Sta
     return () => document.removeEventListener("mousedown", onOutside)
   }, [open])
 
-  const config = STATUS_MAP[current] ?? { label: current, className: "bg-zinc-800 text-zinc-400 border border-zinc-700" }
+  const config = STATUS_MAP[current] ?? { label: current, className: "bg-[#1A1D24] text-[#9CA3AF] border border-[#2A2D35]" }
 
   if (!taskId) {
     return (
@@ -95,7 +95,7 @@ export function OSStatusBadge({ status, className, taskId, onStatusChange }: Sta
         <ChevronDown size={9} strokeWidth={2.5} className={cn("transition-transform duration-150", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute z-50 top-full mt-1 left-0 w-36 rounded-lg border border-zinc-700 bg-zinc-900 shadow-2xl overflow-hidden py-1">
+        <div className="absolute z-50 top-full mt-1 left-0 w-36 rounded-lg border border-[#2A2D35] bg-[#111318] shadow-2xl overflow-hidden py-1">
           {TASK_STATUSES.map(s => {
             const sc = STATUS_MAP[s]
             return (
@@ -104,8 +104,8 @@ export function OSStatusBadge({ status, className, taskId, onStatusChange }: Sta
                 type="button"
                 onClick={() => void pick(s)}
                 className={cn(
-                  "w-full flex items-center px-2.5 py-1.5 text-left transition-colors hover:bg-zinc-800/80",
-                  s === current && "bg-zinc-800/50",
+                  "w-full flex items-center px-2.5 py-1.5 text-left transition-colors hover:bg-[#1A1D24]",
+                  s === current && "bg-[#1A1D24]/60",
                 )}
               >
                 <span className={cn("inline-flex px-1.5 py-px rounded text-[10px] font-medium", sc.className)}>
@@ -127,7 +127,7 @@ export function OSPriorityBadge({ priority, className }: { priority: string; cla
     medium:   { label: "Medium",   className: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
     low:      { label: "Low",      className: "bg-green-950 text-green-300 border border-green-800" },
   }
-  const config = PRIORITY_MAP[priority] ?? { label: priority, className: "bg-zinc-800 text-zinc-400 border border-zinc-700" }
+  const config = PRIORITY_MAP[priority] ?? { label: priority, className: "bg-[#1A1D24] text-[#9CA3AF] border border-[#2A2D35]" }
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium tracking-wide", config.className, className)}>
       {config.label}

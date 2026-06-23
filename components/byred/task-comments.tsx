@@ -119,15 +119,15 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
 
   return (
     <div>
-      <h3 className="text-sm font-medium text-zinc-500 mb-3">Comments</h3>
+      <h3 className="text-sm font-medium text-[#9CA3AF] mb-3">Comments</h3>
 
       {/* Feed */}
       <div className="space-y-4 mb-4">
         {loading && (
-          <p className="text-xs text-zinc-400">Loading comments…</p>
+          <p className="text-xs text-[#9CA3AF]">Loading comments…</p>
         )}
         {!loading && comments.length === 0 && (
-          <p className="text-xs text-zinc-400">No comments yet.</p>
+          <p className="text-xs text-[#9CA3AF]">No comments yet.</p>
         )}
         {comments.map((c) => (
           <div key={c.id} className="flex gap-3">
@@ -137,16 +137,16 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-xs font-medium text-zinc-700">
+                <span className="text-xs font-medium text-[#6B7280]">
                   {c.byred_users?.name ?? "Unknown"}
                 </span>
-                <span className="text-[10px] text-zinc-400 font-mono">
+                <span className="text-[10px] text-[#9CA3AF] font-mono">
                   {formatDistanceToNow(parseISO(c.created_at), {
                     addSuffix: true,
                   })}
                 </span>
               </div>
-              <p className="text-xs text-zinc-600 leading-relaxed whitespace-pre-wrap break-words">
+              <p className="text-xs text-[#6B7280] leading-relaxed whitespace-pre-wrap break-words">
                 {renderMentions(c.comment)}
               </p>
             </div>
@@ -165,7 +165,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
             users={teamMembers}
             onSubmit={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
             placeholder="Add a comment… (@name to mention, ⌘↵ to send)"
-            className="text-xs bg-white border border-zinc-300 rounded-md px-3 py-2 text-zinc-700 placeholder:text-zinc-400 min-h-[64px]"
+            className="text-xs bg-white border border-zinc-300 rounded-md px-3 py-2 text-[#6B7280] placeholder:text-[#9CA3AF] min-h-[64px]"
             disabled={submitting}
             autoResize
             maxHeight={200}

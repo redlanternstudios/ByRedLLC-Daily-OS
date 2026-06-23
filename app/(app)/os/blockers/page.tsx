@@ -106,36 +106,36 @@ function BlockerCard({ task, onUnblocked }: { task: BlockerTask; onUnblocked: ()
 
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             {task.project && (
-              <span className="text-[10px] text-zinc-500 truncate max-w-[180px]">{task.project.name}</span>
+              <span className="text-[10px] text-[#9CA3AF] truncate max-w-[180px]">{task.project.name}</span>
             )}
             <OSPriorityBadge priority={task.priority ?? "medium"} className="text-[9px] py-0 px-1.5" />
             {task.due_date && (
               <span className={cn(
                 "text-[10px] font-mono",
-                task.days_overdue > 0 ? "text-red-400" : "text-zinc-600"
+                task.days_overdue > 0 ? "text-red-400" : "text-[#6B7280]"
               )}>
                 {task.days_overdue > 0 ? `${task.days_overdue}d overdue` : fmtDate(task.due_date)}
               </span>
             )}
-            <span className="text-[10px] text-zinc-700 font-mono">
+            <span className="text-[10px] text-[#6B7280] font-mono">
               blocked {blockedDays === 0 ? "today" : `${blockedDays}d ago`}
             </span>
           </div>
         </div>
 
-        <button className="text-zinc-600 hover:text-zinc-400 shrink-0 mt-0.5">
+        <button className="text-[#6B7280] hover:text-[#9CA3AF] shrink-0 mt-0.5">
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="border-t border-red-900/30 px-4 py-3 bg-zinc-900/40 space-y-3">
+        <div className="border-t border-red-900/30 px-4 py-3 bg-[#111318]/60 space-y-3">
 
           {/* Blocker reason */}
           <div>
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-1">Why blocked</p>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-1">Why blocked</p>
+            <p className="text-xs text-[#9CA3AF] leading-relaxed">
               {task.blocker_reason ?? "No reason provided — update this task to add context."}
             </p>
           </div>
@@ -143,24 +143,24 @@ function BlockerCard({ task, onUnblocked }: { task: BlockerTask; onUnblocked: ()
           {/* Dependency link */}
           {task.blocking_task ? (
             <div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-1.5">Blocked by</p>
+              <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-1.5">Blocked by</p>
               <Link
                 href={`/os/tasks/${task.blocking_task.id}`}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/60 border border-zinc-700 hover:border-zinc-500 transition-colors group"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1A1D24]/80 border border-[#2A2D35] hover:border-zinc-500 transition-colors group"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Link2 className="w-3 h-3 text-zinc-500 shrink-0 group-hover:text-zinc-300" strokeWidth={1.75} />
-                <span className="text-xs text-zinc-300 truncate flex-1 group-hover:text-white">{task.blocking_task.title}</span>
+                <Link2 className="w-3 h-3 text-[#9CA3AF] shrink-0 group-hover:text-[#9CA3AF]" strokeWidth={1.75} />
+                <span className="text-xs text-[#9CA3AF] truncate flex-1 group-hover:text-white">{task.blocking_task.title}</span>
                 {task.blocking_task.owner && (
-                  <span className="text-[10px] text-zinc-600 shrink-0">{task.blocking_task.owner.name}</span>
+                  <span className="text-[10px] text-[#6B7280] shrink-0">{task.blocking_task.owner.name}</span>
                 )}
-                <ArrowRight className="w-3 h-3 text-zinc-600 shrink-0 group-hover:text-zinc-400" strokeWidth={1.75} />
+                <ArrowRight className="w-3 h-3 text-[#6B7280] shrink-0 group-hover:text-[#9CA3AF]" strokeWidth={1.75} />
               </Link>
             </div>
           ) : (
             <div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-1">Dependency</p>
-              <p className="text-xs text-zinc-700 italic">No linked dependency — blocker is standalone.</p>
+              <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-1">Dependency</p>
+              <p className="text-xs text-[#6B7280] italic">No linked dependency — blocker is standalone.</p>
             </div>
           )}
 
@@ -168,7 +168,7 @@ function BlockerCard({ task, onUnblocked }: { task: BlockerTask; onUnblocked: ()
           <div className="flex items-center gap-2 pt-1">
             <Link
               href={`/os/tasks/${task.id}`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs font-medium text-[#9CA3AF] hover:bg-[#1A1D24] transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               Open task
@@ -200,7 +200,7 @@ function OwnerGroup({ group, onUnblocked }: { group: GroupedOwner; onUnblocked: 
   const critCount = group.tasks.filter((t) => t.priority === "critical").length
 
   return (
-    <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+    <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
       <button
         type="button"
         onClick={() => setCollapsed((v) => !v)}
@@ -209,7 +209,7 @@ function OwnerGroup({ group, onUnblocked }: { group: GroupedOwner; onUnblocked: 
         <OSAvatar name={group.owner.name} size="sm" />
         <div className="flex-1 min-w-0 text-left">
           <p className="text-sm font-semibold text-white">{group.owner.name}</p>
-          <p className="text-[10px] text-zinc-600 capitalize">{group.owner.role}</p>
+          <p className="text-[10px] text-[#6B7280] capitalize">{group.owner.role}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-[11px] font-mono text-red-400 font-semibold">
@@ -221,14 +221,14 @@ function OwnerGroup({ group, onUnblocked }: { group: GroupedOwner; onUnblocked: 
             </span>
           )}
           {collapsed
-            ? <ChevronDown className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-            : <ChevronUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+            ? <ChevronDown className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+            : <ChevronUp className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
           }
         </div>
       </button>
 
       {!collapsed && (
-        <div className="px-4 pb-4 space-y-2.5 border-t border-zinc-800/60 pt-3">
+        <div className="px-4 pb-4 space-y-2.5 border-t border-[#2A2D35]/60 pt-3">
           {group.tasks.map((task) => (
             <BlockerCard key={task.id} task={task} onUnblocked={onUnblocked} />
           ))}
@@ -267,7 +267,7 @@ export default function BlockersPage() {
               </span>
             )}
           </h1>
-          <p className="text-xs text-zinc-500 mt-1">
+          <p className="text-xs text-[#9CA3AF] mt-1">
             Active blocks and dependencies — auto-populated from task status
           </p>
         </div>
@@ -275,7 +275,7 @@ export default function BlockersPage() {
           type="button"
           onClick={reload}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-[#9CA3AF] text-xs font-medium hover:bg-[#1A1D24] transition-colors disabled:opacity-50"
         >
           <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} strokeWidth={1.75} />
           Refresh
@@ -285,14 +285,14 @@ export default function BlockersPage() {
       {/* ── Stats Bar ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Blocked",     value: stats.total,          color: stats.total > 0 ? "text-red-400" : "text-white",    border: stats.total > 0 ? "border-red-900/40" : "border-zinc-800" },
-          { label: "Critical",          value: stats.critical,       color: stats.critical > 0 ? "text-red-400" : "text-white", border: stats.critical > 0 ? "border-red-900/40" : "border-zinc-800" },
+          { label: "Total Blocked",     value: stats.total,          color: stats.total > 0 ? "text-red-400" : "text-white",    border: stats.total > 0 ? "border-red-900/40" : "border-[#2A2D35]" },
+          { label: "Critical",          value: stats.critical,       color: stats.critical > 0 ? "text-red-400" : "text-white", border: stats.critical > 0 ? "border-red-900/40" : "border-[#2A2D35]" },
           { label: "Owners Affected",   value: stats.ownersAffected, color: "text-yellow-400",  border: "border-yellow-900/30" },
-          { label: "Overdue",           value: stats.overdue,        color: stats.overdue > 0 ? "text-orange-400" : "text-white", border: stats.overdue > 0 ? "border-orange-900/40" : "border-zinc-800" },
+          { label: "Overdue",           value: stats.overdue,        color: stats.overdue > 0 ? "text-orange-400" : "text-white", border: stats.overdue > 0 ? "border-orange-900/40" : "border-[#2A2D35]" },
         ].map(({ label, value, color, border }) => (
-          <div key={label} className={cn("rounded-xl bg-zinc-900 border px-4 py-3", border)}>
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold">{label}</p>
-            <p className={cn("text-2xl font-bold font-condensed mt-1", isLoading ? "text-zinc-700" : color)}>
+          <div key={label} className={cn("rounded-xl bg-[#111318] border px-4 py-3", border)}>
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold">{label}</p>
+            <p className={cn("text-2xl font-bold font-condensed mt-1", isLoading ? "text-[#6B7280]" : color)}>
               {isLoading ? "—" : value}
             </p>
           </div>
@@ -303,15 +303,15 @@ export default function BlockersPage() {
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(2)].map((_, i) => (
-            <div key={i} className="rounded-xl bg-zinc-900 border border-zinc-800 h-24 animate-pulse" />
+            <div key={i} className="rounded-xl bg-[#111318] border border-[#2A2D35] h-24 animate-pulse" />
           ))}
         </div>
       ) : !hasBlockers ? (
-        <div className="rounded-xl bg-zinc-900 border border-green-900/30 px-6 py-10 text-center space-y-3">
+        <div className="rounded-xl bg-[#111318] border border-green-900/30 px-6 py-10 text-center space-y-3">
           <TrendingUp className="w-8 h-8 text-green-400 mx-auto" strokeWidth={1.5} />
           <p className="text-sm font-semibold text-green-400">No active blockers</p>
-          <p className="text-xs text-zinc-600 max-w-sm mx-auto">
-            Tasks with <code className="text-zinc-500">status: blocked</code> will appear here automatically.
+          <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+            Tasks with <code className="text-[#9CA3AF]">status: blocked</code> will appear here automatically.
             Mark any task as "Blocked" from its detail page to track it.
           </p>
         </div>
@@ -322,11 +322,11 @@ export default function BlockersPage() {
           ))}
 
           {unassigned.length > 0 && (
-            <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-              <div className="flex items-center gap-3 px-5 py-3.5 border-b border-zinc-800/60">
-                <Clock className="w-4 h-4 text-zinc-600" strokeWidth={1.75} />
-                <p className="text-sm font-semibold text-zinc-400">Unassigned</p>
-                <span className="ml-auto text-[11px] font-mono text-zinc-600">{unassigned.length}</span>
+            <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#2A2D35]/60">
+                <Clock className="w-4 h-4 text-[#6B7280]" strokeWidth={1.75} />
+                <p className="text-sm font-semibold text-[#9CA3AF]">Unassigned</p>
+                <span className="ml-auto text-[11px] font-mono text-[#6B7280]">{unassigned.length}</span>
               </div>
               <div className="px-4 pb-4 pt-3 space-y-2.5">
                 {unassigned.map((task) => (

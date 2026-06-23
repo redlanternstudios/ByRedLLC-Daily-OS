@@ -64,7 +64,7 @@ export default async function OSTeamPage() {
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Team</h1>
-        <p className="text-sm text-zinc-500 mt-1">{members.length} active members</p>
+        <p className="text-sm text-[#9CA3AF] mt-1">{members.length} active members</p>
       </div>
 
       {members.length === 0 ? (
@@ -78,26 +78,26 @@ export default async function OSTeamPage() {
           {members.map((member) => (
             <div
               key={member.id}
-              className="rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors p-5"
+              className="rounded-xl bg-[#111318] border border-[#2A2D35] hover:border-[#2A2D35] transition-colors p-5"
             >
               <div className="flex items-start gap-3 mb-4">
                 <OSAvatar name={member.name} size="md" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{member.name}</p>
-                  <p className="text-xs text-zinc-500 truncate">{member.email}</p>
-                  <span className="inline-block mt-1.5 text-[10px] font-medium text-zinc-500 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded capitalize">
+                  <p className="text-xs text-[#9CA3AF] truncate">{member.email}</p>
+                  <span className="inline-block mt-1.5 text-[10px] font-medium text-[#9CA3AF] bg-[#1A1D24] border border-[#2A2D35] px-2 py-0.5 rounded capitalize">
                     {ROLE_MAP[member.role] ?? member.role}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2 pt-3 border-t border-zinc-800">
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <CheckSquare className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+              <div className="space-y-2 pt-3 border-t border-[#2A2D35]">
+                <div className="flex items-center gap-2 text-xs text-[#9CA3AF]">
+                  <CheckSquare className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
                   <span>{member.task_count} active tasks</span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <Building2 className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+                <div className="flex items-center gap-2 text-xs text-[#9CA3AF]">
+                  <Building2 className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
                   <span>{member.tenant_count} tenants</span>
                 </div>
               </div>

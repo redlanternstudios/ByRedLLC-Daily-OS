@@ -22,7 +22,7 @@ type Doc = {
 type DocFull = Doc & { content: string | null }
 
 const DOC_TYPE_CLASSES: Record<string, string> = {
-  note: "bg-zinc-500/10 text-zinc-400 border border-zinc-500/30",
+  note: "bg-zinc-500/10 text-[#9CA3AF] border border-zinc-500/30",
   sop: "bg-sky-500/10 text-sky-400 border border-sky-500/30",
   spec: "bg-violet-500/10 text-violet-400 border border-violet-500/30",
   brief: "bg-amber-500/10 text-amber-400 border border-amber-500/30",
@@ -110,17 +110,17 @@ export default function OSDocsPage() {
     return (
       <div className="space-y-4 max-w-2xl">
         <div className="flex items-center justify-between">
-          <button type="button" onClick={() => setSelected(null)} className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          <button type="button" onClick={() => setSelected(null)} className="flex items-center gap-1.5 text-xs text-[#9CA3AF] hover:text-[#9CA3AF] transition-colors">
             <ChevronLeft className="w-3.5 h-3.5" /> All docs
           </button>
-          {savingContent && <span className="text-[10px] text-zinc-600">Saving…</span>}
+          {savingContent && <span className="text-[10px] text-[#6B7280]">Saving…</span>}
         </div>
 
         <div>
           <h1 className="text-2xl font-bold text-white">{selected.title}</h1>
           <div className="flex items-center gap-2 mt-1.5">
             {typeTag(selected.doc_type)}
-            <span className="text-[10px] text-zinc-600">Updated {formatDate(selected.updated_at)}</span>
+            <span className="text-[10px] text-[#6B7280]">Updated {formatDate(selected.updated_at)}</span>
           </div>
         </div>
 
@@ -128,7 +128,7 @@ export default function OSDocsPage() {
           value={editContent}
           onChange={e => autoSave(e.target.value)}
           placeholder="Start writing… markdown-style. Use headers, bullets, code blocks."
-          className="w-full min-h-[480px] bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-zinc-300 placeholder:text-zinc-700 resize-none focus:outline-none focus:border-zinc-700 leading-relaxed font-mono"
+          className="w-full min-h-[480px] bg-[#111318] border border-[#2A2D35] rounded-lg px-4 py-3 text-sm text-[#9CA3AF] placeholder:text-[#6B7280] resize-none focus:outline-none focus:border-[#2A2D35] leading-relaxed font-mono"
         />
       </div>
     )
@@ -139,7 +139,7 @@ export default function OSDocsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-condensed font-bold text-white tracking-tight">Docs</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">{docs.length} {docs.length === 1 ? "document" : "documents"}</p>
+          <p className="text-xs text-[#9CA3AF] mt-0.5">{docs.length} {docs.length === 1 ? "document" : "documents"}</p>
         </div>
         <Button size="sm" className="bg-[#D7261E] hover:bg-[#B51E18] text-white text-xs" onClick={() => setShowNew(v => !v)}>
           <Plus className="w-3.5 h-3.5 mr-1.5" /> New doc
@@ -147,20 +147,20 @@ export default function OSDocsPage() {
       </div>
 
       {showNew && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-          <p className="text-xs font-semibold text-zinc-400 mb-3 uppercase tracking-wider">New document</p>
+        <div className="bg-[#111318] border border-[#2A2D35] rounded-lg p-4">
+          <p className="text-xs font-semibold text-[#9CA3AF] mb-3 uppercase tracking-wider">New document</p>
           <form onSubmit={createDoc} className="flex items-end gap-3">
             <div className="flex-1 space-y-1">
-              <Label className="text-xs text-zinc-500">Title *</Label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} required className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="Q2 SOPs, Project Brief, Meeting Notes…" />
+              <Label className="text-xs text-[#9CA3AF]">Title *</Label>
+              <Input value={title} onChange={e => setTitle(e.target.value)} required className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="Q2 SOPs, Project Brief, Meeting Notes…" />
             </div>
             <div className="w-36 space-y-1">
-              <Label className="text-xs text-zinc-500">Type</Label>
+              <Label className="text-xs text-[#9CA3AF]">Type</Label>
               <Select value={docType} onValueChange={setDocType}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectTrigger className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-[#111318] border-[#2A2D35]">
                   {["note", "sop", "spec", "brief"].map(t => (
-                    <SelectItem key={t} value={t} className="text-zinc-300 uppercase text-xs tracking-wide">{t}</SelectItem>
+                    <SelectItem key={t} value={t} className="text-[#9CA3AF] uppercase text-xs tracking-wide">{t}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -169,16 +169,16 @@ export default function OSDocsPage() {
               <Button type="submit" size="sm" disabled={creating} className="bg-[#D7261E] hover:bg-[#B51E18] text-white text-xs">
                 {creating ? "Creating…" : "Create"}
               </Button>
-              <Button type="button" size="sm" variant="ghost" className="text-zinc-500 text-xs" onClick={() => setShowNew(false)}>Cancel</Button>
+              <Button type="button" size="sm" variant="ghost" className="text-[#9CA3AF] text-xs" onClick={() => setShowNew(false)}>Cancel</Button>
             </div>
           </form>
         </div>
       )}
 
-      {loading && <p className="text-xs text-zinc-600 py-8 text-center">Loading…</p>}
+      {loading && <p className="text-xs text-[#6B7280] py-8 text-center">Loading…</p>}
 
       {!loading && docs.length === 0 && (
-        <p className="text-xs text-zinc-600 py-8 text-center">No documents yet. Create your first SOP, note, or spec above.</p>
+        <p className="text-xs text-[#6B7280] py-8 text-center">No documents yet. Create your first SOP, note, or spec above.</p>
       )}
 
       {!loading && docs.length > 0 && (
@@ -188,16 +188,16 @@ export default function OSDocsPage() {
               type="button"
               key={doc.id}
               onClick={() => { setSelected(doc as DocFull); setEditContent("") }}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-center gap-3 hover:border-zinc-700 transition-colors text-left group"
+              className="w-full bg-[#111318] border border-[#2A2D35] rounded-lg px-4 py-3 flex items-center gap-3 hover:border-[#2A2D35] transition-colors text-left group"
             >
-              <div className="w-7 h-7 rounded-md bg-zinc-800 flex items-center justify-center shrink-0">
-                <FileText className="w-3.5 h-3.5 text-zinc-500" />
+              <div className="w-7 h-7 rounded-md bg-[#1A1D24] flex items-center justify-center shrink-0">
+                <FileText className="w-3.5 h-3.5 text-[#9CA3AF]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-zinc-200 truncate">{doc.title}</p>
+                <p className="text-sm font-medium text-white truncate">{doc.title}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <Clock className="w-3 h-3 text-zinc-700" />
-                  <span className="text-xs text-zinc-600">Updated {formatDate(doc.updated_at)}</span>
+                  <Clock className="w-3 h-3 text-[#6B7280]" />
+                  <span className="text-xs text-[#6B7280]">Updated {formatDate(doc.updated_at)}</span>
                 </div>
               </div>
               {typeTag(doc.doc_type)}

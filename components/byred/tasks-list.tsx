@@ -94,7 +94,7 @@ export function TasksList({ initialTasks }: TasksListProps) {
           <h1 className="text-3xl font-condensed font-bold text-zinc-900 tracking-tight">
             Tasks
           </h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-sm text-[#9CA3AF] mt-1">
             {filtered.length} {filtered.length === 1 ? "task" : "tasks"}
           </p>
         </div>
@@ -117,23 +117,23 @@ export function TasksList({ initialTasks }: TasksListProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tasks..."
-            className="h-8 w-48 bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 text-xs focus-visible:ring-byred-red"
+            className="h-8 w-48 bg-white border-zinc-300 text-[#6B7280] placeholder:text-[#9CA3AF] text-xs focus-visible:ring-byred-red"
           />
 
           {/* Tenant */}
           <Select value={tenantFilter} onValueChange={setTenantFilter}>
-            <SelectTrigger className="h-8 w-44 bg-white border-zinc-300 text-xs text-zinc-600">
+            <SelectTrigger className="h-8 w-44 bg-white border-zinc-300 text-xs text-[#6B7280]">
               <SelectValue placeholder="Tenant" />
             </SelectTrigger>
             <SelectContent className="bg-white border-zinc-200 shadow-md">
-              <SelectItem value="all" className="text-xs text-zinc-600">
+              <SelectItem value="all" className="text-xs text-[#6B7280]">
                 All tenants
               </SelectItem>
               {TENANT_OPTIONS.map((t) => (
                 <SelectItem
                   key={t.id}
                   value={t.id}
-                  className="text-xs text-zinc-600"
+                  className="text-xs text-[#6B7280]"
                 >
                   {t.name}
                 </SelectItem>
@@ -143,18 +143,18 @@ export function TasksList({ initialTasks }: TasksListProps) {
 
           {/* Status */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-8 w-36 bg-white border-zinc-300 text-xs text-zinc-600">
+            <SelectTrigger className="h-8 w-36 bg-white border-zinc-300 text-xs text-[#6B7280]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent className="bg-white border-zinc-200 shadow-md">
-              <SelectItem value="all" className="text-xs text-zinc-600">
+              <SelectItem value="all" className="text-xs text-[#6B7280]">
                 All statuses
               </SelectItem>
               {STATUS_OPTIONS.map((s) => (
                 <SelectItem
                   key={s}
                   value={s}
-                  className="text-xs text-zinc-600 capitalize"
+                  className="text-xs text-[#6B7280] capitalize"
                 >
                   {s.replace("_", " ")}
                 </SelectItem>
@@ -164,15 +164,15 @@ export function TasksList({ initialTasks }: TasksListProps) {
 
           {/* AI Mode */}
           <Select value={aiModeFilter} onValueChange={setAiModeFilter}>
-            <SelectTrigger className="h-8 w-36 bg-white border-zinc-300 text-xs text-zinc-600">
+            <SelectTrigger className="h-8 w-36 bg-white border-zinc-300 text-xs text-[#6B7280]">
               <SelectValue placeholder="AI Mode" />
             </SelectTrigger>
             <SelectContent className="bg-white border-zinc-200 shadow-md">
-              <SelectItem value="all" className="text-xs text-zinc-600">
+              <SelectItem value="all" className="text-xs text-[#6B7280]">
                 All modes
               </SelectItem>
               {AI_MODE_OPTIONS.map((m) => (
-                <SelectItem key={m} value={m} className="text-xs text-zinc-600">
+                <SelectItem key={m} value={m} className="text-xs text-[#6B7280]">
                   {m}
                 </SelectItem>
               ))}
@@ -181,18 +181,18 @@ export function TasksList({ initialTasks }: TasksListProps) {
 
           {/* Priority */}
           <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="h-8 w-32 bg-white border-zinc-300 text-xs text-zinc-600">
+            <SelectTrigger className="h-8 w-32 bg-white border-zinc-300 text-xs text-[#6B7280]">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent className="bg-white border-zinc-200 shadow-md">
-              <SelectItem value="all" className="text-xs text-zinc-600">
+              <SelectItem value="all" className="text-xs text-[#6B7280]">
                 All priorities
               </SelectItem>
               {PRIORITY_OPTIONS.map((p) => (
                 <SelectItem
                   key={p}
                   value={p}
-                  className="text-xs text-zinc-600 capitalize"
+                  className="text-xs text-[#6B7280] capitalize"
                 >
                   {p}
                 </SelectItem>
@@ -210,7 +210,7 @@ export function TasksList({ initialTasks }: TasksListProps) {
             />
             <Label
               htmlFor="overdue"
-              className="text-xs text-zinc-500 cursor-pointer"
+              className="text-xs text-[#9CA3AF] cursor-pointer"
             >
               Overdue only
             </Label>
@@ -225,7 +225,7 @@ export function TasksList({ initialTasks }: TasksListProps) {
             />
             <Label
               htmlFor="blockers"
-              className="text-xs text-zinc-500 cursor-pointer"
+              className="text-xs text-[#9CA3AF] cursor-pointer"
             >
               Blockers only
             </Label>
@@ -236,7 +236,7 @@ export function TasksList({ initialTasks }: TasksListProps) {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-8 text-xs text-zinc-400 hover:text-zinc-700 gap-1.5"
+              className="h-8 text-xs text-[#9CA3AF] hover:text-[#6B7280] gap-1.5"
             >
               <X className="w-3 h-3" strokeWidth={1.75} />
               Clear filters
@@ -249,7 +249,7 @@ export function TasksList({ initialTasks }: TasksListProps) {
       <TaskTable tasks={filtered} />
 
       {/* Footer */}
-      <p className="text-xs text-zinc-400 text-right font-mono">
+      <p className="text-xs text-[#9CA3AF] text-right font-mono">
         Showing {filtered.length} of {initialTasks.length} tasks
       </p>
     </div>

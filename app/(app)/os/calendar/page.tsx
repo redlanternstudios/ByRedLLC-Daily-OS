@@ -175,7 +175,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
           onClick={() => onChange(c)}
           className={cn(
             "w-6 h-6 rounded-full border-2 transition-all",
-            value === c ? "border-white scale-110" : "border-transparent hover:border-zinc-500"
+            value === c ? "border-white scale-110" : "border-transparent hover:border-[#9CA3AF]/60"
           )}
           style={{ backgroundColor: c }}
         />
@@ -184,7 +184,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-6 h-6 rounded-full cursor-pointer border border-zinc-700 bg-transparent"
+        className="w-6 h-6 rounded-full cursor-pointer border border-[#2A2D35] bg-transparent"
         title="Custom color"
       />
     </div>
@@ -313,14 +313,14 @@ function EventFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative z-10 w-full max-w-lg bg-[#07080D] border border-[#2A2D35] rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2D35] shrink-0">
           <h2 className="text-sm font-semibold text-white">
             {editEvent ? "Edit Event" : "New Event"}
           </h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors">
-            <X className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.75} />
+          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-[#1A1D24] flex items-center justify-center hover:bg-[#1A1D24] transition-colors">
+            <X className="w-3.5 h-3.5 text-[#9CA3AF]" strokeWidth={1.75} />
           </button>
         </div>
 
@@ -336,23 +336,23 @@ function EventFormModal({
 
             {/* Title */}
             <div>
-              <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Title *</label>
+              <label className="block text-[11px] text-[#9CA3AF] font-medium uppercase tracking-widest mb-1.5">Title *</label>
               <input
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
                 placeholder="Event title..."
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
+                className="w-full bg-[#111318] border border-[#2A2D35] rounded-lg px-3 py-2 text-sm text-white placeholder:text-[#6B7280] focus:outline-none focus:border-[#2A2D35]"
               />
             </div>
 
             {/* Type + Color row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Type</label>
+                <label className="block text-[11px] text-[#9CA3AF] font-medium uppercase tracking-widest mb-1.5">Type</label>
                 <select
                   value={form.event_type}
                   onChange={(e) => set("event_type", e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
+                  className="w-full bg-[#111318] border border-[#2A2D35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2A2D35]"
                 >
                   {EVENT_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>{t.label}</option>
@@ -360,7 +360,7 @@ function EventFormModal({
                 </select>
               </div>
               <div>
-                <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Color</label>
+                <label className="block text-[11px] text-[#9CA3AF] font-medium uppercase tracking-widest mb-1.5">Color</label>
                 <ColorPicker value={form.calendar_color} onChange={(c) => set("calendar_color", c)} />
               </div>
             </div>
@@ -372,7 +372,7 @@ function EventFormModal({
                 onClick={() => set("all_day", !form.all_day)}
                 className={cn(
                   "relative w-9 h-5 rounded-full transition-colors",
-                  form.all_day ? "bg-[#D7261E]" : "bg-zinc-700"
+                  form.all_day ? "bg-[#D7261E]" : "bg-[#1A1D24]"
                 )}
               >
                 <span className={cn(
@@ -380,30 +380,30 @@ function EventFormModal({
                   form.all_day ? "translate-x-4" : "translate-x-0.5"
                 )} />
               </button>
-              <span className="text-xs text-zinc-400">All day event</span>
+              <span className="text-xs text-[#9CA3AF]">All day event</span>
             </div>
 
             {/* Date / time */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">
+                <label className="block text-[11px] text-[#9CA3AF] font-medium uppercase tracking-widest mb-1.5">
                   {form.all_day ? "Date" : "Start"}
                 </label>
                 <input
                   type={form.all_day ? "date" : "datetime-local"}
                   value={form.all_day ? form.start_at.split("T")[0] : form.start_at}
                   onChange={(e) => set("start_at", e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
+                  className="w-full bg-[#111318] border border-[#2A2D35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2A2D35]"
                 />
               </div>
               {!form.all_day && (
                 <div>
-                  <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">End</label>
+                  <label className="block text-[11px] text-[#9CA3AF] font-medium uppercase tracking-widest mb-1.5">End</label>
                   <input
                     type="datetime-local"
                     value={form.end_at}
                     onChange={(e) => set("end_at", e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-600"
+                    className="w-full bg-[#111318] border border-[#2A2D35] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#2A2D35]"
                   />
                 </div>
               )}
@@ -413,7 +413,7 @@ function EventFormModal({
 
             {/* Description */}
             <div>
-              <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Notes</label>
+              <label className="block text-[11px] text-[#9CA3AF] font-medium uppercase tracking-widest mb-1.5">Notes</label>
               <MentionTextarea
                 value={form.description}
                 onChange={(v) => set("description", v)}
@@ -421,14 +421,14 @@ function EventFormModal({
                 autoResize
                 maxHeight={120}
                 placeholder="Additional context..."
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
+                className="w-full bg-[#111318] border border-[#2A2D35] rounded-lg px-3 py-2 text-sm text-white placeholder:text-[#6B7280] focus:outline-none focus:border-[#2A2D35]"
               />
             </div>
 
             {/* Attendees */}
             {directoryUsers.length > 0 && (
               <div>
-                <label className="block text-[11px] text-zinc-500 font-medium uppercase tracking-widest mb-1.5">Attendees</label>
+                <label className="block text-[11px] text-[#9CA3AF] font-medium uppercase tracking-widest mb-1.5">Attendees</label>
                 <div className="space-y-1">
                   {directoryUsers.map((u) => (
                     <button
@@ -438,11 +438,11 @@ function EventFormModal({
                       className={cn(
                         "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs transition-colors border",
                         form.attendee_ids.includes(u.id)
-                          ? "bg-zinc-800 border-zinc-600 text-white"
-                          : "bg-transparent border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+                          ? "bg-[#1A1D24] border-[#2A2D35] text-white"
+                          : "bg-transparent border-[#2A2D35] text-[#9CA3AF] hover:text-[#9CA3AF] hover:border-[#2A2D35]"
                       )}
                     >
-                      <div className="w-4 h-4 rounded-full bg-zinc-700 flex items-center justify-center text-[9px] text-zinc-300 shrink-0">
+                      <div className="w-4 h-4 rounded-full bg-[#1A1D24] flex items-center justify-center text-[9px] text-[#9CA3AF] shrink-0">
                         {u.name.charAt(0)}
                       </div>
                       {u.name}
@@ -457,11 +457,11 @@ function EventFormModal({
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-4 border-t border-zinc-800 flex items-center justify-end gap-2 shrink-0 bg-zinc-950">
+          <div className="px-5 py-4 border-t border-[#2A2D35] flex items-center justify-end gap-2 shrink-0 bg-[#07080D]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white transition-colors"
+              className="px-4 py-1.5 rounded-lg text-xs text-[#9CA3AF] hover:text-white transition-colors"
             >
               Cancel
             </button>
@@ -512,37 +512,37 @@ function EventDetailPanel({
   const isTaskEvent = event._source === "task"
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 bg-zinc-950 border-l border-zinc-800 z-50 flex flex-col shadow-2xl">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
+    <div className="fixed inset-y-0 right-0 w-80 bg-[#07080D] border-l border-[#2A2D35] z-50 flex flex-col shadow-2xl">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2D35] shrink-0">
         <span className="text-sm font-semibold text-white">Event Detail</span>
         <div className="flex items-center gap-1.5">
           {canEdit && !isTaskEvent && (
             <>
               <button
                 onClick={onEdit}
-                className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-zinc-600 transition-colors"
+                className="w-7 h-7 rounded-lg bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center hover:border-[#2A2D35] transition-colors"
                 title="Edit event"
               >
-                <Edit3 className="w-3 h-3 text-zinc-400" strokeWidth={1.75} />
+                <Edit3 className="w-3 h-3 text-[#9CA3AF]" strokeWidth={1.75} />
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-red-700 hover:text-red-400 transition-colors"
+                className="w-7 h-7 rounded-lg bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center hover:border-red-700 hover:text-red-400 transition-colors"
                 title="Delete event"
               >
                 {deleting
-                  ? <Loader2 className="w-3 h-3 text-zinc-400 animate-spin" />
-                  : <Trash2 className="w-3 h-3 text-zinc-400" strokeWidth={1.75} />
+                  ? <Loader2 className="w-3 h-3 text-[#9CA3AF] animate-spin" />
+                  : <Trash2 className="w-3 h-3 text-[#9CA3AF]" strokeWidth={1.75} />
                 }
               </button>
             </>
           )}
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-zinc-600 transition-colors"
+            className="w-7 h-7 rounded-lg bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center hover:border-[#2A2D35] transition-colors"
           >
-            <X className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.75} />
+            <X className="w-3.5 h-3.5 text-[#9CA3AF]" strokeWidth={1.75} />
           </button>
         </div>
       </div>
@@ -551,7 +551,7 @@ function EventDetailPanel({
         <div className="h-0.5 rounded-full" style={{ backgroundColor: color }} />
 
         <div>
-          <span className="text-[10px] text-zinc-600 uppercase tracking-widest">
+          <span className="text-[10px] text-[#6B7280] uppercase tracking-widest">
             {EVENT_TYPES.find((t) => t.value === event.event_type)?.label ?? event.event_type}
             {isTaskEvent && " · Task Due"}
           </span>
@@ -559,31 +559,31 @@ function EventDetailPanel({
         </div>
 
         {event.description && (
-          <p className="text-sm text-zinc-400 leading-relaxed">{event.description}</p>
+          <p className="text-sm text-[#9CA3AF] leading-relaxed">{event.description}</p>
         )}
 
         <div className="space-y-2.5">
           <div className="flex items-start gap-2 text-xs">
-            <Clock className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
-            <span className="text-zinc-400">{dateLabel}</span>
+            <Clock className="w-3.5 h-3.5 text-[#6B7280] mt-0.5 shrink-0" strokeWidth={1.75} />
+            <span className="text-[#9CA3AF]">{dateLabel}</span>
           </div>
           {event.calendar_label && (
             <div className="flex items-start gap-2 text-xs">
-              <Tag className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
-              <span className="text-zinc-400">{event.calendar_label}</span>
+              <Tag className="w-3.5 h-3.5 text-[#6B7280] mt-0.5 shrink-0" strokeWidth={1.75} />
+              <span className="text-[#9CA3AF]">{event.calendar_label}</span>
             </div>
           )}
           {event.task_id && (
             <div className="flex items-start gap-2 text-xs">
-              <CheckSquare className="w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0" strokeWidth={1.75} />
-              <span className="text-zinc-500">Linked to task</span>
+              <CheckSquare className="w-3.5 h-3.5 text-[#6B7280] mt-0.5 shrink-0" strokeWidth={1.75} />
+              <span className="text-[#9CA3AF]">Linked to task</span>
             </div>
           )}
         </div>
 
         {isTaskEvent && event._task && (
-          <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-3 space-y-2">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest">Task</p>
+          <div className="rounded-lg bg-[#111318] border border-[#2A2D35] p-3 space-y-2">
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest">Task</p>
             <div className="flex flex-wrap gap-1.5">
               {/* Street light: critical=red, high=red, medium=yellow, low=green */}
               <span className={cn(
@@ -592,7 +592,7 @@ function EventDetailPanel({
                 event._task.priority === "high"     ? "bg-red-950 text-red-300 border-red-800" :
                 event._task.priority === "medium"   ? "bg-yellow-950 text-yellow-300 border-yellow-800" :
                 event._task.priority === "low"      ? "bg-green-950 text-green-300 border-green-800" :
-                                                      "bg-zinc-800 text-zinc-400 border-zinc-700"
+                                                      "bg-[#1A1D24] text-[#9CA3AF] border-[#2A2D35]"
               )}>
                 {event._task.priority}
               </span>
@@ -602,7 +602,7 @@ function EventDetailPanel({
                 event._task.status === "in_progress" ? "bg-yellow-950 text-yellow-300 border border-yellow-800" :
                 event._task.status === "blocked"      ? "bg-red-950 text-red-300 border border-red-800" :
                 event._task.status === "done"         ? "bg-green-950 text-green-300 border border-green-800" :
-                                                        "bg-zinc-800 text-zinc-400 border-zinc-700"
+                                                        "bg-[#1A1D24] text-[#9CA3AF] border-[#2A2D35]"
               )}>
                 {event._task.status.replace(/_/g, " ")}
               </span>
@@ -618,20 +618,20 @@ function EventDetailPanel({
 
           {event.os_calendar_event_attendees?.length > 0 && (
           <div className="space-y-2">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest">
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest">
               Attendees ({event.os_calendar_event_attendees.length})
             </p>
             {event.os_calendar_event_attendees.map((a) => (
               <div key={a.user_id} className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-zinc-800 flex items-center justify-center text-[9px] text-zinc-400 font-semibold shrink-0">
+                <div className="w-5 h-5 rounded-full bg-[#1A1D24] flex items-center justify-center text-[9px] text-[#9CA3AF] font-semibold shrink-0">
                   ?
                 </div>
-                <span className="text-xs text-zinc-400 flex-1 font-mono text-[10px]">{a.user_id.slice(0, 8)}…</span>
+                <span className="text-xs text-[#9CA3AF] flex-1 font-mono text-[10px]">{a.user_id.slice(0, 8)}…</span>
                 <span className={cn(
                   "text-[10px] px-1.5 py-0.5 rounded",
                   a.rsvp === "accepted" ? "bg-green-950/60 text-green-400" :
                   a.rsvp === "declined" ? "bg-red-950/60 text-red-400" :
-                                          "bg-zinc-800 text-zinc-500"
+                                          "bg-[#1A1D24] text-[#9CA3AF]"
                 )}>
                   {a.rsvp}
                 </span>
@@ -690,8 +690,8 @@ function FilterBar({
         className={cn(
           "flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors",
           activeCount > 0
-            ? "bg-zinc-800 border-zinc-600 text-white"
-            : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200"
+            ? "bg-[#1A1D24] border-[#2A2D35] text-white"
+            : "bg-[#111318] border-[#2A2D35] text-[#9CA3AF] hover:text-white"
         )}
       >
         <Filter className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -703,20 +703,20 @@ function FilterBar({
       </button>
 
       {open && (
-        <div className="absolute top-full right-0 mt-1.5 w-64 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute top-full right-0 mt-1.5 w-64 bg-[#111318] border border-[#2A2D35] rounded-xl shadow-2xl z-50 overflow-hidden">
           {/* Search */}
-          <div className="p-3 border-b border-zinc-800">
+          <div className="p-3 border-b border-[#2A2D35]">
             <input
               value={filters.search}
               onChange={(e) => onChange({ ...filters, search: e.target.value })}
               placeholder="Search events..."
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600"
+              className="w-full bg-[#1A1D24] border border-[#2A2D35] rounded-lg px-2.5 py-1.5 text-xs text-white placeholder:text-[#6B7280] focus:outline-none focus:border-[#2A2D35]"
             />
           </div>
 
           {/* Type filters */}
-          <div className="p-3 border-b border-zinc-800">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2">Event Type</p>
+          <div className="p-3 border-b border-[#2A2D35]">
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest mb-2">Event Type</p>
             <div className="flex flex-wrap gap-1.5">
               {EVENT_TYPES.map((t) => (
                 <button
@@ -725,8 +725,8 @@ function FilterBar({
                   className={cn(
                     "flex items-center gap-1 px-2 py-0.5 rounded text-[11px] border transition-colors",
                     filters.eventTypes.includes(t.value)
-                      ? "bg-zinc-700 border-zinc-500 text-white"
-                      : "bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                      ? "bg-[#1A1D24] border-zinc-500 text-white"
+                      : "bg-transparent border-[#2A2D35] text-[#9CA3AF] hover:border-[#2A2D35] hover:text-[#9CA3AF]"
                   )}
                 >
                   <span
@@ -741,8 +741,8 @@ function FilterBar({
 
           {/* User filters */}
           {directoryUsers.length > 0 && (
-            <div className="p-3 border-b border-zinc-800">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2">People</p>
+            <div className="p-3 border-b border-[#2A2D35]">
+              <p className="text-[10px] text-[#6B7280] uppercase tracking-widest mb-2">People</p>
               <div className="space-y-1">
                 {directoryUsers.map((u) => (
                   <button
@@ -751,11 +751,11 @@ function FilterBar({
                     className={cn(
                       "w-full flex items-center gap-2 px-2 py-1 rounded text-xs transition-colors",
                       filters.userIds.includes(u.id)
-                        ? "bg-zinc-700 text-white"
-                        : "text-zinc-500 hover:text-zinc-300"
+                        ? "bg-[#1A1D24] text-white"
+                        : "text-[#9CA3AF] hover:text-[#9CA3AF]"
                     )}
                   >
-                    <div className="w-4 h-4 rounded-full bg-zinc-700 flex items-center justify-center text-[9px] shrink-0">
+                    <div className="w-4 h-4 rounded-full bg-[#1A1D24] flex items-center justify-center text-[9px] shrink-0">
                       {u.name.charAt(0)}
                     </div>
                     {u.name}
@@ -770,7 +770,7 @@ function FilterBar({
             <div className="p-2">
               <button
                 onClick={() => onChange({ eventTypes: [], userIds: [], hasProject: null, search: "" })}
-                className="w-full text-xs text-zinc-500 hover:text-zinc-300 py-1 transition-colors"
+                className="w-full text-xs text-[#9CA3AF] hover:text-[#9CA3AF] py-1 transition-colors"
               >
                 Clear all filters
               </button>
@@ -792,23 +792,23 @@ function TableView({
   onSelect: (e: CalendarEventRow) => void
 }) {
   return (
-    <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+    <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-zinc-800">
-              <th className="text-left px-4 py-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Event</th>
-              <th className="text-left px-4 py-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Type</th>
-              <th className="text-left px-4 py-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Date</th>
-              <th className="text-left px-4 py-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Time</th>
-              <th className="text-left px-4 py-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Attendees</th>
-              <th className="text-left px-4 py-3 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Status</th>
+            <tr className="border-b border-[#2A2D35]">
+              <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">Event</th>
+              <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">Type</th>
+              <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">Date</th>
+              <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">Time</th>
+              <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">Attendees</th>
+              <th className="text-left px-4 py-3 text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">Status</th>
             </tr>
           </thead>
           <tbody>
             {events.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-sm text-zinc-600">
+                <td colSpan={6} className="px-4 py-12 text-center text-sm text-[#6B7280]">
                   No events match the current filters.
                 </td>
               </tr>
@@ -819,23 +819,23 @@ function TableView({
                   <tr
                     key={evt.id}
                     onClick={() => onSelect(evt)}
-                    className="border-b border-zinc-800/50 hover:bg-white/[0.03] cursor-pointer transition-colors"
+                    className="border-b border-[#2A2D35]/50 hover:bg-white/[0.03] cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                        <span className="text-zinc-200 font-medium truncate max-w-[180px]">{evt.title}</span>
+                        <span className="text-white font-medium truncate max-w-[180px]">{evt.title}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-[11px] text-zinc-500">
+                      <span className="text-[11px] text-[#9CA3AF]">
                         {EVENT_TYPES.find((t) => t.value === evt.event_type)?.label ?? evt.event_type}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-zinc-400 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-[#9CA3AF] whitespace-nowrap">
                       {fmtDate(evt.start_at)}
                     </td>
-                    <td className="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-[#9CA3AF] whitespace-nowrap">
                       {evt.all_day ? "All day" : fmtTime(evt.start_at)}
                     </td>
                     <td className="px-4 py-3">
@@ -843,13 +843,13 @@ function TableView({
                         {evt.os_calendar_event_attendees.slice(0, 3).map((a) => (
                           <div
                             key={a.user_id}
-                            className="w-5 h-5 rounded-full bg-zinc-700 border border-zinc-900 flex items-center justify-center text-[9px] text-zinc-300"
+                            className="w-5 h-5 rounded-full bg-[#1A1D24] border border-zinc-900 flex items-center justify-center text-[9px] text-[#9CA3AF]"
                           >
                             ?
                           </div>
                         ))}
                         {evt.os_calendar_event_attendees.length > 3 && (
-                          <span className="text-[10px] text-zinc-500 ml-2">+{evt.os_calendar_event_attendees.length - 3}</span>
+                          <span className="text-[10px] text-[#9CA3AF] ml-2">+{evt.os_calendar_event_attendees.length - 3}</span>
                         )}
                       </div>
                     </td>
@@ -858,7 +858,7 @@ function TableView({
                         "text-[10px] px-1.5 py-0.5 rounded border font-medium",
                         evt.status === "upcoming"     ? "bg-emerald-950 text-emerald-300 border-emerald-800" :
                         evt.status === "in_progress"  ? "bg-sky-950 text-sky-300 border-sky-800" :
-                                                        "bg-zinc-800 text-zinc-500 border-zinc-700"
+                                                        "bg-[#1A1D24] text-[#9CA3AF] border-[#2A2D35]"
                       )}>
                         {evt.status.replace("_", " ")}
                       </span>
@@ -998,11 +998,11 @@ export default function OSCalendarPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Calendar</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">Tasks, milestones and meetings</p>
+          <p className="text-sm text-[#9CA3AF] mt-0.5">Tasks, milestones and meetings</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* View toggle */}
-          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-[#111318] border border-[#2A2D35] rounded-lg p-1">
             {([
               { id: "month",  label: "Month",  icon: Calendar },
               { id: "agenda", label: "Agenda", icon: List },
@@ -1013,7 +1013,7 @@ export default function OSCalendarPage() {
                 onClick={() => setView(id)}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-                  view === id ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+                  view === id ? "bg-white/10 text-white" : "text-[#9CA3AF] hover:text-[#9CA3AF]"
                 )}
               >
                 <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -1041,12 +1041,12 @@ export default function OSCalendarPage() {
       {/* Filter chips (active filters summary) */}
       {(filters.eventTypes.length > 0 || filters.userIds.length > 0 || filters.search) && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] text-zinc-600">Filtered:</span>
+          <span className="text-[11px] text-[#6B7280]">Filtered:</span>
           {filters.eventTypes.map((t) => (
             <button
               key={t}
               onClick={() => setFilters((f) => ({ ...f, eventTypes: f.eventTypes.filter((x) => x !== t) }))}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300 hover:border-red-700 hover:text-red-400 transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF] hover:border-red-700 hover:text-red-400 transition-colors"
             >
               <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: EVENT_TYPE_COLORS[t] }} />
               {EVENT_TYPES.find((x) => x.value === t)?.label}
@@ -1059,7 +1059,7 @@ export default function OSCalendarPage() {
               <button
                 key={id}
                 onClick={() => setFilters((f) => ({ ...f, userIds: f.userIds.filter((x) => x !== id) }))}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300 hover:border-red-700 hover:text-red-400 transition-colors"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF] hover:border-red-700 hover:text-red-400 transition-colors"
               >
                 {u.name}
                 <X className="w-2.5 h-2.5" />
@@ -1069,7 +1069,7 @@ export default function OSCalendarPage() {
           {filters.search && (
             <button
               onClick={() => setFilters((f) => ({ ...f, search: "" }))}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300 hover:border-red-700 hover:text-red-400 transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF] hover:border-red-700 hover:text-red-400 transition-colors"
             >
               &quot;{filters.search}&quot;
               <X className="w-2.5 h-2.5" />
@@ -1087,7 +1087,7 @@ export default function OSCalendarPage() {
 
       {isLoading && !data && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" />
+          <Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" />
         </div>
       )}
 
@@ -1095,37 +1095,37 @@ export default function OSCalendarPage() {
         <>
           {/* Month view */}
           {view === "month" && (
-            <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+            <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2D35]">
                 <button
                   onClick={prevMonth}
-                  className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-zinc-600 transition-colors"
+                  className="w-7 h-7 rounded-lg bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center hover:border-[#2A2D35] transition-colors"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5 text-zinc-400" strokeWidth={2} />
+                  <ChevronLeft className="w-3.5 h-3.5 text-[#9CA3AF]" strokeWidth={2} />
                 </button>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => { setViewYear(now.getFullYear()); setViewMonth(now.getMonth()) }}
-                    className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                    className="text-[11px] text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
                   >
                     Today
                   </button>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-white">{monthLabel}</span>
-                    {isLoading && <Loader2 className="w-3 h-3 text-zinc-600 animate-spin" />}
+                    {isLoading && <Loader2 className="w-3 h-3 text-[#6B7280] animate-spin" />}
                   </div>
                 </div>
                 <button
                   onClick={nextMonth}
-                  className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-zinc-600 transition-colors"
+                  className="w-7 h-7 rounded-lg bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center hover:border-[#2A2D35] transition-colors"
                 >
-                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400" strokeWidth={2} />
+                  <ChevronRight className="w-3.5 h-3.5 text-[#9CA3AF]" strokeWidth={2} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-7 border-b border-zinc-800">
+              <div className="grid grid-cols-7 border-b border-[#2A2D35]">
                 {DAYS_OF_WEEK.map((d) => (
-                  <div key={d} className="py-2 text-center text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">
+                  <div key={d} className="py-2 text-center text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">
                     {d}
                   </div>
                 ))}
@@ -1140,8 +1140,8 @@ export default function OSCalendarPage() {
                       key={i}
                       onClick={() => cell.iso && openNewEventOnDate(cell.iso)}
                       className={cn(
-                        "min-h-[84px] border-b border-r border-zinc-800/50 p-1.5 cursor-pointer group",
-                        !cell.date && "bg-zinc-950/40 cursor-default",
+                        "min-h-[84px] border-b border-r border-[#2A2D35]/50 p-1.5 cursor-pointer group",
+                        !cell.date && "bg-[#111318]/70 cursor-default",
                         isToday && "bg-[#D7261E]/5",
                         cell.date && "hover:bg-white/[0.02]"
                       )}
@@ -1150,7 +1150,7 @@ export default function OSCalendarPage() {
                         <>
                           <span className={cn(
                             "inline-flex w-5 h-5 items-center justify-center rounded-full text-[11px] font-medium mb-1",
-                            isToday ? "bg-[#D7261E] text-white" : "text-zinc-500 group-hover:text-zinc-300"
+                            isToday ? "bg-[#D7261E] text-white" : "text-[#9CA3AF] group-hover:text-[#9CA3AF]"
                           )}>
                             {cell.date}
                           </span>
@@ -1165,7 +1165,7 @@ export default function OSCalendarPage() {
                             {dayEvents.length > 2 && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); setDayPopover({ iso: cell.iso!, events: dayEvents }) }}
-                                className="text-[10px] text-zinc-600 hover:text-zinc-400 px-1 transition-colors"
+                                className="text-[10px] text-[#6B7280] hover:text-[#9CA3AF] px-1 transition-colors"
                               >
                                 +{dayEvents.length - 2} more
                               </button>
@@ -1182,20 +1182,20 @@ export default function OSCalendarPage() {
 
           {/* Agenda view */}
           {view === "agenda" && (
-            <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+            <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2D35]">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-white">Upcoming</span>
-                  {isLoading && <Loader2 className="w-3 h-3 text-zinc-600 animate-spin" />}
+                  {isLoading && <Loader2 className="w-3 h-3 text-[#6B7280] animate-spin" />}
                 </div>
-                <span className="text-xs text-zinc-600">{upcomingItems.length} events</span>
+                <span className="text-xs text-[#6B7280]">{upcomingItems.length} events</span>
               </div>
               {upcomingItems.length === 0 ? (
-                <div className="px-5 py-12 text-center text-sm text-zinc-600">
+                <div className="px-5 py-12 text-center text-sm text-[#6B7280]">
                   No upcoming events or task deadlines.
                 </div>
               ) : (
-                <div className="divide-y divide-zinc-800/50">
+                <div className="divide-y divide-[#2A2D35]/50">
                   {upcomingItems.map((evt) => {
                     const color = getEventColor(evt)
                     return (
@@ -1206,16 +1206,16 @@ export default function OSCalendarPage() {
                       >
                         <div className="w-2.5 h-2.5 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: color }} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-zinc-200 font-medium truncate">{evt.title}</p>
-                          <p className="text-[10px] text-zinc-600 mt-0.5">
+                          <p className="text-sm text-white font-medium truncate">{evt.title}</p>
+                          <p className="text-[10px] text-[#6B7280] mt-0.5">
                             {EVENT_TYPES.find((t) => t.value === evt.event_type)?.label ?? evt.event_type}
                             {evt._source === "task" && evt._task && <> · {evt._task.priority} priority</>}
                           </p>
                         </div>
                         <div className="shrink-0 text-right">
-                          <p className="text-xs text-zinc-400">{fmtDate(evt.start_at)}</p>
+                          <p className="text-xs text-[#9CA3AF]">{fmtDate(evt.start_at)}</p>
                           {!evt.all_day && (
-                            <p className="text-[10px] text-zinc-600">{fmtTime(evt.start_at)}</p>
+                            <p className="text-[10px] text-[#6B7280]">{fmtTime(evt.start_at)}</p>
                           )}
                         </div>
                       </button>
@@ -1261,16 +1261,16 @@ export default function OSCalendarPage() {
       {dayPopover && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDayPopover(null)} />
-          <div className="relative z-10 w-72 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+          <div className="relative z-10 w-72 bg-[#07080D] border border-[#2A2D35] rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#2A2D35]">
               <span className="text-xs font-semibold text-white">
                 {new Date(dayPopover.iso + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </span>
               <button
                 onClick={() => setDayPopover(null)}
-                className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center hover:bg-zinc-700"
+                className="w-6 h-6 rounded bg-[#1A1D24] flex items-center justify-center hover:bg-[#1A1D24]"
               >
-                <X className="w-3 h-3 text-zinc-400" />
+                <X className="w-3 h-3 text-[#9CA3AF]" />
               </button>
             </div>
             <div className="p-2 space-y-1 max-h-72 overflow-y-auto">
@@ -1278,21 +1278,21 @@ export default function OSCalendarPage() {
                 <button
                   key={evt.id}
                   onClick={() => { setSelectedEvent(evt); setDayPopover(null) }}
-                  className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-zinc-900 transition-colors"
+                  className="w-full text-left flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-[#111318] transition-colors"
                 >
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getEventColor(evt) }} />
-                  <span className="text-xs text-zinc-300 truncate">{evt.title}</span>
+                  <span className="text-xs text-[#9CA3AF] truncate">{evt.title}</span>
                   {!evt.all_day && (
-                    <span className="ml-auto text-[10px] text-zinc-600 shrink-0">{fmtTime(evt.start_at)}</span>
+                    <span className="ml-auto text-[10px] text-[#6B7280] shrink-0">{fmtTime(evt.start_at)}</span>
                   )}
                   {evt.all_day && (
-                    <span className="ml-auto text-[10px] text-zinc-600 shrink-0">All day</span>
+                    <span className="ml-auto text-[10px] text-[#6B7280] shrink-0">All day</span>
                   )}
                 </button>
               ))}
               <button
                 onClick={() => { openNewEventOnDate(dayPopover.iso); setDayPopover(null) }}
-                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs text-zinc-600 hover:text-zinc-400 hover:bg-zinc-900 transition-colors border border-dashed border-zinc-800 mt-1"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs text-[#6B7280] hover:text-[#9CA3AF] hover:bg-[#111318] transition-colors border border-dashed border-[#2A2D35] mt-1"
               >
                 <Plus className="w-3 h-3" />
                 Add event

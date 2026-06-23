@@ -118,9 +118,9 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(
         className="absolute z-[9999] -translate-y-full"
         style={{ top: dropPos.top, left: dropPos.left, width: dropPos.width }}
       >
-        <div className="rounded-lg border border-zinc-700 bg-zinc-900 shadow-2xl overflow-hidden">
+        <div className="rounded-lg border border-[#2A2D35] bg-[#111318] shadow-2xl overflow-hidden">
           <div className="px-2 pt-1.5 pb-0.5">
-            <span className="text-[9px] font-semibold uppercase tracking-widest text-zinc-600">Mention</span>
+            <span className="text-[9px] font-semibold uppercase tracking-widest text-[#6B7280]">Mention</span>
           </div>
           {filtered.map((u, i) => (
             <button
@@ -129,7 +129,7 @@ export const MentionTextarea = forwardRef<HTMLTextAreaElement, Props>(
               onMouseDown={(e) => { e.preventDefault(); pick(u) }}
               className={cn(
                 "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors",
-                i === focused ? "bg-zinc-700/60 text-white" : "text-zinc-300 hover:bg-zinc-800",
+                i === focused ? "bg-[#1A1D24]/60 text-white" : "text-[#9CA3AF] hover:bg-[#1A1D24]",
               )}
             >
               <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 bg-[#D7261E]/[0.13] text-[#D7261E]">

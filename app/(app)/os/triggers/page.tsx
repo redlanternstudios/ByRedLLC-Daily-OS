@@ -16,19 +16,19 @@ export default function OSTriggersPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-          <Zap className="w-5 h-5 text-zinc-400" strokeWidth={1.5} />
+        <div className="w-10 h-10 rounded-xl bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center">
+          <Zap className="w-5 h-5 text-[#9CA3AF]" strokeWidth={1.5} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Triggers</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">
+          <p className="text-sm text-[#9CA3AF] mt-0.5">
             Set up event-based triggers to fire automations, alerts, and actions across the OS.
           </p>
         </div>
       </div>
 
       {/* Planned trigger types */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 divide-y divide-zinc-800">
+      <div className="rounded-xl bg-[#111318] border border-[#2A2D35] divide-y divide-[#2A2D35]">
         {[
           { label: "Task status changed", detail: "Fire when a task moves to blocked, done, or any custom status" },
           { label: "Due date approaching", detail: "Alert N days before a task or project deadline" },
@@ -37,10 +37,10 @@ export default function OSTriggersPage() {
           { label: "Manual trigger", detail: "Button-based one-click trigger for on-demand workflows" },
         ].map((t) => (
           <div key={t.label} className="flex items-start gap-3 px-5 py-4">
-            <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-zinc-700 shrink-0" />
+            <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-[#1A1D24] shrink-0" />
             <div>
-              <p className="text-sm text-zinc-300 font-medium">{t.label}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">{t.detail}</p>
+              <p className="text-sm text-[#9CA3AF] font-medium">{t.label}</p>
+              <p className="text-xs text-[#6B7280] mt-0.5">{t.detail}</p>
             </div>
           </div>
         ))}

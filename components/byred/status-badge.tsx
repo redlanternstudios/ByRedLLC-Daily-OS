@@ -7,12 +7,12 @@ import { ChevronDown } from "lucide-react"
 const TASK_STATUSES = ["not_started", "in_progress", "blocked", "done", "cancelled"] as const
 
 const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
-  not_started:  { label: "Not Started", classes: "bg-zinc-800 text-zinc-400 border border-zinc-700" },
+  not_started:  { label: "Not Started", classes: "bg-[#1A1D24] text-[#9CA3AF] border border-[#2A2D35]" },
   in_progress:  { label: "In Progress", classes: "bg-yellow-950 text-yellow-300 border border-yellow-800" },
   overdue:      { label: "Overdue",     classes: "bg-red-950 text-red-300 border border-red-800" },
   done:         { label: "Done",        classes: "bg-green-950 text-green-300 border border-green-800" },
   blocked:      { label: "Blocked",     classes: "bg-red-950 text-red-300 border border-red-800" },
-  cancelled:    { label: "Cancelled",   classes: "bg-zinc-900 text-zinc-500 border border-zinc-800 line-through" },
+  cancelled:    { label: "Cancelled",   classes: "bg-[#111318] text-[#9CA3AF] border border-[#2A2D35] line-through" },
 }
 
 interface StatusBadgeProps {
@@ -40,7 +40,7 @@ export function StatusBadge({ status, className, taskId, onStatusChange }: Statu
   }, [open])
 
   const key = current.toLowerCase()
-  const config = STATUS_CONFIG[key] ?? { label: current, classes: "bg-zinc-100 text-zinc-500" }
+  const config = STATUS_CONFIG[key] ?? { label: current, classes: "bg-zinc-100 text-[#9CA3AF]" }
 
   if (!taskId) {
     return (
@@ -87,7 +87,7 @@ export function StatusBadge({ status, className, taskId, onStatusChange }: Statu
         <ChevronDown size={9} strokeWidth={2.5} className={cn("transition-transform duration-150", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute z-50 top-full mt-1 left-0 w-36 rounded-lg border border-zinc-700 bg-zinc-900 shadow-2xl overflow-hidden py-1">
+        <div className="absolute z-50 top-full mt-1 left-0 w-36 rounded-lg border border-[#2A2D35] bg-[#111318] shadow-2xl overflow-hidden py-1">
           {TASK_STATUSES.map(s => {
             const sc = STATUS_CONFIG[s]
             return (
@@ -96,8 +96,8 @@ export function StatusBadge({ status, className, taskId, onStatusChange }: Statu
                 type="button"
                 onClick={() => void pick(s)}
                 className={cn(
-                  "w-full flex items-center px-2.5 py-1.5 text-left transition-colors hover:bg-zinc-800/80",
-                  s === current && "bg-zinc-800/50",
+                  "w-full flex items-center px-2.5 py-1.5 text-left transition-colors hover:bg-[#1A1D24]",
+                  s === current && "bg-[#1A1D24]/60",
                 )}
               >
                 <span className={cn("inline-flex px-1.5 py-px rounded-sm text-[10px] font-medium", sc.classes)}>

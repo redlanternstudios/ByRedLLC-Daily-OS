@@ -104,14 +104,14 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
       <div className="lg:col-span-2 space-y-6">
         {/* Breadcrumb */}
         <nav
-          className="flex items-center gap-1.5 text-xs text-zinc-400"
+          className="flex items-center gap-1.5 text-xs text-[#9CA3AF]"
           aria-label="Breadcrumb"
         >
-          <Link href="/leads" className="hover:text-zinc-700 transition-colors">
+          <Link href="/leads" className="hover:text-[#6B7280] transition-colors">
             Leads
           </Link>
           <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-          <span className="text-zinc-500 truncate max-w-[200px]">
+          <span className="text-[#9CA3AF] truncate max-w-[200px]">
             {lead.name.slice(0, 40)}
           </span>
         </nav>
@@ -121,24 +121,24 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
         </h1>
 
         {/* Contact card */}
-        <Card className="bg-white border-zinc-200 shadow-sm">
+        <Card className="bg-[#111318] border-[#2A2D35]">
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               {lead.phone && (
                 <div className="flex items-center gap-2">
                   <Phone
-                    className="w-4 h-4 text-zinc-400 shrink-0"
+                    className="w-4 h-4 text-[#9CA3AF] shrink-0"
                     strokeWidth={1.75}
                   />
                   <a
                     href={`tel:${lead.phone}`}
-                    className="text-zinc-600 hover:text-zinc-800 text-xs"
+                    className="text-[#6B7280] hover:text-white text-xs"
                   >
                     {lead.phone}
                   </a>
                   <button
                     onClick={() => copy(lead.phone!)}
-                    className="text-zinc-400 hover:text-zinc-600"
+                    className="text-[#9CA3AF] hover:text-[#6B7280]"
                   >
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </button>
@@ -147,35 +147,35 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
               {lead.email && (
                 <div className="flex items-center gap-2">
                   <Mail
-                    className="w-4 h-4 text-zinc-400 shrink-0"
+                    className="w-4 h-4 text-[#9CA3AF] shrink-0"
                     strokeWidth={1.75}
                   />
                   <a
                     href={`mailto:${lead.email}`}
-                    className="text-zinc-600 hover:text-zinc-800 text-xs truncate"
+                    className="text-[#6B7280] hover:text-white text-xs truncate"
                   >
                     {lead.email}
                   </a>
                   <button
                     onClick={() => copy(lead.email!)}
-                    className="text-zinc-400 hover:text-zinc-600"
+                    className="text-[#9CA3AF] hover:text-[#6B7280]"
                   >
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </button>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-400">Source</span>
-                <span className="text-xs text-zinc-600">
+                <span className="text-xs text-[#9CA3AF]">Source</span>
+                <span className="text-xs text-[#6B7280]">
                   {lead.source ?? "—"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-400">Tenant</span>
+                <span className="text-xs text-[#9CA3AF]">Tenant</span>
                 <TenantPill tenantId={lead.tenant_id} />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-400">Owner</span>
+                <span className="text-xs text-[#9CA3AF]">Owner</span>
                 {lead.assigned_user_id ? (
                   <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-full bg-byred-red/10 border border-byred-red/20 flex items-center justify-center">
@@ -183,10 +183,10 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
                         {initials}
                       </span>
                     </div>
-                    <span className="text-xs text-zinc-600">{displayName}</span>
+                    <span className="text-xs text-[#6B7280]">{displayName}</span>
                   </div>
                 ) : (
-                  <span className="text-xs text-zinc-400">Unassigned</span>
+                  <span className="text-xs text-[#9CA3AF]">Unassigned</span>
                 )}
               </div>
             </div>
@@ -195,7 +195,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
 
         {/* Stage tracker */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-500 mb-3">Stage</h3>
+          <h3 className="text-sm font-medium text-[#9CA3AF] mb-3">Stage</h3>
           <div className="flex items-center gap-1 flex-wrap">
             {STAGES.map((s, i) => {
               const isActive = s === stage
@@ -209,8 +209,8 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
                     isActive
                       ? "bg-byred-red text-white"
                       : isCompleted
-                        ? "text-zinc-500 bg-zinc-200"
-                        : "text-zinc-400 bg-zinc-100 hover:text-zinc-700 hover:bg-zinc-200"
+                        ? "text-[#9CA3AF] bg-[#1A1D24]"
+                        : "text-[#9CA3AF] bg-[#1A1D24]/60 hover:text-[#6B7280] hover:bg-[#1A1D24]"
                   )}
                 >
                   {s}
@@ -222,9 +222,9 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
 
         {/* Activity timeline */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-500 mb-2">Activity</h3>
+          <h3 className="text-sm font-medium text-[#9CA3AF] mb-2">Activity</h3>
           {activities.length === 0 ? (
-            <p className="text-xs text-zinc-400">No activity.</p>
+            <p className="text-xs text-[#9CA3AF]">No activity.</p>
           ) : (
             <div className="divide-y divide-zinc-100">
               {activities.map((a) => (
@@ -236,13 +236,13 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
 
         {/* Log contact */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-500 mb-2">Log contact</h3>
+          <h3 className="text-sm font-medium text-[#9CA3AF] mb-2">Log contact</h3>
           <div className="space-y-2">
             <Textarea
               value={logNote}
               onChange={(e) => setLogNote(e.target.value)}
               placeholder="Describe the contact..."
-              className="bg-white border-zinc-300 text-zinc-700 placeholder:text-zinc-400 text-xs focus-visible:ring-byred-red min-h-[80px]"
+              className="bg-[#111318] border-[#2A2D35] text-[#6B7280] placeholder:text-[#6B7280] text-xs focus-visible:ring-[#D92532] min-h-[80px]"
             />
             <Button
               size="sm"
@@ -259,7 +259,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
       {/* Right: sticky sidebar */}
       <div className="space-y-4 lg:sticky lg:top-20 self-start">
         {/* Revenue block */}
-        <Card className="bg-white border-zinc-200 shadow-sm">
+        <Card className="bg-[#111318] border-[#2A2D35]">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign
@@ -270,14 +270,14 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
                 {formatCurrency(lead.revenue_potential)}
               </p>
             </div>
-            <p className="text-xs text-zinc-400">potential</p>
+            <p className="text-xs text-[#9CA3AF]">potential</p>
           </CardContent>
         </Card>
 
         {/* Follow-up */}
-        <Card className="bg-white border-zinc-200 shadow-sm">
+        <Card className="bg-[#111318] border-[#2A2D35]">
           <CardHeader className="pb-2">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-[#6B7280] uppercase tracking-wide">
               Follow-up
             </h3>
           </CardHeader>
@@ -307,7 +307,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
+              className="w-full border-[#2A2D35] text-[#6B7280] hover:text-white hover:bg-[#1A1D24] text-xs gap-2"
               onClick={() => toast.success("Marked as contacted.")}
             >
               <CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -317,7 +317,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
+              className="w-full border-[#2A2D35] text-[#6B7280] hover:text-white hover:bg-[#1A1D24] text-xs gap-2"
               onClick={() => toast.success("Follow-up scheduled.")}
             >
               <Calendar className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -327,9 +327,9 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
         </Card>
 
         {/* Quick actions */}
-        <Card className="bg-white border-zinc-200 shadow-sm">
+        <Card className="bg-[#111318] border-[#2A2D35]">
           <CardHeader className="pb-2">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-[#6B7280] uppercase tracking-wide">
               Quick actions
             </h3>
           </CardHeader>
@@ -337,7 +337,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
+              className="w-full border-[#2A2D35] text-[#6B7280] hover:text-white hover:bg-[#1A1D24] text-xs gap-2"
               onClick={() => toast.success("Task created from lead.")}
             >
               <CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -347,7 +347,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-xs gap-2"
+              className="w-full border-[#2A2D35] text-[#6B7280] hover:text-white hover:bg-[#1A1D24] text-xs gap-2"
               onClick={() => toast.success("Lead reassigned.")}
             >
               <UserCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -359,7 +359,7 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="w-full border-zinc-200 text-zinc-400 hover:text-byred-red hover:border-byred-red/30 text-xs gap-2"
+                  className="w-full border-zinc-200 text-[#9CA3AF] hover:text-byred-red hover:border-byred-red/30 text-xs gap-2"
                 >
                   <Archive className="w-3.5 h-3.5" strokeWidth={1.75} />
                   Archive
@@ -370,12 +370,12 @@ export function LeadDetail({ lead, activities }: LeadDetailProps) {
                   <AlertDialogTitle className="text-zinc-800">
                     Archive this lead?
                   </AlertDialogTitle>
-                  <AlertDialogDescription className="text-zinc-500">
+                  <AlertDialogDescription className="text-[#9CA3AF]">
                     This will move the lead to LOST. This cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="border-zinc-300 text-zinc-500">
+                  <AlertDialogCancel className="border-[#2A2D35] text-[#9CA3AF]">
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction

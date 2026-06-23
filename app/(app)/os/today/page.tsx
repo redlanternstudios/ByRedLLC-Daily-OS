@@ -61,7 +61,7 @@ const BUCKETS: {
   { key: "critical_now",  label: "Critical Now",  icon: Flame,      accent: "text-red-400",     border: "border-red-900/60",    bg: "bg-red-950/20" },
   { key: "money_moves",   label: "Money Moves",   icon: DollarSign, accent: "text-green-400",   border: "border-green-900/60",  bg: "bg-green-950/20" },
   { key: "quick_wins",    label: "Quick Wins",    icon: Zap,        accent: "text-yellow-400",  border: "border-yellow-900/60", bg: "bg-yellow-950/20" },
-  { key: "coming_up",     label: "Coming Up",     icon: Calendar,   accent: "text-zinc-400",    border: "border-zinc-800",      bg: "bg-zinc-900/40" },
+  { key: "coming_up",     label: "Coming Up",     icon: Calendar,   accent: "text-[#9CA3AF]",    border: "border-[#2A2D35]",      bg: "bg-[#111318]/60" },
   { key: "deep_work",     label: "Deep Work",     icon: Brain,      accent: "text-yellow-400",  border: "border-yellow-900/60", bg: "bg-yellow-950/20" },
 ]
 
@@ -142,33 +142,33 @@ function TaskCard({
   }
 
   return (
-    <div className="rounded-lg bg-zinc-800/60 border border-zinc-700/50 overflow-hidden hover:border-zinc-600 transition-colors">
+    <div className="rounded-lg bg-[#1A1D24]/80 border border-[#2A2D35]/50 overflow-hidden hover:border-[#2A2D35] transition-colors">
       <div
         className="flex items-start gap-2.5 p-3 cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
       >
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-zinc-200 leading-snug line-clamp-2">{task.title}</p>
+          <p className="text-xs font-medium text-white leading-snug line-clamp-2">{task.title}</p>
           {aiReason && (
-            <p className="text-[10px] text-zinc-500 italic mt-1 leading-snug">{aiReason}</p>
+            <p className="text-[10px] text-[#9CA3AF] italic mt-1 leading-snug">{aiReason}</p>
           )}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             {task.due_date && (
-              <span className="text-[10px] text-zinc-600 font-mono">{fmtDate(task.due_date)}</span>
+              <span className="text-[10px] text-[#6B7280] font-mono">{fmtDate(task.due_date)}</span>
             )}
             {(task.estimated_minutes ?? 0) > 0 && (
-              <span className="text-[10px] text-zinc-600 font-mono">{fmtMinutes(task.estimated_minutes)}</span>
+              <span className="text-[10px] text-[#6B7280] font-mono">{fmtMinutes(task.estimated_minutes)}</span>
             )}
             <OSPriorityBadge priority={task.priority ?? "medium"} className="text-[9px] py-0 px-1.5" />
           </div>
         </div>
-        <button className="text-zinc-600 hover:text-zinc-400 shrink-0 mt-0.5">
+        <button className="text-[#6B7280] hover:text-[#9CA3AF] shrink-0 mt-0.5">
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
 
       {expanded && (
-        <div className="border-t border-zinc-700/50 px-3 py-2.5 space-y-2 bg-zinc-900/40">
+        <div className="border-t border-[#2A2D35]/50 px-3 py-2.5 space-y-2 bg-[#111318]/60">
           {/* Notes — edit inline */}
           {editingNote ? (
             <div className="flex items-start gap-1.5">
@@ -185,30 +185,30 @@ function TaskCard({
                   autoFocus
                   autoResize
                   maxHeight={80}
-                  className="text-[11px] bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-400"
+                  className="text-[11px] bg-[#1A1D24] border border-[#2A2D35] rounded px-2 py-1 text-white placeholder-[#6B7280] outline-none focus:border-[#9CA3AF]"
                   placeholder="Add notes…"
                 />
               </div>
               <button type="button" onClick={() => void saveNote()} disabled={savingNote} aria-label="Save" className="text-green-400 hover:text-green-300 mt-0.5 shrink-0">
                 {savingNote ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2} />}
               </button>
-              <button type="button" onClick={() => { setEditingNote(false); setNoteValue(task.description ?? "") }} aria-label="Cancel" className="text-zinc-500 hover:text-zinc-300 mt-0.5 shrink-0">
+              <button type="button" onClick={() => { setEditingNote(false); setNoteValue(task.description ?? "") }} aria-label="Cancel" className="text-[#9CA3AF] hover:text-[#9CA3AF] mt-0.5 shrink-0">
                 <X className="w-3.5 h-3.5" strokeWidth={2} />
               </button>
             </div>
           ) : (
             <div className="flex items-start gap-2 group/note">
               {noteValue ? (
-                <p className="text-[11px] text-zinc-400 leading-relaxed flex-1">{noteValue}</p>
+                <p className="text-[11px] text-[#9CA3AF] leading-relaxed flex-1">{noteValue}</p>
               ) : (
-                <p className="text-[11px] text-zinc-700 flex-1 italic">No notes yet</p>
+                <p className="text-[11px] text-[#6B7280] flex-1 italic">No notes yet</p>
               )}
               <div className="flex items-center gap-1 opacity-0 group-hover/note:opacity-100 transition-opacity shrink-0">
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setEditingNote(true) }}
                   aria-label="Edit note"
-                  className="text-zinc-600 hover:text-zinc-300"
+                  className="text-[#6B7280] hover:text-[#9CA3AF]"
                 >
                   <Pencil className="w-3 h-3" strokeWidth={1.75} />
                 </button>
@@ -218,7 +218,7 @@ function TaskCard({
                     onClick={(e) => { e.stopPropagation(); void deleteNote() }}
                     disabled={savingNote}
                     aria-label="Delete note"
-                    className="text-zinc-600 hover:text-red-400"
+                    className="text-[#6B7280] hover:text-red-400"
                   >
                     {savingNote ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" strokeWidth={2} />}
                   </button>
@@ -243,7 +243,7 @@ function TaskCard({
       )}
 
       {showActions && onConfirm && onReassign && (
-        <div className="border-t border-zinc-700/50 flex">
+        <div className="border-t border-[#2A2D35]/50 flex">
           <button
             onClick={onConfirm}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-green-400 hover:bg-green-950/40 transition-colors"
@@ -251,10 +251,10 @@ function TaskCard({
             <CheckCheck className="w-3 h-3" strokeWidth={1.75} />
             Confirm
           </button>
-          <div className="w-px bg-zinc-700/50" />
+          <div className="w-px bg-[#1A1D24]/50" />
           <button
             onClick={onReassign}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-zinc-400 hover:bg-zinc-700/30 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-[#9CA3AF] hover:bg-[#1A1D24]/30 transition-colors"
           >
             <RotateCcw className="w-3 h-3" strokeWidth={1.75} />
             Reassign
@@ -291,12 +291,12 @@ function BucketColumn({
 
   return (
     <div className={cn("rounded-xl border flex flex-col overflow-hidden", bucket.border, bucket.bg)}>
-      <div className="flex items-center justify-between px-3.5 py-3 border-b border-zinc-800/60">
+      <div className="flex items-center justify-between px-3.5 py-3 border-b border-[#2A2D35]/60">
         <div className={cn("flex items-center gap-2", bucket.accent)}>
           <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
           <span className="text-[11px] font-semibold uppercase tracking-widest">{bucket.label}</span>
         </div>
-        <span className="text-[10px] font-mono text-zinc-600">
+        <span className="text-[10px] font-mono text-[#6B7280]">
           {triageMode ? pendingSuggestions.length + confirmedSuggestions.length : tasks.length}
         </span>
       </div>
@@ -321,7 +321,7 @@ function BucketColumn({
         ))}
 
         {displayTasks.length === 0 && pendingSuggestions.length === 0 && (
-          <p className="text-[11px] text-zinc-700 text-center py-6">None.</p>
+          <p className="text-[11px] text-[#6B7280] text-center py-6">None.</p>
         )}
       </div>
     </div>
@@ -499,11 +499,11 @@ export default function OSTodayPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight font-condensed flex items-center gap-3">
-            {isMorning ? <Sun className="w-5 h-5 text-yellow-400" strokeWidth={1.75} /> : <Moon className="w-5 h-5 text-zinc-400" strokeWidth={1.75} />}
+            {isMorning ? <Sun className="w-5 h-5 text-yellow-400" strokeWidth={1.75} /> : <Moon className="w-5 h-5 text-[#9CA3AF]" strokeWidth={1.75} />}
             Today
-            <span className="text-zinc-600 font-normal text-base">{timeOfDay}</span>
+            <span className="text-[#6B7280] font-normal text-base">{timeOfDay}</span>
           </h1>
-          <p className="text-xs text-zinc-500 mt-1">{today}</p>
+          <p className="text-xs text-[#9CA3AF] mt-1">{today}</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -519,7 +519,7 @@ export default function OSTodayPage() {
           <button
             onClick={generateTriage}
             disabled={loadingTriage || tasks.length === 0}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-[#9CA3AF] text-xs font-medium hover:bg-[#1A1D24] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loadingTriage
               ? <RefreshCw className="w-3.5 h-3.5 animate-spin" strokeWidth={1.75} />
@@ -543,26 +543,26 @@ export default function OSTodayPage() {
 
       {/* ── Daily Brief ── */}
       {brief && (
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
-            <span className="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
+        <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#2A2D35]">
+            <span className="text-[10px] font-semibold tracking-widest text-[#9CA3AF] uppercase">
               Daily Brief · {timeOfDay}
             </span>
             {brief.generated_at && (
-              <span className="text-[10px] text-zinc-700 font-mono">
+              <span className="text-[10px] text-[#6B7280] font-mono">
                 {new Date(brief.generated_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
           </div>
           <div className="px-5 py-4 space-y-4">
-            <p className="text-sm text-zinc-200 leading-relaxed">{brief.body}</p>
+            <p className="text-sm text-white leading-relaxed">{brief.body}</p>
 
             {brief.top_3.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest">Top 3 Focus</p>
+                <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">Top 3 Focus</p>
                 <ol className="space-y-1">
                   {brief.top_3.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-zinc-300">
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-[#9CA3AF]">
                       <span className="text-[#D7261E] font-bold font-condensed shrink-0 w-4">{i + 1}.</span>
                       {item}
                     </li>
@@ -583,8 +583,8 @@ export default function OSTodayPage() {
             )}
 
             {brief.next_action && (
-              <div className="pt-3 border-t border-zinc-800">
-                <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1">Next Action</p>
+              <div className="pt-3 border-t border-[#2A2D35]">
+                <p className="text-[10px] text-[#6B7280] uppercase tracking-widest mb-1">Next Action</p>
                 <p className="text-sm font-semibold text-white">{brief.next_action}</p>
               </div>
             )}
@@ -596,7 +596,7 @@ export default function OSTodayPage() {
       {loadingData ? (
         <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-3">
           {BUCKETS.map((b) => (
-            <div key={b.key} className="rounded-xl bg-zinc-900 border border-zinc-800 h-48 animate-pulse" />
+            <div key={b.key} className="rounded-xl bg-[#111318] border border-[#2A2D35] h-48 animate-pulse" />
           ))}
         </div>
       ) : (
@@ -620,14 +620,14 @@ export default function OSTodayPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
         {/* Team Strip */}
-        <div className="xl:col-span-2 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-zinc-800">
-            <Users className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
+        <div className="xl:col-span-2 rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-[#2A2D35]">
+            <Users className="w-4 h-4 text-[#9CA3AF]" strokeWidth={1.75} />
             <span className="text-sm font-medium text-white">Team Status</span>
           </div>
-          <div className="divide-y divide-zinc-800/60">
+          <div className="divide-y divide-[#2A2D35]/40">
             {team.length === 0 ? (
-              <p className="text-xs text-zinc-600 px-5 py-4">Loading team...</p>
+              <p className="text-xs text-[#6B7280] px-5 py-4">Loading team...</p>
             ) : (
               // Team status: green (on track) → yellow (at risk) → red (blocked)
               team.map((member) => {
@@ -643,10 +643,10 @@ export default function OSTodayPage() {
                       <OSAvatar name={member.name} size="sm" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-zinc-200">{member.name}</p>
+                          <p className="text-sm font-medium text-white">{member.name}</p>
                           <span className={cn("w-2 h-2 rounded-full shrink-0", dot)} />
                         </div>
-                        <p className="text-[10px] text-zinc-600">{member.taskCount} tasks · {member.role}</p>
+                        <p className="text-[10px] text-[#6B7280]">{member.taskCount} tasks · {member.role}</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className={cn(
@@ -658,26 +658,26 @@ export default function OSTodayPage() {
                           {member.status.replace("_", " ").toUpperCase()}
                         </span>
                         {isExpanded
-                          ? <ChevronUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-                          : <ChevronDown className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+                          ? <ChevronUp className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+                          : <ChevronDown className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
                         }
                       </div>
                     </div>
                     {isExpanded && member.tasks.length > 0 && (
-                      <div className="px-5 pb-3 space-y-1.5 bg-zinc-900/60">
+                      <div className="px-5 pb-3 space-y-1.5 bg-[#111318]">
                         {member.tasks.slice(0, 5).map((t) => (
                           <div key={t.id} className="flex items-center gap-2.5">
                             <OSStatusBadge status={t.status ?? "not_started"} taskId={t.id} className="text-[9px] py-0 px-1.5 shrink-0" />
                             <Link
                               href={`/os/tasks/${t.id}`}
-                              className="text-xs text-zinc-400 hover:text-zinc-200 truncate transition-colors"
+                              className="text-xs text-[#9CA3AF] hover:text-white truncate transition-colors"
                             >
                               {t.title}
                             </Link>
                           </div>
                         ))}
                         {member.tasks.length > 5 && (
-                          <p className="text-[10px] text-zinc-600">+{member.tasks.length - 5} more</p>
+                          <p className="text-[10px] text-[#6B7280]">+{member.tasks.length - 5} more</p>
                         )}
                       </div>
                     )}
@@ -689,7 +689,7 @@ export default function OSTodayPage() {
         </div>
 
         {/* Blocker Rail */}
-        <div className="rounded-xl bg-zinc-900 border border-red-900/40 overflow-hidden">
+        <div className="rounded-xl bg-[#111318] border border-red-900/40 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-red-900/30">
             <AlertTriangle className="w-4 h-4 text-red-400" strokeWidth={1.75} />
             <span className="text-sm font-medium text-white">Blockers</span>
@@ -699,18 +699,18 @@ export default function OSTodayPage() {
               </span>
             )}
           </div>
-          <div className="divide-y divide-zinc-800/60">
+          <div className="divide-y divide-[#2A2D35]/40">
             {blockers.length === 0 ? (
-              <p className="text-xs text-zinc-600 px-4 py-4">No active blockers.</p>
+              <p className="text-xs text-[#6B7280] px-4 py-4">No active blockers.</p>
             ) : (
               blockers.map((b) => (
                 <div key={b.id} className="px-4 py-3 space-y-1.5">
-                  <p className="text-xs font-medium text-zinc-200">{b.title}</p>
+                  <p className="text-xs font-medium text-white">{b.title}</p>
                   {b.blocker_reason && (
-                    <p className="text-[10px] text-zinc-500 italic">{b.blocker_reason}</p>
+                    <p className="text-[10px] text-[#9CA3AF] italic">{b.blocker_reason}</p>
                   )}
                   <div className="flex items-center gap-2 pt-1">
-                    <p className="text-[10px] text-zinc-600 flex-1">
+                    <p className="text-[10px] text-[#6B7280] flex-1">
                       Ask: &quot;Who&apos;s handling {b.title.split(" ").slice(0, 4).join(" ")}...?&quot;
                     </p>
                     <Link
@@ -728,26 +728,26 @@ export default function OSTodayPage() {
       </div>
 
       {/* ── Team Pulse Script ── */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
         <button
           onClick={() => setScriptVisible((v) => !v)}
           className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors"
         >
           <div className="flex items-center gap-2">
-            <Send className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
+            <Send className="w-4 h-4 text-[#9CA3AF]" strokeWidth={1.75} />
             <span className="text-sm font-medium text-white">Team Pulse Script</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-zinc-600">Ready to read aloud</span>
+            <span className="text-[10px] text-[#6B7280]">Ready to read aloud</span>
             {scriptVisible
-              ? <ChevronUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-              : <ChevronDown className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+              ? <ChevronUp className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+              : <ChevronDown className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
             }
           </div>
         </button>
         {scriptVisible && (
-          <div className="border-t border-zinc-800 px-5 py-4">
-            <pre className="text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed font-mono">
+          <div className="border-t border-[#2A2D35] px-5 py-4">
+            <pre className="text-xs text-[#9CA3AF] whitespace-pre-wrap leading-relaxed font-mono">
               {teamPulseScript()}
             </pre>
             <button
@@ -755,7 +755,7 @@ export default function OSTodayPage() {
                 navigator.clipboard.writeText(teamPulseScript())
                 toast.success("Script copied to clipboard")
               }}
-              className="mt-3 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1.5"
+              className="mt-3 text-[11px] text-[#9CA3AF] hover:text-[#9CA3AF] transition-colors flex items-center gap-1.5"
             >
               <Clock className="w-3 h-3" strokeWidth={1.75} />
               Copy to clipboard
