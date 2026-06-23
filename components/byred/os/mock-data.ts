@@ -57,7 +57,7 @@ export type OSTask = {
   blocker_flag: boolean
   blocker_reason: string | null
   comment_count: number
-  monday_item_id: string | null
+
   definition_of_done: string | null
   created_at: string
 }
@@ -97,7 +97,7 @@ export type OSTeamMember = {
   name: string
   email: string
   role: string
-  monday_user_id: string | null
+
   avatar_url: string | null
   active: boolean
   tenant_count: number
@@ -106,7 +106,7 @@ export type OSTeamMember = {
 
 export type OSImportBatch = {
   id: string
-  source: "monday" | "csv" | "notion"
+  source: "csv" | "notion"
   status: "pending" | "processing" | "completed" | "failed"
   total_rows: number
   imported_rows: number
@@ -177,7 +177,7 @@ export const MOCK_PROJECTS: OSProject[] = [
     completed_task_count: 14,
     board_count: 4,
     created_at: "2026-04-20T07:00:00Z",
-  },
+  }
 ]
 
 // ---- BOARDS ----
@@ -214,7 +214,7 @@ export const MOCK_BOARDS: OSBoard[] = [
     status: "active",
     task_count: 18,
     created_at: "2026-04-20T07:00:00Z",
-  },
+  }
 ]
 
 // ---- TASKS ----
@@ -237,7 +237,7 @@ export const MOCK_TASKS: OSTask[] = [
     blocker_flag: false,
     blocker_reason: null,
     comment_count: 3,
-    monday_item_id: "123456789",
+
     definition_of_done: "Algorithm passes all test cases with >90% accuracy score.",
     created_at: "2026-04-22T08:00:00Z",
   },
@@ -259,7 +259,7 @@ export const MOCK_TASKS: OSTask[] = [
     blocker_flag: true,
     blocker_reason: "Waiting on SSO provider credentials from client.",
     comment_count: 7,
-    monday_item_id: "123456790",
+
     definition_of_done: "Login flow tested with 3 employer accounts including MFA.",
     created_at: "2026-04-25T09:00:00Z",
   },
@@ -281,7 +281,7 @@ export const MOCK_TASKS: OSTask[] = [
     blocker_flag: false,
     blocker_reason: null,
     comment_count: 1,
-    monday_item_id: null,
+
     definition_of_done: "Design approved by stakeholders and dev-ready assets exported.",
     created_at: "2026-04-26T10:00:00Z",
   },
@@ -303,7 +303,7 @@ export const MOCK_TASKS: OSTask[] = [
     blocker_flag: false,
     blocker_reason: null,
     comment_count: 2,
-    monday_item_id: "987654321",
+
     definition_of_done: "Webhook tested with live Monday board, tasks appear in Supabase within 5s.",
     created_at: "2026-04-26T07:00:00Z",
   },
@@ -325,10 +325,10 @@ export const MOCK_TASKS: OSTask[] = [
     blocker_flag: false,
     blocker_reason: null,
     comment_count: 0,
-    monday_item_id: null,
+
     definition_of_done: "Kanban renders all 4 columns with correct task cards.",
     created_at: "2026-04-28T06:00:00Z",
-  },
+  }
 ]
 
 // ---- COMMENTS ----
@@ -359,7 +359,7 @@ export const MOCK_COMMENTS: OSComment[] = [
     user_name: "Homira Gitesatani",
     body: "Initial scoring model draft is ready for review.",
     created_at: "2026-04-28T09:00:00Z",
-  },
+  }
 ]
 
 // ---- CALENDAR EVENTS ----
@@ -439,7 +439,7 @@ export const MOCK_CALENDAR_EVENTS: OSCalendarEvent[] = [
     calendar_label: "HireWire",
     related_entity_type: "project",
     related_entity_id: "proj-1",
-  },
+  }
 ]
 
 // ---- TEAM ----
@@ -449,7 +449,7 @@ export const MOCK_TEAM: OSTeamMember[] = [
     name: "Rory Semeah",
     email: "roryleesemeah@icloud.com",
     role: "admin",
-    monday_user_id: "102146404",
+
     avatar_url: null,
     active: true,
     tenant_count: 8,
@@ -460,7 +460,7 @@ export const MOCK_TEAM: OSTeamMember[] = [
     name: "Homira Gitesatani",
     email: "g.homira@gmail.com",
     role: "admin",
-    monday_user_id: "102146493",
+
     avatar_url: null,
     active: true,
     tenant_count: 8,
@@ -471,36 +471,14 @@ export const MOCK_TEAM: OSTeamMember[] = [
     name: "Keymon Penn",
     email: "clashon64@gmail.com",
     role: "admin",
-    monday_user_id: "102146081",
+
     avatar_url: null,
     active: true,
     tenant_count: 8,
     task_count: 9,
-  },
+  }
 ]
 
 // ---- IMPORT BATCHES ----
 export const MOCK_IMPORT_BATCHES: OSImportBatch[] = [
-  {
-    id: "import-1",
-    source: "monday",
-    status: "completed",
-    total_rows: 47,
-    imported_rows: 44,
-    failed_rows: 3,
-    created_at: "2026-04-28T06:00:00Z",
-    completed_at: "2026-04-28T06:03:12Z",
-    error_message: null,
-  },
-  {
-    id: "import-2",
-    source: "monday",
-    status: "processing",
-    total_rows: 12,
-    imported_rows: 7,
-    failed_rows: 0,
-    created_at: "2026-04-28T18:00:00Z",
-    completed_at: null,
-    error_message: null,
-  },
 ]
