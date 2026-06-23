@@ -106,11 +106,11 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo-banner.png"
+          src="/logo-badge.png"
           alt="By Red, LLC. – RedLantern Studios"
-          className="w-[340px] max-w-[80vw] h-auto select-none mb-2"
+          className="w-[180px] max-w-[60vw] h-auto select-none mb-8"
           style={{
-            filter: "drop-shadow(0 6px 32px rgba(200,16,46,0.5))",
+            filter: "drop-shadow(0 8px 40px rgba(200,16,46,0.6))",
           }}
         />
         <p className="text-[10px] font-semibold tracking-[0.35em] text-white/30 uppercase mb-8">
