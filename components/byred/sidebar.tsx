@@ -207,17 +207,17 @@ function SidebarContent({
 
         {/* Logo */}
         <div className={cn(
-          "shrink-0 flex items-center justify-center border-b border-[#2A2D35]/60",
-          collapsed ? "h-14 px-2" : "h-16 px-3"
+          "shrink-0 flex items-center justify-center border-b border-[#2A2D35]/60 overflow-visible",
+          collapsed ? "h-14 px-2" : "h-[72px] px-2"
         )}>
-          <Link href="/os/dashboard" onClick={onNavClick} className="block w-full">
+          <Link href="/os/dashboard" onClick={onNavClick} className={cn("block", collapsed ? "" : "w-full")}>
             {collapsed ? (
               <Image
                 src="/logo-banner.png"
                 alt="By Red, LLC. – RedLantern Studios"
-                width={40}
-                height={27}
-                className="w-9 h-auto object-contain"
+                width={36}
+                height={24}
+                className="w-8 h-auto object-contain mx-auto"
                 style={{ filter: "drop-shadow(0 2px 8px rgba(200,16,46,0.3))" }}
                 priority
               />
@@ -225,10 +225,10 @@ function SidebarContent({
               <Image
                 src="/logo-banner.png"
                 alt="By Red, LLC. – RedLantern Studios"
-                width={192}
-                height={128}
-                className="w-full h-auto object-contain"
-                style={{ filter: "drop-shadow(0 2px 10px rgba(200,16,46,0.2))" }}
+                width={200}
+                height={133}
+                className="w-full max-w-[200px] h-auto object-contain"
+                style={{ filter: "drop-shadow(0 2px 10px rgba(200,16,46,0.25))" }}
                 priority
               />
             )}
@@ -354,7 +354,7 @@ export function AppSidebar() {
     <aside
       style={{ zIndex: 50, pointerEvents: "auto", isolation: "isolate" }}
       className={cn(
-        "shrink-0 flex flex-col h-screen bg-[#0D0D0F] border-r border-white/[0.07] fixed left-0 top-0 transition-all duration-300",
+        "shrink-0 flex flex-col h-screen bg-[#0D0D0F] border-r border-white/[0.07] fixed left-0 top-0 transition-all duration-300 overflow-visible",
         isCollapsed ? "w-14" : "w-56"
       )}
     >
