@@ -157,7 +157,7 @@ function TaskCard({
               <span className="text-[10px] text-[#6B7280] font-mono">{fmtDate(task.due_date)}</span>
             )}
             {(task.estimated_minutes ?? 0) > 0 && (
-              <span className="text-[10px] text-[#6B7280] font-mono">{fmtMinutes(task.estimated_minutes)}</span>
+              <span className="text-[10px] text-[#6B7280] font-mono">{fmtMinutes(task.estimated_minutes ?? 0)}</span>
             )}
             <OSPriorityBadge priority={task.priority ?? "medium"} className="text-[9px] py-0 px-1.5" />
           </div>
@@ -406,13 +406,13 @@ export default function OSTodayPage() {
         )
       case "quick_wins":
         // estimated_minutes defaults to 30 in mapper — include those plus explicit short tasks
-        return active.filter((t) => t.estimated_minutes <= 45)
+        return active.filter((t) => (t.estimated_minutes ?? 0) <= 45)
       case "coming_up":
         return active.filter(
           (t) => t.due_date && t.due_date > today_date && t.due_date <= threeDays
         )
       case "deep_work":
-        return active.filter((t) => t.estimated_minutes > 45)
+        return active.filter((t) => (t.estimated_minutes ?? 0) > 45)
     }
   }
 
