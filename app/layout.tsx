@@ -47,6 +47,27 @@ export const metadata: Metadata = {
     shortcut: "/favicon-16x16.png",
     apple: "/apple-touch-icon.png",
   },
+  openGraph: {
+    title: "byred_os — By Red, LLC.",
+    description: "Internal operations. Execution, not ambition.",
+    url: "https://byredlanternos.com",
+    siteName: "byred_os",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "By Red, LLC. — RedLantern Studios",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "byred_os — By Red, LLC.",
+    description: "Internal operations. Execution, not ambition.",
+    images: ["/og-image.png"],
+  },
 }
 
 export default function RootLayout({
