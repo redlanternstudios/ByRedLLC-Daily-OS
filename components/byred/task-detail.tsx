@@ -242,6 +242,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               <dl className="space-y-3 text-sm">
+<<<<<<< HEAD
                 {task.monday_item_id && (
                   <div className="flex justify-between">
                     <dt className="text-[#9CA3AF]">Monday ID</dt>
@@ -257,6 +258,8 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     </dd>
                   </div>
                 )}
+=======
+>>>>>>> 056da98e8e407109a23c9bb5b8bfa50b5384980c
                 <div className="flex justify-between">
                   <dt className="text-[#9CA3AF]">Estimated</dt>
                   <dd className="text-[#6B7280] font-mono text-xs">

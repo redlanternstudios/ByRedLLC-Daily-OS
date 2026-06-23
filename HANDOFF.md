@@ -187,7 +187,7 @@ Risk: This changes the default sort order users have already seen. Low urgency �
 These were noted in the original audit but are architectural decisions, not bugs:
 
 - **No pagination on task list** — The task list page uses `.limit(300)`. For large tenants this will be slow. A cursor-based pagination or infinite scroll is the correct fix but is a larger feature.
-- **Bulk import doesn't auto-assign `owner_user_id`** — By design for now. Bulk imports come from external sources (Monday sync etc.) where the owner is determined by the import data, not the current session.
+- **Bulk import doesn't auto-assign `owner_user_id`** — By design for now. Bulk imports come from external sources where the owner is determined by the import data, not the current session.
 - **`getTaskStats()` in `lib/data/tasks.ts` is used by the sidebar dashboard widgets** — It has no `ownerId` filter. If you want per-user stats in the sidebar, it needs the same treatment as `getTasksForToday`.
 
 ---

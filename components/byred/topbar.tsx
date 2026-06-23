@@ -31,7 +31,6 @@ const ROUTE_LABELS: Record<string, string> = {
   "/os/team": "Team",
   "/os/comms": "Comms",
   "/os/import": "Import",
-  "/os/import/monday": "Import",
   "/os/docs": "Docs",
   "/os/crm": "CRM",
   "/os/files": "Files",

@@ -23,7 +23,6 @@ export const SEED_TASKS: Task[] = [
   {
     id: 'tk-1',
     tenant_id: 't2',
-    monday_item_id: null,
     title: 'Bind GL insurance ($1M/$2M) — Paradise',
     description: 'Contact GL broker and bind the general liability insurance policy for Paradise Property Services. Policy limits: $1M per occurrence, $2M aggregate.',
     due_date: '2026-04-20',
@@ -42,7 +41,6 @@ export const SEED_TASKS: Task[] = [
   {
     id: 'tk-2',
     tenant_id: 't2',
-    monday_item_id: null,
     title: 'File FBN Paradise Property Services',
     description: 'File the Fictitious Business Name (FBN) statement for Paradise Property Services with the county clerk.',
     due_date: '2026-04-20',
@@ -61,7 +59,6 @@ export const SEED_TASKS: Task[] = [
   {
     id: 'tk-3',
     tenant_id: 't3',
-    monday_item_id: null,
     title: 'Document HireWire data mismatch',
     description: 'Investigate and document the data mismatch issue found in HireWire. Requires direct input from Ro to determine root cause and resolution path.',
     due_date: '2026-04-14',
@@ -80,7 +77,6 @@ export const SEED_TASKS: Task[] = [
   {
     id: 'tk-4',
     tenant_id: 't1',
-    monday_item_id: null,
     title: 'Appoint CA Registered Agent — By Red LLC',
     description: 'Appoint a California registered agent for By Red LLC to handle service of process.',
     due_date: '2026-04-19',
@@ -99,7 +95,6 @@ export const SEED_TASKS: Task[] = [
   {
     id: 'tk-5',
     tenant_id: 't4',
-    monday_item_id: null,
     title: 'Order Authentic Hadith flyers',
     description: 'Design and order promotional flyers for Authentic Hadith product launch.',
     due_date: '2026-05-29',

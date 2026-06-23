@@ -16,7 +16,6 @@ export type DirectoryEntry = {
   name: string
   email: string
   role: string
-  monday_user_id?: string | null
   avatar_url?: string | null
 }
 
@@ -24,9 +23,7 @@ export type DirectoryEntry = {
 export type SerializedUser = {
   authUser: User
   profile: ByredUser | null
-  tenants: Array<Omit<ByredTenant, "monday_board_id" | "monday_group_id"> & {
-    monday_board_id?: string | null
-    monday_group_id?: string | null
+  tenants: Array<ByredTenant & {
     role: string
   }>
   isAdmin: boolean

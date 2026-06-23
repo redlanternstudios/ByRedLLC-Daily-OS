@@ -7,7 +7,6 @@ function t(id: string): Task {
   return {
     id,
     tenant_id: 'tenant-1',
-    monday_item_id: null,
     title: id,
     description: null,
     status: 'not_started',

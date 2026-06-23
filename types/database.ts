@@ -181,7 +181,6 @@ export type Database = {
           due_date: string | null
           estimated_minutes: number | null
           id: string
-          monday_item_id: string | null
           owner_user_id: string | null
           priority: string
           revenue_impact_score: number | null
@@ -203,7 +202,6 @@ export type Database = {
           due_date?: string | null
           estimated_minutes?: number | null
           id?: string
-          monday_item_id?: string | null
           owner_user_id?: string | null
           priority?: string
           revenue_impact_score?: number | null
@@ -225,7 +223,6 @@ export type Database = {
           due_date?: string | null
           estimated_minutes?: number | null
           id?: string
-          monday_item_id?: string | null
           owner_user_id?: string | null
           priority?: string
           revenue_impact_score?: number | null
