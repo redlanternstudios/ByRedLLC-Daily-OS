@@ -207,18 +207,18 @@ function SidebarContent({
 
         {/* Logo */}
         <div className={cn(
-          "shrink-0 flex items-center justify-center border-b border-[#2A2D35]/60",
-          collapsed ? "h-16 px-2" : "h-24 px-3"
+          "shrink-0 flex items-center justify-center border-b border-[#2A2D35]/60 py-2",
+          collapsed ? "px-2" : "px-3"
         )}>
           <Link href="/os/dashboard" onClick={onNavClick} className="block">
             <Image
-              src="/by-red-logo.png"
+              src="/by-red-logo-cropped.png"
               alt="By Red, LLC. – RedLantern Studios"
               width={148}
               height={148}
               className={cn(
-                "h-auto object-contain drop-shadow-[0_4px_12px_rgba(200,16,46,0.25)]",
-                collapsed ? "w-10" : "w-16"
+                "h-auto w-auto drop-shadow-[0_4px_12px_rgba(200,16,46,0.25)]",
+                collapsed ? "max-h-10" : "max-h-16"
               )}
               priority
             />
