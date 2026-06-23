@@ -27,7 +27,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 // Street light: gray → yellow → red → green
 const KANBAN_COLUMNS = [
-  { id: "not_started", label: "Not Started", border: "border-zinc-700",   count_color: "text-zinc-400",   drop_bg: "bg-zinc-800/40",   drop_border: "border-zinc-600" },
+  { id: "not_started", label: "Not Started", border: "border-[#2A2D35]",   count_color: "text-[#9CA3AF]",   drop_bg: "bg-[#1A1D24]/50",   drop_border: "border-[#2A2D35]" },
   { id: "in_progress", label: "In Progress", border: "border-yellow-700", count_color: "text-yellow-400", drop_bg: "bg-yellow-950/30", drop_border: "border-yellow-600" },
   { id: "blocked",     label: "Blocked",     border: "border-red-700",    count_color: "text-red-400",    drop_bg: "bg-red-950/30",    drop_border: "border-red-600" },
   { id: "done",        label: "Done",        border: "border-green-700",  count_color: "text-green-400",  drop_bg: "bg-green-950/30",  drop_border: "border-green-600" },
@@ -60,7 +60,7 @@ function TaskCard({
         onDragStart(task.id)
       }}
       className={cn(
-        "p-3.5 rounded-lg bg-zinc-800/80 border border-zinc-700/60 transition-all cursor-grab active:cursor-grabbing select-none",
+        "p-3.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35]/60 transition-all cursor-grab active:cursor-grabbing select-none",
         task.blocker_flag && "border-red-800/60 bg-red-950/20",
         isDragging && "opacity-40 scale-95"
       )}
@@ -80,7 +80,7 @@ function TaskCard({
 
       <Link
         href={`/os/tasks/${task.id}`}
-        className="block text-xs font-medium text-zinc-200 hover:text-white leading-relaxed mb-2.5"
+        className="block text-xs font-medium text-white hover:text-white leading-relaxed mb-2.5"
         onClick={(e) => e.stopPropagation()}
       >
         {task.title}
@@ -91,7 +91,7 @@ function TaskCard({
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-[10px] text-zinc-600">
+        <div className="flex items-center gap-2 text-[10px] text-[#6B7280]">
           {task.due_date && (
             <div className={cn("flex items-center gap-1", isOverdue && "text-red-400")}>
               <Clock className="w-3 h-3" strokeWidth={1.75} />
@@ -155,7 +155,7 @@ export default function OSBoardDetailPage({
   if (tasksLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" strokeWidth={1.75} />
+        <Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" strokeWidth={1.75} />
       </div>
     )
   }
@@ -175,9 +175,9 @@ export default function OSBoardDetailPage({
       <div className="flex items-center gap-3">
         <Link
           href="/os/boards"
-          className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-zinc-600 transition-colors"
+          className="w-7 h-7 rounded-lg bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center hover:border-[#2A2D35] transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.75} />
+          <ArrowLeft className="w-3.5 h-3.5 text-[#9CA3AF]" strokeWidth={1.75} />
         </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -191,11 +191,11 @@ export default function OSBoardDetailPage({
               {tenant?.name ?? boardId}
             </h1>
           </div>
-          <p className="text-xs text-zinc-500 mt-0.5">{tasks.length} tasks · drag cards between columns to update status</p>
+          <p className="text-xs text-[#9CA3AF] mt-0.5">{tasks.length} tasks · drag cards between columns to update status</p>
         </div>
         <Link
           href={`/os/tasks/new?tenant=${boardId}`}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-zinc-300 hover:border-zinc-600 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs text-[#9CA3AF] hover:border-[#2A2D35] hover:text-white transition-colors"
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2} />
           Add Task
@@ -222,7 +222,7 @@ export default function OSBoardDetailPage({
             >
               {/* Column header */}
               <div className={cn("flex items-center justify-between mb-3 pb-2 border-b", col.border)}>
-                <span className="text-xs font-semibold text-zinc-300">{col.label}</span>
+                <span className="text-xs font-semibold text-[#9CA3AF]">{col.label}</span>
                 <span className={cn("text-xs font-mono font-bold", col.count_color)}>{colTasks.length}</span>
               </div>
 
@@ -234,8 +234,8 @@ export default function OSBoardDetailPage({
                 )}
               >
                 {colTasks.length === 0 && !isOver ? (
-                  <div className="h-20 rounded-lg border border-dashed border-zinc-800 flex items-center justify-center">
-                    <span className="text-[10px] text-zinc-700">Drop here</span>
+                  <div className="h-20 rounded-lg border border-dashed border-[#2A2D35] flex items-center justify-center">
+                    <span className="text-[10px] text-[#6B7280]">Drop here</span>
                   </div>
                 ) : (
                   colTasks.map((task) => (
@@ -249,7 +249,7 @@ export default function OSBoardDetailPage({
                 )}
                 {isOver && colTasks.length === 0 && (
                   <div className="h-14 rounded-lg flex items-center justify-center">
-                    <span className="text-[10px] text-zinc-500">Release to move here</span>
+                    <span className="text-[10px] text-[#9CA3AF]">Release to move here</span>
                   </div>
                 )}
               </div>

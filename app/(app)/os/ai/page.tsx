@@ -59,7 +59,7 @@ export default function OSAIPage() {
           <h1 className="text-xl font-extrabold text-zinc-50 tracking-tight leading-none mb-0.5">
             LanternAI
           </h1>
-          <p className="text-[11px] text-zinc-600">Your intelligent operations assistant</p>
+          <p className="text-[11px] text-[#6B7280]">Your intelligent operations assistant</p>
         </div>
       </div>
 
@@ -71,7 +71,7 @@ export default function OSAIPage() {
               <LanternIcon />
             </div>
             <p className="text-base font-bold text-zinc-50 mb-2">How can I help you today?</p>
-            <p className="text-xs text-zinc-600 max-w-sm mx-auto">
+            <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
               Ask me about your tasks, projects, blockers, or anything about your business operations.
             </p>
             <div className="flex gap-2 justify-center mt-5 flex-wrap">
@@ -80,7 +80,7 @@ export default function OSAIPage() {
                   key={s}
                   type="button"
                   onClick={() => setInput(s)}
-                  className="text-[11px] text-zinc-400 bg-zinc-900 border border-white/10 rounded-md px-3 py-1.5 cursor-pointer transition-colors hover:border-red-500/40 hover:text-zinc-200"
+                  className="text-[11px] text-[#9CA3AF] bg-[#111318] border border-white/10 rounded-md px-3 py-1.5 cursor-pointer transition-colors hover:border-red-500/40 hover:text-white"
                 >
                   {s}
                 </button>
@@ -107,7 +107,7 @@ export default function OSAIPage() {
                   "max-w-[70%] px-3.5 py-2.5 text-[13px] text-zinc-50 leading-relaxed whitespace-pre-wrap",
                   m.role === "user"
                     ? "bg-red-600 rounded-xl rounded-br-sm"
-                    : "bg-zinc-900 border border-white/[0.07] rounded-xl rounded-bl-sm"
+                    : "bg-[#111318] border border-white/[0.07] rounded-xl rounded-bl-sm"
                 )}
               >
                 {text}
@@ -121,7 +121,7 @@ export default function OSAIPage() {
 
         {isActive && messages[messages.length - 1]?.role === "user" && (
           <div className="flex justify-start mb-3">
-            <div className="px-3.5 py-2.5 bg-zinc-900 border border-white/[0.07] rounded-xl rounded-bl-sm text-xs text-zinc-600">
+            <div className="px-3.5 py-2.5 bg-[#111318] border border-white/[0.07] rounded-xl rounded-bl-sm text-xs text-[#6B7280]">
               Thinking…
             </div>
           </div>
@@ -140,7 +140,7 @@ export default function OSAIPage() {
       <div className="px-7 pb-5 pt-3 border-t border-white/[0.07] shrink-0">
         <form
           onSubmit={handleSubmit}
-          className="flex gap-2 items-center bg-zinc-900 border border-white/10 rounded-lg px-3.5 py-2"
+          className="flex gap-2 items-center bg-[#111318] border border-white/10 rounded-lg px-3.5 py-2"
         >
           <MentionTextarea
             placeholder="Ask LanternAI anything… (@name to mention)"
@@ -160,7 +160,7 @@ export default function OSAIPage() {
             className={cn(
               "w-[30px] h-[30px] inline-flex items-center justify-center rounded-[5px] border-none shrink-0 transition-colors",
               isActive || !input.trim()
-                ? "bg-white/[0.06] cursor-not-allowed text-zinc-600"
+                ? "bg-white/[0.06] cursor-not-allowed text-[#6B7280]"
                 : "bg-red-600 cursor-pointer text-white hover:bg-red-500"
             )}
           >

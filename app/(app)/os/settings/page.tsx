@@ -34,10 +34,10 @@ function Section({
   return (
     <section>
       <div className="flex items-center gap-2 mb-3">
-        <Icon className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-        <p className="text-[10px] font-semibold tracking-widest text-zinc-600 uppercase">{title}</p>
+        <Icon className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+        <p className="text-[10px] font-semibold tracking-widest text-[#6B7280] uppercase">{title}</p>
       </div>
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
         {children}
       </div>
     </section>
@@ -46,8 +46,8 @@ function Section({
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 last:border-0">
-      <span className="text-xs text-zinc-500">{label}</span>
+    <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#2A2D35] last:border-0">
+      <span className="text-xs text-[#9CA3AF]">{label}</span>
       <div className="flex items-center gap-2">{children}</div>
     </div>
   )
@@ -89,7 +89,7 @@ export default function OSSettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight font-condensed">Settings</h1>
-        <p className="text-xs text-zinc-600 mt-1">Profile, preferences, tenants, and integrations.</p>
+        <p className="text-xs text-[#6B7280] mt-1">Profile, preferences, tenants, and integrations.</p>
       </div>
 
       {/* Profile */}
@@ -101,7 +101,7 @@ export default function OSSettingsPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
-                className="w-44 bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-500"
+                className="w-44 bg-[#1A1D24] border border-[#2A2D35] rounded-md px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-500"
                 autoFocus
               />
               <button
@@ -113,17 +113,17 @@ export default function OSSettingsPage() {
               </button>
               <button
                 onClick={() => { setEditingName(false); setFullName(currentUser?.profile?.name ?? "") }}
-                className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                className="text-[11px] text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
               >
                 Cancel
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="text-xs text-zinc-300">{fullName || "—"}</span>
+              <span className="text-xs text-[#9CA3AF]">{fullName || "—"}</span>
               <button
                 onClick={() => setEditingName(true)}
-                className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                className="text-[11px] text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
               >
                 Edit
               </button>
@@ -131,17 +131,17 @@ export default function OSSettingsPage() {
           )}
         </Row>
         <Row label="Email">
-          <span className="text-xs text-zinc-500">{userEmail}</span>
+          <span className="text-xs text-[#9CA3AF]">{userEmail}</span>
         </Row>
         <Row label="Role">
-          <span className="text-xs text-zinc-500 capitalize">{userRole}</span>
+          <span className="text-xs text-[#9CA3AF] capitalize">{userRole}</span>
         </Row>
       </Section>
 
       {/* Tenants */}
       <Section icon={Building2} title="Workspaces">
         {tenants.length === 0 ? (
-          <div className="px-5 py-4 text-xs text-zinc-600">No workspaces found.</div>
+          <div className="px-5 py-4 text-xs text-[#6B7280]">No workspaces found.</div>
         ) : (
           tenants.map((tenant, idx) => {
             const color = TENANT_COLORS[idx % TENANT_COLORS.length]
@@ -150,14 +150,14 @@ export default function OSSettingsPage() {
               <div
                 key={tenant.id}
                 className={cn(
-                  "flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 last:border-0"
+                  "flex items-center justify-between px-5 py-3.5 border-b border-[#2A2D35] last:border-0"
                 )}
               >
                 <div className="flex items-center gap-2.5">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
                   <div>
-                    <p className="text-xs font-medium text-zinc-200">{tenant.name}</p>
-                    <p className="text-[10px] text-zinc-600 capitalize">{tenant.type} · {tenant.role}</p>
+                    <p className="text-xs font-medium text-white">{tenant.name}</p>
+                    <p className="text-[10px] text-[#6B7280] capitalize">{tenant.type} · {tenant.role}</p>
                   </div>
                 </div>
                 {isActive ? (
@@ -165,7 +165,7 @@ export default function OSSettingsPage() {
                 ) : (
                   <button
                     onClick={() => currentUser?.setActiveTenantId(tenant.id)}
-                    className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+                    className="text-[10px] text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
                   >
                     Switch
                   </button>
@@ -179,7 +179,7 @@ export default function OSSettingsPage() {
       {/* AI Mode */}
       <Section icon={Cpu} title="AI Defaults">
         <div className="px-5 py-4 space-y-3">
-          <p className="text-[11px] text-zinc-600 mb-2">Default AI mode for new tasks</p>
+          <p className="text-[11px] text-[#6B7280] mb-2">Default AI mode for new tasks</p>
           {AI_MODES.map((mode) => (
             <label key={mode} className="flex items-start gap-3 cursor-pointer">
               <input
@@ -191,7 +191,7 @@ export default function OSSettingsPage() {
                 className="mt-0.5 accent-[#D7261E]"
               />
               <div>
-                <p className="text-xs text-zinc-300 font-mono">{mode}</p>
+                <p className="text-xs text-[#9CA3AF] font-mono">{mode}</p>
                 {mode === "AI_EXECUTE" && (
                   <div className="flex items-center gap-1.5 mt-1 px-2 py-1 rounded bg-yellow-950/40 border border-yellow-900/40">
                     <AlertTriangle className="w-3 h-3 text-yellow-500 shrink-0" strokeWidth={1.75} />
@@ -218,7 +218,7 @@ export default function OSSettingsPage() {
               "flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-md border",
               int.connected
                 ? "bg-emerald-950/40 text-emerald-400 border-emerald-900/40"
-                : "bg-zinc-800 text-zinc-600 border-zinc-700"
+                : "bg-[#1A1D24] text-[#6B7280] border-[#2A2D35]"
             )}>
               {int.connected
                 ? <CheckCircle className="w-3 h-3" strokeWidth={1.75} />
@@ -235,7 +235,7 @@ export default function OSSettingsPage() {
         <div className="px-5 py-4">
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 text-xs transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2A2D35] text-[#9CA3AF] hover:text-white hover:border-[#9CA3AF]/60 text-xs transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" strokeWidth={1.75} />
             Sign out

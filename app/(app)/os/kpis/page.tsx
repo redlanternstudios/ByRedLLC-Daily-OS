@@ -36,7 +36,7 @@ function StatCard({
   const ring = accent === "red" && Number(value) > 0 ? "border-red-800/50 bg-red-950/20"
     : accent === "yellow" && Number(value) > 0 ? "border-yellow-800/40 bg-yellow-950/10"
     : accent === "green" ? "border-green-800/30 bg-green-950/10"
-    : "border-zinc-800 bg-zinc-900"
+    : "border-[#2A2D35] bg-[#111318]"
   const valColor = accent === "red" && Number(value) > 0 ? "text-red-400"
     : accent === "yellow" && Number(value) > 0 ? "text-yellow-400"
     : accent === "green" ? "text-green-400"
@@ -44,16 +44,16 @@ function StatCard({
   const iconColor = accent === "red" && Number(value) > 0 ? "text-red-500"
     : accent === "yellow" && Number(value) > 0 ? "text-yellow-500"
     : accent === "green" ? "text-green-500"
-    : "text-zinc-600"
+    : "text-[#6B7280]"
 
   return (
     <div className={cn("rounded-xl border p-5 flex flex-col gap-3", ring)}>
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">{label}</span>
+        <span className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest">{label}</span>
         <Icon className={cn("w-3.5 h-3.5", iconColor)} strokeWidth={1.75} />
       </div>
       <p className={cn("text-3xl font-bold font-condensed tracking-tight", valColor)}>{value}</p>
-      {sub && <p className="text-xs text-zinc-600">{sub}</p>}
+      {sub && <p className="text-xs text-[#6B7280]">{sub}</p>}
     </div>
   )
 }
@@ -62,7 +62,7 @@ function StatCard({
 function VelocityTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-zinc-200 shadow-xl">
+    <div className="px-3 py-2 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs text-white shadow-xl">
       <p className="font-medium">{label}</p>
       <p className="text-green-400">{payload[0].value} completed</p>
     </div>
@@ -85,9 +85,9 @@ const MEMBER_COLORS = [
 function TeamPieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number }> }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="px-2.5 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs shadow-xl">
+    <div className="px-2.5 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs shadow-xl">
       <p className="font-medium text-white">{payload[0].name}</p>
-      <p className="text-zinc-400">{payload[0].value} active tasks</p>
+      <p className="text-[#9CA3AF]">{payload[0].value} active tasks</p>
     </div>
   )
 }
@@ -106,7 +106,7 @@ function TeamLoadPanel({ team }: { team: TeamMember[] }) {
     userId: m.user_id,
   }))
 
-  if (team.length === 0) return <p className="text-sm text-zinc-600">No team data yet.</p>
+  if (team.length === 0) return <p className="text-sm text-[#6B7280]">No team data yet.</p>
 
   if (active.length === 0) {
     return (
@@ -164,7 +164,7 @@ function TeamLoadPanel({ team }: { team: TeamMember[] }) {
                     selected.has_blocker ? "bg-red-500" : selected.has_critical ? "bg-yellow-500" : "bg-green-500"
                   )} />
                 </div>
-                <p className="text-[10px] text-zinc-600">{selected.done_this_week} done this week</p>
+                <p className="text-[10px] text-[#6B7280]">{selected.done_this_week} done this week</p>
               </div>
             </div>
 
@@ -178,10 +178,10 @@ function TeamLoadPanel({ team }: { team: TeamMember[] }) {
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
                       {t.has_blocker && <AlertTriangle className="w-2.5 h-2.5 text-red-400" strokeWidth={2} />}
-                      <span className="text-[10px] text-zinc-500">{t.task_count}</span>
+                      <span className="text-[10px] text-[#9CA3AF]">{t.task_count}</span>
                     </div>
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1 bg-[#1A1D24] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -197,7 +197,7 @@ function TeamLoadPanel({ team }: { team: TeamMember[] }) {
             <button
               type="button"
               onClick={() => setSelectedId(null)}
-              className="flex items-center gap-1 text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
             >
               <ArrowLeft className="w-2.5 h-2.5" strokeWidth={2} />
               All members
@@ -216,14 +216,14 @@ function TeamLoadPanel({ team }: { team: TeamMember[] }) {
                   className="w-full flex items-center gap-2 text-left group/leg"
                 >
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                  <span className="text-[11px] text-zinc-400 group-hover/leg:text-zinc-200 transition-colors truncate flex-1">
+                  <span className="text-[11px] text-[#9CA3AF] group-hover/leg:text-white transition-colors truncate flex-1">
                     {member.name.split(" ")[0]}
                   </span>
                   <span className={cn(
                     "w-1.5 h-1.5 rounded-full shrink-0",
                     member.has_blocker ? "bg-red-500" : member.has_critical ? "bg-yellow-500" : "bg-green-500"
                   )} />
-                  <span className="text-[10px] text-zinc-600 shrink-0 tabular-nums">{entry.value}</span>
+                  <span className="text-[10px] text-[#6B7280] shrink-0 tabular-nums">{entry.value}</span>
                 </button>
               )
             })}
@@ -241,7 +241,7 @@ export default function OSKPIsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" strokeWidth={1.75} />
+        <Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" strokeWidth={1.75} />
       </div>
     )
   }
@@ -265,12 +265,12 @@ export default function OSKPIsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">KPIs</h1>
-          <p className="text-sm text-zinc-500 mt-1">Read-only · as of {fmtTime(data.as_of)}</p>
+          <p className="text-sm text-[#9CA3AF] mt-1">Read-only · as of {fmtTime(data.as_of)}</p>
         </div>
         <button
           type="button"
           onClick={() => mutate()}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs text-[#9CA3AF] hover:text-white hover:border-[#9CA3AF]/40 transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" strokeWidth={1.75} />
           Refresh
@@ -313,29 +313,29 @@ export default function OSKPIsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
         {/* Completion by Project */}
-        <div className="lg:col-span-3 rounded-xl bg-zinc-900 border border-zinc-800 p-5">
+        <div className="lg:col-span-3 rounded-xl bg-[#111318] border border-[#2A2D35] p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Layers className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Completion by Project</span>
+            <Layers className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+            <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">Completion by Project</span>
           </div>
           {data.by_tenant.length === 0 ? (
-            <p className="text-sm text-zinc-600">No project data yet.</p>
+            <p className="text-sm text-[#6B7280]">No project data yet.</p>
           ) : (
             <div className="space-y-3">
               {data.by_tenant.map((t) => (
                 <div key={t.tenant_id}>
                     <div className="flex items-center justify-between mb-1">
                     {/* Project names use neutral text; color is reserved for the progress bar */}
-                    <span className="text-[11px] font-medium text-zinc-300 truncate max-w-[200px]">
+                    <span className="text-[11px] font-medium text-[#9CA3AF] truncate max-w-[200px]">
                       {t.tenant_name.replace(/^[^\w\s]*\s*/, "").split(" — ")[0].split(" - ")[0]}
                     </span>
-                    <div className="flex items-center gap-3 text-[10px] text-zinc-600 shrink-0">
+                    <div className="flex items-center gap-3 text-[10px] text-[#6B7280] shrink-0">
                       {t.overdue > 0 && <span className="text-red-400">{t.overdue} overdue</span>}
                       {t.blocked > 0 && <span className="text-red-500">{t.blocked} blocked</span>}
                       <span>{t.done}/{t.total} · {t.pct}%</span>
                     </div>
                   </div>
-                  <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#1A1D24] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{ width: `${t.pct}%`, backgroundColor: t.tenant_color }}
@@ -348,10 +348,10 @@ export default function OSKPIsPage() {
         </div>
 
         {/* Team Load */}
-        <div className="lg:col-span-2 rounded-xl bg-zinc-900 border border-zinc-800 p-5">
+        <div className="lg:col-span-2 rounded-xl bg-[#111318] border border-[#2A2D35] p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Team Load</span>
+            <Users className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+            <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">Team Load</span>
           </div>
           <TeamLoadPanel team={data.team} />
         </div>
@@ -361,10 +361,10 @@ export default function OSKPIsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Delivery Risk */}
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
+        <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Delivery Risk</span>
+            <Clock className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+            <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">Delivery Risk</span>
             {data.overdue_detail.length > 0 && (
               <span className="ml-auto text-[10px] text-red-400 font-medium">{data.overdue_detail.length} overdue</span>
             )}
@@ -380,13 +380,13 @@ export default function OSKPIsPage() {
                 <Link
                   key={t.id}
                   href={`/os/tasks/${t.id}`}
-                  className="flex items-start gap-2.5 p-2.5 rounded-lg bg-zinc-800/60 hover:bg-zinc-800 border border-zinc-700/50 hover:border-zinc-600 transition-colors group"
+                  className="flex items-start gap-2.5 p-2.5 rounded-lg bg-[#1A1D24]/60 hover:bg-[#1A1D24] border border-[#2A2D35]/50 hover:border-[#9CA3AF]/40 transition-colors group"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-zinc-300 group-hover:text-white truncate leading-snug">{t.title}</p>
+                    <p className="text-xs text-[#9CA3AF] group-hover:text-white truncate leading-snug">{t.title}</p>
                     <div className="flex items-center gap-2 mt-1">
                       {/* Small color dot + neutral text for project name */}
-                      <span className="flex items-center gap-1.5 text-[10px] font-medium text-zinc-500">
+                      <span className="flex items-center gap-1.5 text-[10px] font-medium text-[#9CA3AF]">
                         <span
                           className="w-1.5 h-1.5 rounded-full shrink-0"
                           style={{ backgroundColor: t.tenant_color }}
@@ -401,7 +401,7 @@ export default function OSKPIsPage() {
                     <span className="text-[10px] font-medium text-red-400">
                       Due {new Date(t.due_date).toLocaleDateString([], { month: "short", day: "numeric" })}
                     </span>
-                    <span className="text-[9px] text-zinc-600">
+                    <span className="text-[9px] text-[#6B7280]">
                       {t.days_overdue === 1 ? "1 day ago" : `${t.days_overdue} days ago`}
                     </span>
                   </div>
@@ -412,14 +412,14 @@ export default function OSKPIsPage() {
         </div>
 
         {/* Pipeline or Priority Mix */}
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
+        <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-5">
           {data.pipeline.length > 0 ? (
             <>
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Pipeline</span>
+                <TrendingUp className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+                <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">Pipeline</span>
                 {totalPipelineRevenue > 0 && (
-                  <span className="ml-auto text-[10px] text-zinc-500">
+                  <span className="ml-auto text-[10px] text-[#9CA3AF]">
                     ${totalPipelineRevenue.toLocaleString()} total potential
                   </span>
                 )}
@@ -434,15 +434,15 @@ export default function OSKPIsPage() {
                   return (
                     <div key={p.stage} className="flex items-center gap-3">
                       <span className="text-[10px] font-semibold w-20 shrink-0" style={{ color }}>{p.stage}</span>
-                      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-[#1A1D24] rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{ width: `${Math.min((p.count / (data.pipeline.reduce((s, x) => s + x.count, 0))) * 100, 100)}%`, backgroundColor: color }}
                         />
                       </div>
-                      <span className="text-[10px] text-zinc-500 w-8 text-right shrink-0">{p.count}</span>
+                      <span className="text-[10px] text-[#9CA3AF] w-8 text-right shrink-0">{p.count}</span>
                       {p.revenue_potential > 0 && (
-                        <span className="text-[10px] text-zinc-600 shrink-0">${(p.revenue_potential / 1000).toFixed(0)}k</span>
+                        <span className="text-[10px] text-[#6B7280] shrink-0">${(p.revenue_potential / 1000).toFixed(0)}k</span>
                       )}
                     </div>
                   )
@@ -452,8 +452,8 @@ export default function OSKPIsPage() {
           ) : (
             <>
               <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Priority Mix</span>
+                <Zap className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+                <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">Priority Mix</span>
               </div>
               {(() => {
                 // Street light: critical=red, high=red, medium=yellow, low=green
@@ -472,13 +472,13 @@ export default function OSKPIsPage() {
                       return (
                         <div key={p.key} className="flex items-center gap-3">
                           <span className="text-[10px] font-semibold w-14 shrink-0" style={{ color: p.color }}>{p.label}</span>
-                          <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="flex-1 h-1.5 bg-[#1A1D24] rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full"
                               style={{ width: `${pct}%`, backgroundColor: p.color }}
                             />
                           </div>
-                          <span className="text-[10px] text-zinc-500 w-10 text-right shrink-0">{count} ({pct}%)</span>
+                          <span className="text-[10px] text-[#9CA3AF] w-10 text-right shrink-0">{count} ({pct}%)</span>
                         </div>
                       )
                     })}
@@ -491,11 +491,11 @@ export default function OSKPIsPage() {
       </div>
 
       {/* ── Row 4: 14-Day Velocity ── */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
+      <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-5">
         <div className="flex items-center gap-2 mb-5">
-          <TrendingUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">14-Day Velocity</span>
-          <span className="ml-auto text-[10px] text-zinc-600">tasks completed per day</span>
+          <TrendingUp className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+          <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">14-Day Velocity</span>
+          <span className="ml-auto text-[10px] text-[#6B7280]">tasks completed per day</span>
         </div>
         <ResponsiveContainer width="100%" height={140}>
           <BarChart data={data.velocity} barSize={16} margin={{ top: 4, right: 0, left: -24, bottom: 0 }}>

@@ -130,7 +130,7 @@ export function AppTopbar() {
             variant="ghost"
             size="icon"
             onClick={toggleMobile}
-            className="w-8 h-8 text-zinc-500 hover:text-zinc-200 hover:bg-white/5 -ml-1"
+            className="w-8 h-8 text-[#9CA3AF] hover:text-white hover:bg-white/5 -ml-1"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" strokeWidth={1.75} />
@@ -146,7 +146,7 @@ export function AppTopbar() {
             <span key={crumb.href} className="flex items-center gap-1.5">
               {i > 0 && (
                 <ChevronRight
-                  className="w-3 h-3 text-zinc-700"
+                  className="w-3 h-3 text-[#6B7280]"
                   strokeWidth={1.75}
                 />
               )}
@@ -157,7 +157,7 @@ export function AppTopbar() {
               ) : (
                 <Link
                   href={crumb.href}
-                  className="text-zinc-600 hover:text-zinc-400 transition-colors hidden md:inline text-xs"
+                  className="text-[#6B7280] hover:text-[#9CA3AF] transition-colors hidden md:inline text-xs"
                 >
                   {crumb.label}
                 </Link>
@@ -175,7 +175,7 @@ export function AppTopbar() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-zinc-500 hover:text-zinc-200 hover:bg-white/5 gap-2 text-xs px-2 md:px-3"
+              className="text-[#9CA3AF] hover:text-white hover:bg-white/5 gap-2 text-xs px-2 md:px-3"
             >
               <FileText className="w-4 h-4" strokeWidth={1.75} />
               <span className="hidden md:inline">Brief</span>
@@ -196,14 +196,14 @@ export function AppTopbar() {
             <div className="p-4 space-y-3">
               {brief.top_3.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2">
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-widest mb-2">
                     Top 3
                   </p>
                   <ol className="space-y-1">
                     {brief.top_3.map((item, i) => (
                       <li
                         key={i}
-                        className="flex items-start gap-2 text-xs text-zinc-400"
+                        className="flex items-start gap-2 text-xs text-[#9CA3AF]"
                       >
                         <span className="text-[#D7261E] font-mono font-medium shrink-0">
                           {i + 1}.
@@ -216,7 +216,7 @@ export function AppTopbar() {
               )}
               {brief.warnings.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2">
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-widest mb-2">
                     Warnings
                   </p>
                   {brief.warnings.map((w, i) => (
@@ -233,11 +233,11 @@ export function AppTopbar() {
                   ))}
                 </div>
               )}
-              <div className="pt-2 border-t border-zinc-800">
-                <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1">
+              <div className="pt-2 border-t border-[#2A2D35]">
+                <p className="text-[10px] text-[#6B7280] uppercase tracking-widest mb-1">
                   Next Action
                 </p>
-                <p className="text-sm font-medium text-zinc-200">
+                <p className="text-sm font-medium text-white">
                   {brief.next_action}
                 </p>
               </div>
@@ -250,7 +250,7 @@ export function AppTopbar() {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="text-zinc-500 hover:text-zinc-200 hover:bg-white/5 w-8 h-8"
+          className="text-[#9CA3AF] hover:text-white hover:bg-white/5 w-8 h-8"
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         >
           {theme === "dark" ? (

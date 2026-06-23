@@ -20,13 +20,13 @@ type OsFile = {
 }
 
 function fileIcon(mimeType: string | null) {
-  if (!mimeType) return <FileText className="w-4 h-4 text-zinc-500" />
+  if (!mimeType) return <FileText className="w-4 h-4 text-[#9CA3AF]" />
   if (mimeType.startsWith("image/")) return <Image className="w-4 h-4 text-sky-400" />
   if (mimeType.includes("pdf")) return <FileText className="w-4 h-4 text-[#D7261E]" />
   if (mimeType.includes("code") || mimeType.includes("json") || mimeType.includes("javascript") || mimeType.includes("typescript")) {
     return <FileCode className="w-4 h-4 text-violet-400" />
   }
-  return <FileText className="w-4 h-4 text-zinc-500" />
+  return <FileText className="w-4 h-4 text-[#9CA3AF]" />
 }
 
 function formatBytes(type: string | null) {
@@ -80,18 +80,18 @@ export default function OSFilesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-condensed font-bold text-white tracking-tight">Files</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">{files.length} {files.length === 1 ? "file" : "files"} across all projects</p>
+          <p className="text-xs text-[#9CA3AF] mt-0.5">{files.length} {files.length === 1 ? "file" : "files"} across all projects</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6B7280]" />
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search files…"
-            className="bg-zinc-900 border-zinc-800 text-zinc-300 text-sm pl-8 placeholder:text-zinc-700"
+            className="bg-[#111318] border-[#2A2D35] text-[#9CA3AF] text-sm pl-8 placeholder:text-[#6B7280]"
           />
         </div>
         <div className="flex gap-1">
@@ -103,8 +103,8 @@ export default function OSFilesPage() {
               className={cn(
                 "text-xs px-3 py-1.5 rounded-md font-medium capitalize transition-colors",
                 entityFilter === et
-                  ? "bg-zinc-800 text-zinc-200"
-                  : "text-zinc-600 hover:text-zinc-400"
+                  ? "bg-[#1A1D24] text-white"
+                  : "text-[#6B7280] hover:text-[#9CA3AF]"
               )}
             >
               {et === "all" ? "All" : (ENTITY_LABEL[et] ?? et)}
@@ -113,37 +113,37 @@ export default function OSFilesPage() {
         </div>
       </div>
 
-      {loading && <p className="text-xs text-zinc-600 py-8 text-center">Loading…</p>}
+      {loading && <p className="text-xs text-[#6B7280] py-8 text-center">Loading…</p>}
 
       {!loading && files.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-            <FolderOpen className="w-5 h-5 text-zinc-600" />
+          <div className="w-12 h-12 rounded-xl bg-[#111318] border border-[#2A2D35] flex items-center justify-center">
+            <FolderOpen className="w-5 h-5 text-[#6B7280]" />
           </div>
           <div>
-            <p className="text-sm font-medium text-zinc-400">No files yet</p>
-            <p className="text-xs text-zinc-600 mt-1">Files attached to tasks, contacts, and docs will appear here.</p>
+            <p className="text-sm font-medium text-[#9CA3AF]">No files yet</p>
+            <p className="text-xs text-[#6B7280] mt-1">Files attached to tasks, contacts, and docs will appear here.</p>
           </div>
         </div>
       )}
 
       {!loading && Object.entries(grouped).map(([entity, entityFiles]) => (
         <div key={entity} className="space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 px-1">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6B7280] px-1">
             {ENTITY_LABEL[entity] ?? entity} ({entityFiles.length})
           </p>
           {entityFiles.map(f => (
-            <div key={f.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-center gap-3 hover:border-zinc-700 transition-colors">
-              <div className="w-7 h-7 rounded-md bg-zinc-800 flex items-center justify-center shrink-0">
+            <div key={f.id} className="bg-[#111318] border border-[#2A2D35] rounded-lg px-4 py-3 flex items-center gap-3 hover:border-[#2A2D35] transition-colors">
+              <div className="w-7 h-7 rounded-md bg-[#1A1D24] flex items-center justify-center shrink-0">
                 {fileIcon(f.mime_type)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-zinc-200 truncate">{f.file_name}</p>
+                <p className="text-sm font-medium text-white truncate">{f.file_name}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {f.mime_type && <span className="text-[10px] text-zinc-600">{formatBytes(f.mime_type)}</span>}
-                  <span className="text-[10px] text-zinc-700">·</span>
-                  <span className="text-[10px] text-zinc-600">{formatDate(f.created_at)}</span>
-                  {f.byred_users && <span className="text-[10px] text-zinc-700">· {f.byred_users.name}</span>}
+                  {f.mime_type && <span className="text-[10px] text-[#6B7280]">{formatBytes(f.mime_type)}</span>}
+                  <span className="text-[10px] text-[#6B7280]">·</span>
+                  <span className="text-[10px] text-[#6B7280]">{formatDate(f.created_at)}</span>
+                  {f.byred_users && <span className="text-[10px] text-[#6B7280]">· {f.byred_users.name}</span>}
                 </div>
               </div>
               {f.external_url && (
@@ -151,10 +151,10 @@ export default function OSFilesPage() {
                   href={f.external_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-7 h-7 rounded-md bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
+                  className="w-7 h-7 rounded-md bg-[#1A1D24] hover:bg-[#1A1D24] flex items-center justify-center transition-colors"
                   title="Download"
                 >
-                  <Download className="w-3.5 h-3.5 text-zinc-500" />
+                  <Download className="w-3.5 h-3.5 text-[#9CA3AF]" />
                 </a>
               )}
             </div>

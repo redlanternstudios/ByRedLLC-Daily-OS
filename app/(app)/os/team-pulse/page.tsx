@@ -71,7 +71,7 @@ function MemberRow({ member }: { member: TeamMember }) {
   const criticalTasks = member.tasks.filter((t) => t.priority === "critical" && t.status !== "blocked")
 
   return (
-    <div className="border-b border-zinc-800/60 last:border-0">
+    <div className="border-b border-[#2A2D35]/60 last:border-0">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -83,12 +83,12 @@ function MemberRow({ member }: { member: TeamMember }) {
             <p className="text-sm font-semibold text-white">{member.name}</p>
             <span className={cn("w-2 h-2 rounded-full shrink-0", statusDot(member.status))} />
           </div>
-          <p className="text-[11px] text-zinc-500 capitalize">{member.role}</p>
+          <p className="text-[11px] text-[#9CA3AF] capitalize">{member.role}</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <CheckSquare className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-          <span className="text-sm font-mono font-semibold text-zinc-300">{member.taskCount}</span>
-          <span className="text-[10px] text-zinc-600">tasks</span>
+          <CheckSquare className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+          <span className="text-sm font-mono font-semibold text-[#9CA3AF]">{member.taskCount}</span>
+          <span className="text-[10px] text-[#6B7280]">tasks</span>
         </div>
         {blockerTasks.length > 0 && (
           <span className="shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-red-400 bg-red-950/50 border border-red-800">
@@ -107,13 +107,13 @@ function MemberRow({ member }: { member: TeamMember }) {
           {statusLabel(member.status)}
         </span>
         {expanded
-          ? <ChevronUp className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={1.75} />
-          : <ChevronDown className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={1.75} />
+          ? <ChevronUp className="w-4 h-4 text-[#6B7280] shrink-0" strokeWidth={1.75} />
+          : <ChevronDown className="w-4 h-4 text-[#6B7280] shrink-0" strokeWidth={1.75} />
         }
       </button>
 
       {expanded && (
-        <div className="px-5 pb-4 bg-zinc-900/40 space-y-1.5">
+        <div className="px-5 pb-4 bg-[#111318]/60 space-y-1.5">
           {blockerTasks.length > 0 && (
             <div className="mb-3 space-y-1.5">
               <p className="text-[10px] font-semibold text-red-400 uppercase tracking-widest">Blocked</p>
@@ -121,9 +121,9 @@ function MemberRow({ member }: { member: TeamMember }) {
                 <div key={t.id} className="flex items-start gap-2 p-2 rounded-lg bg-red-950/30 border border-red-900/40">
                   <AlertTriangle className="w-3 h-3 text-red-400 mt-0.5 shrink-0" strokeWidth={1.75} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-zinc-200 leading-snug">{t.title}</p>
+                    <p className="text-xs text-white leading-snug">{t.title}</p>
                     {t.blocker_reason && (
-                      <p className="text-[10px] text-zinc-500 italic mt-0.5">{t.blocker_reason}</p>
+                      <p className="text-[10px] text-[#9CA3AF] italic mt-0.5">{t.blocker_reason}</p>
                     )}
                   </div>
                   <Link href={`/os/tasks/${t.id}`} className="text-[10px] text-[#D7261E] hover:text-red-400 shrink-0">
@@ -139,7 +139,7 @@ function MemberRow({ member }: { member: TeamMember }) {
               {criticalTasks.map((t) => (
                 <div key={t.id} className="flex items-center gap-2">
                   <OSStatusBadge status={t.status ?? "not_started"} className="text-[9px] shrink-0" />
-                  <Link href={`/os/tasks/${t.id}`} className="text-xs text-zinc-400 hover:text-zinc-200 truncate">
+                  <Link href={`/os/tasks/${t.id}`} className="text-xs text-[#9CA3AF] hover:text-white truncate">
                     {t.title}
                   </Link>
                 </div>
@@ -149,13 +149,13 @@ function MemberRow({ member }: { member: TeamMember }) {
           {member.tasks.filter((t) => t.status !== "blocked" && !t.blocker_flag && t.priority !== "critical").slice(0, 5).map((t) => (
             <div key={t.id} className="flex items-center gap-2">
               <OSStatusBadge status={t.status ?? "not_started"} className="text-[9px] shrink-0" />
-              <Link href={`/os/tasks/${t.id}`} className="text-xs text-zinc-400 hover:text-zinc-200 truncate">
+              <Link href={`/os/tasks/${t.id}`} className="text-xs text-[#9CA3AF] hover:text-white truncate">
                 {t.title}
               </Link>
             </div>
           ))}
           {member.taskCount > 7 && (
-            <p className="text-[10px] text-zinc-600 pt-1">+{member.taskCount - 7} more tasks</p>
+            <p className="text-[10px] text-[#6B7280] pt-1">+{member.taskCount - 7} more tasks</p>
           )}
         </div>
       )}
@@ -209,7 +209,7 @@ function StandUpAgenda({
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+    <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -220,34 +220,34 @@ function StandUpAgenda({
             <Activity className="w-3 h-3 text-[#D7261E]" strokeWidth={1.75} />
           </div>
           <span className="text-sm font-semibold text-white">Stand-Up Agenda</span>
-          <span className="text-[10px] text-zinc-600 hidden sm:inline">Keymon — read this aloud</span>
+          <span className="text-[10px] text-[#6B7280] hidden sm:inline">Keymon — read this aloud</span>
         </div>
         <div className="flex items-center gap-2">
           {latestPulse?.summary.generated_at && (
-            <span className="text-[10px] text-zinc-700 font-mono hidden sm:inline">
+            <span className="text-[10px] text-[#6B7280] font-mono hidden sm:inline">
               {fmtTime(latestPulse.summary.generated_at)}
             </span>
           )}
           {open
-            ? <ChevronUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-            : <ChevronDown className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+            ? <ChevronUp className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+            : <ChevronDown className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
           }
         </div>
       </button>
 
       {open && (
-        <div className="border-t border-zinc-800 divide-y divide-zinc-800/60">
+        <div className="border-t border-[#2A2D35] divide-y divide-[#2A2D35]/40">
 
           {/* Date / time header */}
           <div className="px-5 py-4 flex items-center justify-between">
             <div>
               <p className="text-base font-bold text-white">{today}</p>
-              <p className="text-[11px] text-zinc-500 mt-0.5">{timeOfDay}</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">{timeOfDay}</p>
             </div>
             <button
               type="button"
               onClick={copy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs font-medium text-[#9CA3AF] hover:bg-[#1A1D24] transition-colors"
             >
               {copied
                 ? <Check className="w-3 h-3 text-green-400" strokeWidth={2} />
@@ -259,14 +259,14 @@ function StandUpAgenda({
 
           {/* AI Pulse summary */}
           <div className="px-5 py-4">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5">
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5">
               <Sparkles className="w-3 h-3" strokeWidth={1.75} />
               Pulse
             </p>
-            <p className="text-sm text-zinc-200 leading-relaxed">
+            <p className="text-sm text-white leading-relaxed">
               {latestPulse
                 ? <>&ldquo;{pulseText}&rdquo;</>
-                : <span className="text-zinc-600 italic">No pulse yet — generate one above.</span>
+                : <span className="text-[#6B7280] italic">No pulse yet — generate one above.</span>
               }
             </p>
           </div>
@@ -274,7 +274,7 @@ function StandUpAgenda({
           {/* Roll Call */}
           {team.length > 0 && (
             <div className="px-5 py-4">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-3 flex items-center gap-1.5">
+              <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-3 flex items-center gap-1.5">
                 <Users className="w-3 h-3" strokeWidth={1.75} />
                 Roll Call
               </p>
@@ -282,12 +282,12 @@ function StandUpAgenda({
                 {team.map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center gap-2.5 p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/40"
+                    className="flex items-center gap-2.5 p-2.5 rounded-lg bg-[#1A1D24]/60 border border-[#2A2D35]/40"
                   >
                     <OSAvatar name={m.name} size="sm" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-zinc-200 truncate">{m.name}</p>
-                      <p className="text-[10px] text-zinc-600">{m.taskCount} tasks</p>
+                      <p className="text-xs font-semibold text-white truncate">{m.name}</p>
+                      <p className="text-[10px] text-[#6B7280]">{m.taskCount} tasks</p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusDot(m.status))} />
@@ -303,7 +303,7 @@ function StandUpAgenda({
 
           {/* Blockers */}
           <div className="px-5 py-4">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5">
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5">
               <AlertTriangle className="w-3 h-3" strokeWidth={1.75} />
               Blockers
               <span className={cn("ml-1 font-mono", blockers.length > 0 ? "text-red-400" : "text-green-400")}>
@@ -321,9 +321,9 @@ function StandUpAgenda({
                   <div key={b.id} className="flex items-start gap-2.5 p-3 rounded-lg bg-red-950/20 border border-red-900/30">
                     <AlertTriangle className="w-3 h-3 text-red-400 shrink-0 mt-0.5" strokeWidth={1.75} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-zinc-200 leading-snug">{b.title}</p>
+                      <p className="text-xs font-medium text-white leading-snug">{b.title}</p>
                       {b.blocker_reason && (
-                        <p className="text-[10px] text-zinc-500 italic mt-0.5">{b.blocker_reason}</p>
+                        <p className="text-[10px] text-[#9CA3AF] italic mt-0.5">{b.blocker_reason}</p>
                       )}
                     </div>
                     <Link
@@ -412,7 +412,7 @@ export default function TeamPulsePage() {
       value: loading ? "—" : String(team.length),
       href: "/os/team",
       icon: Users,
-      border: "border-zinc-800",
+      border: "border-[#2A2D35]",
       valueColor: "text-white",
     },
     {
@@ -420,7 +420,7 @@ export default function TeamPulsePage() {
       value: loading ? "—" : String(totalTasks),
       href: "/os/tasks",
       icon: CheckSquare,
-      border: "border-zinc-800",
+      border: "border-[#2A2D35]",
       valueColor: "text-white",
     },
     {
@@ -428,7 +428,7 @@ export default function TeamPulsePage() {
       value: loading ? "—" : String(blockers.length),
       href: "/os/blockers",
       icon: Shield,
-      border: blockers.length > 0 ? "border-red-900/40" : "border-zinc-800",
+      border: blockers.length > 0 ? "border-red-900/40" : "border-[#2A2D35]",
       valueColor: blockers.length > 0 ? "text-red-400" : "text-white",
     },
     {
@@ -436,7 +436,7 @@ export default function TeamPulsePage() {
       value: null, // custom render
       href: "/os/team",
       icon: BarChart2,
-      border: "border-zinc-800",
+      border: "border-[#2A2D35]",
       valueColor: "text-white",
     },
   ]
@@ -450,12 +450,12 @@ export default function TeamPulsePage() {
           <h1 className="text-2xl font-bold text-white tracking-tight font-condensed flex items-center gap-3">
             <Activity className="w-5 h-5 text-[#D7261E]" strokeWidth={1.75} />
             Team Pulse
-            <span className="text-zinc-600 font-normal text-base">{timeOfDay}</span>
+            <span className="text-[#6B7280] font-normal text-base">{timeOfDay}</span>
           </h1>
-          <p className="text-xs text-zinc-500 mt-1">
+          <p className="text-xs text-[#9CA3AF] mt-1">
             {isMorning
               ? <Sun className="w-3 h-3 inline mr-1 text-yellow-400" strokeWidth={1.75} />
-              : <Moon className="w-3 h-3 inline mr-1 text-zinc-400" strokeWidth={1.75} />
+              : <Moon className="w-3 h-3 inline mr-1 text-[#9CA3AF]" strokeWidth={1.75} />
             }
             {today}
           </p>
@@ -478,7 +478,7 @@ export default function TeamPulsePage() {
             type="button"
             onClick={loadData}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-[#9CA3AF] text-xs font-medium hover:bg-[#1A1D24] transition-colors disabled:opacity-50"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} strokeWidth={1.75} />
             Refresh
@@ -493,13 +493,13 @@ export default function TeamPulsePage() {
             key={tile.label}
             href={tile.href}
             className={cn(
-              "rounded-xl bg-zinc-900 border px-4 py-3 hover:bg-zinc-800/60 transition-colors group",
+              "rounded-xl bg-[#111318] border px-4 py-3 hover:bg-[#1A1D24]/80 transition-colors group",
               tile.border
             )}
           >
             <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold">{tile.label}</p>
-              <tile.icon className="w-3 h-3 text-zinc-700 group-hover:text-zinc-500 transition-colors" strokeWidth={1.75} />
+              <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold">{tile.label}</p>
+              <tile.icon className="w-3 h-3 text-[#6B7280] group-hover:text-[#9CA3AF] transition-colors" strokeWidth={1.75} />
             </div>
 
             {tile.label === "Team Status" ? (
@@ -521,7 +521,7 @@ export default function TeamPulsePage() {
             ) : (
               <div className="flex items-end justify-between">
                 <p className={cn("text-2xl font-bold font-condensed", tile.valueColor)}>{tile.value}</p>
-                <ArrowRight className="w-3 h-3 text-zinc-700 group-hover:text-zinc-500 transition-colors mb-1" strokeWidth={1.75} />
+                <ArrowRight className="w-3 h-3 text-[#6B7280] group-hover:text-[#9CA3AF] transition-colors mb-1" strokeWidth={1.75} />
               </div>
             )}
           </Link>
@@ -529,16 +529,16 @@ export default function TeamPulsePage() {
       </div>
 
       {/* ── AI-Generated Pulse (from cron) ── */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
+      <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[#2A2D35]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#D7261E]" />
-            <span className="text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
+            <span className="text-[10px] font-semibold tracking-widest text-[#9CA3AF] uppercase">
               {latestPulse?.summary.generated_by === "manual" ? "Manual Pulse" : "Scheduled Pulse"} · {latestPulse?.summary.time_of_day ?? timeOfDay}
             </span>
           </div>
           {latestPulse?.summary.generated_at && (
-            <div className="flex items-center gap-1.5 text-[10px] text-zinc-600 font-mono">
+            <div className="flex items-center gap-1.5 text-[10px] text-[#6B7280] font-mono">
               <Clock className="w-3 h-3" strokeWidth={1.75} />
               {fmtTime(latestPulse.summary.generated_at)}
             </div>
@@ -546,42 +546,42 @@ export default function TeamPulsePage() {
         </div>
         <div className="px-5 py-4">
           {loading ? (
-            <div className="h-12 rounded-lg bg-zinc-800 animate-pulse" />
+            <div className="h-12 rounded-lg bg-[#1A1D24] animate-pulse" />
           ) : (
-            <p className="text-sm text-zinc-200 leading-relaxed">{pulseText}</p>
+            <p className="text-sm text-white leading-relaxed">{pulseText}</p>
           )}
         </div>
         {pulses.length > 1 && (
-          <div className="border-t border-zinc-800/60 px-5 py-3">
-            <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2">
+          <div className="border-t border-[#2A2D35]/60 px-5 py-3">
+            <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-2">
               Earlier — {pulses[1].summary.time_of_day}
             </p>
-            <p className="text-xs text-zinc-500 leading-relaxed">{pulses[1].summary.text}</p>
+            <p className="text-xs text-[#9CA3AF] leading-relaxed">{pulses[1].summary.text}</p>
           </div>
         )}
       </div>
 
       {/* ── Team Roll Call ── */}
-      <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-        <div className="flex items-center gap-2 px-5 py-3 border-b border-zinc-800">
-          <Users className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
+      <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+        <div className="flex items-center gap-2 px-5 py-3 border-b border-[#2A2D35]">
+          <Users className="w-4 h-4 text-[#9CA3AF]" strokeWidth={1.75} />
           <span className="text-sm font-semibold text-white">Team Roll Call</span>
-          <span className="ml-auto text-[10px] text-zinc-600 font-mono">{team.length} members</span>
+          <span className="ml-auto text-[10px] text-[#6B7280] font-mono">{team.length} members</span>
         </div>
         {loading ? (
-          <div className="divide-y divide-zinc-800/60">
+          <div className="divide-y divide-[#2A2D35]/40">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-5 py-4">
-                <div className="w-8 h-8 rounded-full bg-zinc-800 animate-pulse shrink-0" />
+                <div className="w-8 h-8 rounded-full bg-[#1A1D24] animate-pulse shrink-0" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-3 w-32 rounded bg-zinc-800 animate-pulse" />
-                  <div className="h-2 w-20 rounded bg-zinc-800 animate-pulse" />
+                  <div className="h-3 w-32 rounded bg-[#1A1D24] animate-pulse" />
+                  <div className="h-2 w-20 rounded bg-[#1A1D24] animate-pulse" />
                 </div>
               </div>
             ))}
           </div>
         ) : team.length === 0 ? (
-          <p className="text-xs text-zinc-600 px-5 py-6 text-center">No team members found.</p>
+          <p className="text-xs text-[#6B7280] px-5 py-6 text-center">No team members found.</p>
         ) : (
           <div>
             {team.map((member) => <MemberRow key={member.id} member={member} />)}
@@ -591,7 +591,7 @@ export default function TeamPulsePage() {
 
       {/* ── Active Blockers ── */}
       {(blockers.length > 0 || !loading) && (
-        <div className="rounded-xl bg-zinc-900 border border-red-900/40 overflow-hidden">
+        <div className="rounded-xl bg-[#111318] border border-red-900/40 overflow-hidden">
           <div className="flex items-center gap-2 px-5 py-3 border-b border-red-900/30">
             <AlertTriangle className="w-4 h-4 text-red-400" strokeWidth={1.75} />
             <span className="text-sm font-semibold text-white">Active Blockers</span>
@@ -599,14 +599,14 @@ export default function TeamPulsePage() {
               "ml-auto text-[10px] font-bold px-2 py-0.5 rounded border font-mono",
               blockers.length > 0
                 ? "text-red-400 bg-red-950 border-red-800"
-                : "text-zinc-500 bg-zinc-800 border-zinc-700"
+                : "text-[#9CA3AF] bg-[#1A1D24] border-[#2A2D35]"
             )}>
               {blockers.length}
             </span>
             {blockers.length > 0 && (
               <Link
                 href="/os/blockers"
-                className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition-colors"
+                className="text-[10px] text-[#9CA3AF] hover:text-[#9CA3AF] flex items-center gap-1 transition-colors"
               >
                 View all
                 <ArrowRight className="w-2.5 h-2.5" strokeWidth={2} />
@@ -619,7 +619,7 @@ export default function TeamPulsePage() {
               <p className="text-sm text-green-400 font-medium">All clear — no active blockers.</p>
             </div>
           ) : (
-            <div className="divide-y divide-zinc-800/60">
+            <div className="divide-y divide-[#2A2D35]/40">
               {blockers.map((b) => {
                 const owner = team.find((m) => m.tasks.some((t) => t.id === b.id))
                 return (
@@ -627,11 +627,11 @@ export default function TeamPulsePage() {
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" strokeWidth={1.75} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-zinc-200">{b.title}</p>
+                        <p className="text-sm font-semibold text-white">{b.title}</p>
                         {b.blocker_reason && (
-                          <p className="text-xs text-zinc-500 italic mt-0.5">{b.blocker_reason}</p>
+                          <p className="text-xs text-[#9CA3AF] italic mt-0.5">{b.blocker_reason}</p>
                         )}
-                        {owner && <p className="text-[10px] text-zinc-600 mt-1">Owner: {owner.name}</p>}
+                        {owner && <p className="text-[10px] text-[#6B7280] mt-1">Owner: {owner.name}</p>}
                       </div>
                       <Link
                         href={`/os/tasks/${b.id}`}
@@ -640,7 +640,7 @@ export default function TeamPulsePage() {
                         Resolve →
                       </Link>
                     </div>
-                    <p className="text-[11px] text-zinc-600 pl-7 italic">
+                    <p className="text-[11px] text-[#6B7280] pl-7 italic">
                       Ask: &quot;Who&apos;s unblocking {b.title.split(" ").slice(0, 4).join(" ")}...?&quot;
                     </p>
                   </div>

@@ -39,13 +39,13 @@ function LeadCard({ lead }: { lead: Lead }) {
   return (
     <Link href={`/leads/${lead.id}`}>
       <div className="p-3 rounded-md bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all cursor-pointer">
-        <h3 className="text-xs font-semibold text-zinc-700 leading-snug mb-2">
+        <h3 className="text-xs font-semibold text-[#6B7280] leading-snug mb-2">
           {lead.name}
         </h3>
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <TenantPill tenantId={lead.tenant_id} />
           {lead.source && (
-            <span className="text-[10px] text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded-sm">
+            <span className="text-[10px] text-[#9CA3AF] bg-zinc-100 px-1.5 py-0.5 rounded-sm">
               {lead.source}
             </span>
           )}
@@ -59,7 +59,7 @@ function LeadCard({ lead }: { lead: Lead }) {
             <span
               className={cn(
                 "text-[10px] font-mono",
-                overdue ? "text-byred-red" : "text-zinc-500"
+                overdue ? "text-byred-red" : "text-[#9CA3AF]"
               )}
             >
               {overdue ? "Overdue" : "Follow up"}{" "}
@@ -126,13 +126,13 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
           <p className="text-2xl font-condensed font-bold text-emerald-600">
             {formatCurrency(totalPipeline)}
           </p>
-          <p className="text-xs text-zinc-500 mt-1">Total pipeline</p>
+          <p className="text-xs text-[#9CA3AF] mt-1">Total pipeline</p>
         </div>
         <div className="p-4 rounded-md bg-white border border-zinc-200 shadow-sm">
           <p className="text-2xl font-condensed font-bold text-zinc-800">
             {conversionRate}%
           </p>
-          <p className="text-xs text-zinc-500 mt-1">Conversion rate</p>
+          <p className="text-xs text-[#9CA3AF] mt-1">Conversion rate</p>
         </div>
         <div className="p-4 rounded-md bg-white border border-zinc-200 shadow-sm">
           <p
@@ -143,7 +143,7 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
           >
             {overdueFollowUps}
           </p>
-          <p className="text-xs text-zinc-500 mt-1">Overdue follow-ups</p>
+          <p className="text-xs text-[#9CA3AF] mt-1">Overdue follow-ups</p>
         </div>
       </div>
 
@@ -164,17 +164,17 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
                 {/* Column header */}
                 <div className="flex items-center justify-between mb-3 px-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xs font-condensed font-semibold uppercase tracking-wide text-zinc-600">
+                    <h3 className="text-xs font-condensed font-semibold uppercase tracking-wide text-[#6B7280]">
                       {label}
                     </h3>
-                    <span className="text-xs text-zinc-400 font-mono bg-zinc-100 px-1.5 py-0.5 rounded-sm">
+                    <span className="text-xs text-[#9CA3AF] font-mono bg-zinc-100 px-1.5 py-0.5 rounded-sm">
                       {stageLeads.length}
                     </span>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-6 h-6 text-zinc-400 hover:text-zinc-700"
+                    className="w-6 h-6 text-[#9CA3AF] hover:text-[#6B7280]"
                     onClick={() => router.push("/leads/new")}
                     aria-label={`Add lead to ${label}`}
                   >
@@ -189,7 +189,7 @@ export function LeadsKanban({ initialLeads }: LeadsKanbanProps) {
                   aria-label={`${label} column`}
                 >
                   {stageLeads.length === 0 ? (
-                    <p className="text-xs text-zinc-400 text-center py-8">
+                    <p className="text-xs text-[#9CA3AF] text-center py-8">
                       No {label.toLowerCase()} leads.
                     </p>
                   ) : (

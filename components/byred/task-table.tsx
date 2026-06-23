@@ -50,33 +50,33 @@ export function TaskTable({ tasks }: TaskTableProps) {
   }
 
   return (
-    <div className="rounded-md border border-zinc-200 overflow-hidden bg-white">
+    <div className="rounded-md border border-[#2A2D35] overflow-hidden bg-[#111318]">
       <table className="w-full text-sm" role="grid">
         <thead>
-          <tr className="border-b border-zinc-200 bg-zinc-50">
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 w-8" />
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">
+          <tr className="border-b border-[#2A2D35] bg-[#1A1D24]">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF] w-8" />
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF]">
               Title
             </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden md:table-cell">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF] hidden md:table-cell">
               Tenant
             </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF]">
               Due
             </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden lg:table-cell">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF] hidden lg:table-cell">
               Pri
             </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden lg:table-cell">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF] hidden lg:table-cell">
               Est
             </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden xl:table-cell">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF] hidden xl:table-cell">
               Owner
             </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400 hidden xl:table-cell">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF] hidden xl:table-cell">
               AI
             </th>
-            <th className="text-left px-4 py-2.5 text-xs font-medium text-zinc-400">
+            <th className="text-left px-4 py-2.5 text-xs font-medium text-[#9CA3AF]">
               Status
             </th>
             <th className="px-2 py-2.5 w-10" />
@@ -87,8 +87,8 @@ export function TaskTable({ tasks }: TaskTableProps) {
             <tr
               key={task.id}
               className={cn(
-                "border-b border-zinc-100 hover:bg-zinc-50 transition-colors h-12 relative",
-                task.blocker_flag && "border-l-2 border-byred-red"
+                "border-b border-[#2A2D35]/60 hover:bg-[#1A1D24] transition-colors h-12 relative",
+                task.blocker_flag && "border-l-2 border-[#D92532]"
               )}
               style={{ height: "48px" }}
             >
@@ -101,7 +101,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
               <td className="px-4 py-2 max-w-xs">
                 <Link
                   href={`/tasks/${task.id}`}
-                  className="text-zinc-700 hover:text-zinc-900 font-medium truncate block focus-visible:ring-2 focus-visible:ring-byred-red focus-visible:outline-none rounded"
+                  className="text-[#9CA3AF] hover:text-white font-medium truncate block focus-visible:ring-2 focus-visible:ring-[#D92532] focus-visible:outline-none rounded"
                 >
                   {task.title}
                 </Link>
@@ -164,7 +164,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="w-7 h-7 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100"
+                      className="w-7 h-7 text-[#9CA3AF] hover:text-white hover:bg-[#1A1D24]"
                       aria-label="Task actions"
                     >
                       <MoreHorizontal
@@ -175,11 +175,11 @@ export function TaskTable({ tasks }: TaskTableProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="bg-white border-zinc-200 shadow-md"
+                    className="bg-[#111318] border-[#2A2D35] shadow-md"
                   >
                     <DropdownMenuItem
                       asChild
-                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
+                      className="text-[#9CA3AF] focus:text-white focus:bg-[#1A1D24] gap-2 text-xs cursor-pointer"
                     >
                       <Link href={`/tasks/${task.id}`}>
                         <Edit className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -188,7 +188,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       asChild
-                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
+                      className="text-[#9CA3AF] focus:text-white focus:bg-[#1A1D24] gap-2 text-xs cursor-pointer"
                     >
                       <Link href={`/tasks/${task.id}`}>
                         <ExternalLink
@@ -199,7 +199,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-zinc-600 focus:text-zinc-900 focus:bg-zinc-100 gap-2 text-xs cursor-pointer"
+                      className="text-[#9CA3AF] focus:text-white focus:bg-[#1A1D24] gap-2 text-xs cursor-pointer"
                       onClick={() =>
                         navigator.clipboard.writeText(
                           `${window.location.origin}/tasks/${task.id}`
@@ -209,7 +209,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                       <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
                       Copy link
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-zinc-400 focus:text-zinc-600 focus:bg-zinc-100 gap-2 text-xs cursor-pointer">
+                    <DropdownMenuItem className="text-[#6B7280] focus:text-[#9CA3AF] focus:bg-[#1A1D24] gap-2 text-xs cursor-pointer">
                       <Archive className="w-3.5 h-3.5" strokeWidth={1.75} />
                       Archive
                     </DropdownMenuItem>

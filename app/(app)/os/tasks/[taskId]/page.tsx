@@ -82,10 +82,10 @@ function MetaRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-zinc-800/60 last:border-0">
+    <div className="flex items-start gap-3 py-2.5 border-b border-[#2A2D35]/60 last:border-0">
       <div className="flex items-center gap-2 w-28 shrink-0">
-        <Icon className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-        <span className="text-xs text-zinc-600">{label}</span>
+        <Icon className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+        <span className="text-xs text-[#6B7280]">{label}</span>
       </div>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
@@ -110,7 +110,7 @@ function IntelFlag({
         "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium border transition-colors",
         active
           ? "bg-[#D7261E]/15 border-[#D7261E]/30 text-red-300"
-          : "bg-zinc-800/50 border-zinc-700/50 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600"
+          : "bg-[#1A1D24]/60 border-[#2A2D35]/50 text-[#9CA3AF] hover:text-[#9CA3AF] hover:border-[#2A2D35]"
       )}
     >
       {saving ? <Loader2 className="w-3 h-3 animate-spin" strokeWidth={1.75} /> : <Icon className="w-3 h-3" strokeWidth={1.75} />}
@@ -155,11 +155,11 @@ function InlineTextField({
         onClick={() => { setDraft(value ?? ""); setEditing(true) }}
       >
         {value ? (
-          <p className="text-sm text-zinc-400 leading-relaxed group-hover/field:text-zinc-200 transition-colors">
+          <p className="text-sm text-[#9CA3AF] leading-relaxed group-hover/field:text-white transition-colors">
             {multiline ? value : value}
           </p>
         ) : (
-          <p className="text-sm text-zinc-700 italic flex items-center gap-1.5 group-hover/field:text-zinc-500 transition-colors">
+          <p className="text-sm text-[#6B7280] italic flex items-center gap-1.5 group-hover/field:text-[#9CA3AF] transition-colors">
             <Pencil className="w-3 h-3" strokeWidth={1.5} />
             {placeholder}
           </p>
@@ -180,7 +180,7 @@ function InlineTextField({
           autoFocus
           autoResize
           maxHeight={200}
-          className="w-full text-sm bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-400 leading-relaxed"
+          className="w-full text-sm bg-[#1A1D24] border border-[#2A2D35] rounded-lg px-3 py-2 text-white placeholder-[#6B7280] outline-none focus:border-[#9CA3AF] leading-relaxed"
           placeholder={placeholder}
         />
       ) : (
@@ -192,7 +192,7 @@ function InlineTextField({
             if (e.key === "Enter") void save()
             if (e.key === "Escape") setEditing(false)
           }}
-          className="w-full text-sm bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-400"
+          className="w-full text-sm bg-[#1A1D24] border border-[#2A2D35] rounded-lg px-3 py-2 text-white placeholder-[#6B7280] outline-none focus:border-[#9CA3AF]"
           placeholder={placeholder}
         />
       )}
@@ -201,7 +201,7 @@ function InlineTextField({
           type="button"
           onClick={() => void save()}
           disabled={saving}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-700 text-xs text-zinc-200 hover:bg-zinc-600 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1A1D24] text-xs text-white hover:bg-zinc-600 transition-colors disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" strokeWidth={2} />}
           Save
@@ -209,7 +209,7 @@ function InlineTextField({
         <button
           type="button"
           onClick={() => setEditing(false)}
-          className="text-xs text-zinc-600 hover:text-zinc-400 px-2 py-1"
+          className="text-xs text-[#6B7280] hover:text-[#9CA3AF] px-2 py-1"
         >
           Cancel
         </button>
@@ -271,19 +271,19 @@ function SubtasksSection({ taskId }: { taskId: string }) {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800">
+    <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#2A2D35]">
         <div className="flex items-center gap-2">
-          <ListChecks className="w-4 h-4 text-zinc-500" strokeWidth={1.75} />
-          <span className="text-sm font-medium text-zinc-300">Subtasks</span>
+          <ListChecks className="w-4 h-4 text-[#9CA3AF]" strokeWidth={1.75} />
+          <span className="text-sm font-medium text-[#9CA3AF]">Subtasks</span>
           {list.length > 0 && (
-            <span className="text-[11px] text-zinc-600">{doneCount}/{list.length}</span>
+            <span className="text-[11px] text-[#6B7280]">{doneCount}/{list.length}</span>
           )}
         </div>
         <button
           type="button"
           onClick={() => { setAdding(true); setTimeout(() => inputRef.current?.focus(), 50) }}
-          className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-300 transition-colors"
+          className="flex items-center gap-1 text-xs text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
         >
           <Plus className="w-3.5 h-3.5" strokeWidth={2} />
           Add
@@ -292,33 +292,33 @@ function SubtasksSection({ taskId }: { taskId: string }) {
 
       {list.length > 0 && (
         <div className="px-5 pt-3 pb-1">
-          <div className="h-1 rounded-full bg-zinc-800 overflow-hidden">
+          <div className="h-1 rounded-full bg-[#1A1D24] overflow-hidden">
             <div
               ref={progressBarRef}
               className="h-full rounded-full bg-green-500 transition-all duration-300 w-0"
             />
           </div>
-          <p className="text-[10px] text-zinc-700 mt-1">{progress}% complete</p>
+          <p className="text-[10px] text-[#6B7280] mt-1">{progress}% complete</p>
         </div>
       )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="w-4 h-4 text-zinc-700 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="w-4 h-4 text-[#6B7280] animate-spin" strokeWidth={1.75} />
         </div>
       ) : list.length === 0 && !adding ? (
         <div className="px-5 py-5 text-center">
-          <p className="text-xs text-zinc-700">No subtasks yet.</p>
+          <p className="text-xs text-[#6B7280]">No subtasks yet.</p>
           <button
             type="button"
             onClick={() => { setAdding(true); setTimeout(() => inputRef.current?.focus(), 50) }}
-            className="mt-1.5 text-xs text-zinc-600 hover:text-zinc-400 underline"
+            className="mt-1.5 text-xs text-[#6B7280] hover:text-[#9CA3AF] underline"
           >
             Add the first one
           </button>
         </div>
       ) : (
-        <div className="divide-y divide-zinc-800/50">
+        <div className="divide-y divide-[#2A2D35]/30">
           {list.map((subtask) => {
             const done = subtask.status === "done"
             return (
@@ -331,7 +331,7 @@ function SubtasksSection({ taskId }: { taskId: string }) {
                     "w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
                     done
                       ? "bg-green-600 border-green-600 text-white"
-                      : "border-zinc-600 hover:border-zinc-400"
+                      : "border-[#2A2D35] hover:border-zinc-400"
                   )}
                 >
                   {done && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
@@ -340,7 +340,7 @@ function SubtasksSection({ taskId }: { taskId: string }) {
                   href={`/os/tasks/${subtask.id}`}
                   className={cn(
                     "flex-1 text-sm truncate hover:underline transition-colors",
-                    done ? "line-through text-zinc-600" : "text-zinc-300 hover:text-white"
+                    done ? "line-through text-[#6B7280]" : "text-[#9CA3AF] hover:text-white"
                   )}
                 >
                   {subtask.title}
@@ -358,9 +358,9 @@ function SubtasksSection({ taskId }: { taskId: string }) {
       )}
 
       {adding && (
-        <div className="px-5 pb-4 pt-2 border-t border-zinc-800/60">
+        <div className="px-5 pb-4 pt-2 border-t border-[#2A2D35]/60">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded border border-zinc-700 shrink-0" />
+            <div className="w-4 h-4 rounded border border-[#2A2D35] shrink-0" />
             <input
               ref={inputRef}
               value={newTitle}
@@ -370,7 +370,7 @@ function SubtasksSection({ taskId }: { taskId: string }) {
                 if (e.key === "Escape") { setAdding(false); setNewTitle("") }
               }}
               placeholder="Subtask title…"
-              className="flex-1 text-sm bg-transparent text-zinc-200 placeholder-zinc-700 outline-none border-b border-zinc-700 focus:border-zinc-500 pb-0.5 transition-colors"
+              className="flex-1 text-sm bg-transparent text-white placeholder-[#6B7280] outline-none border-b border-[#2A2D35] focus:border-[#9CA3AF]/80 pb-0.5 transition-colors"
             />
             <button
               type="button"
@@ -384,7 +384,7 @@ function SubtasksSection({ taskId }: { taskId: string }) {
             <button
               type="button"
               onClick={() => { setAdding(false); setNewTitle("") }}
-              className="text-zinc-600 hover:text-zinc-400 shrink-0"
+              className="text-[#6B7280] hover:text-[#9CA3AF] shrink-0"
               aria-label="Cancel"
             >
               <X className="w-3.5 h-3.5" strokeWidth={2} />
@@ -500,7 +500,7 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
   if (taskLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" strokeWidth={1.75} />
+        <Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" strokeWidth={1.75} />
       </div>
     )
   }
@@ -508,8 +508,8 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
   if (!task) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <p className="text-zinc-500 text-sm">Task not found.</p>
-        <Link href="/os/tasks" className="text-xs text-zinc-600 hover:text-zinc-400 underline">Back to Tasks</Link>
+        <p className="text-[#9CA3AF] text-sm">Task not found.</p>
+        <Link href="/os/tasks" className="text-xs text-[#6B7280] hover:text-[#9CA3AF] underline">Back to Tasks</Link>
       </div>
     )
   }
@@ -528,22 +528,22 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
       <div className="flex items-center gap-3 mb-5">
         <Link
           href="/os/tasks"
-          className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center hover:border-zinc-600 transition-colors"
+          className="w-7 h-7 rounded-lg bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center hover:border-[#2A2D35] transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-zinc-400" strokeWidth={1.75} />
+          <ArrowLeft className="w-3.5 h-3.5 text-[#9CA3AF]" strokeWidth={1.75} />
         </Link>
-        <div className="flex items-center gap-1.5 text-xs text-zinc-600">
-          <Link href="/os/tasks" className="hover:text-zinc-400">Tasks</Link>
+        <div className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+          <Link href="/os/tasks" className="hover:text-[#9CA3AF]">Tasks</Link>
           {parentTask && (
             <>
               <span>/</span>
-              <Link href={`/os/tasks/${parentTask.id}`} className="hover:text-zinc-400 truncate max-w-[160px]">
+              <Link href={`/os/tasks/${parentTask.id}`} className="hover:text-[#9CA3AF] truncate max-w-[160px]">
                 {parentTask.title}
               </Link>
             </>
           )}
           <span>/</span>
-          <span className="text-zinc-400 truncate max-w-[220px]">{task.title}</span>
+          <span className="text-[#9CA3AF] truncate max-w-[220px]">{task.title}</span>
         </div>
       </div>
 
@@ -553,13 +553,13 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
         <div className="space-y-5">
 
           {/* Title + description card */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-6">
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-6">
             <div className="flex items-center gap-2 flex-wrap mb-4">
               <OSStatusBadge status={task.status} taskId={task.id} />
               <OSPriorityBadge priority={task.priority} />
               {task.blocker_flag && <OSBlockerBadge />}
               {task.source_group_name && (
-                <span className="text-[10px] text-zinc-700 border border-zinc-800/50 px-2 py-0.5 rounded">
+                <span className="text-[10px] text-[#6B7280] border border-[#2A2D35]/50 px-2 py-0.5 rounded">
                   {task.source_group_name}
                 </span>
               )}
@@ -590,15 +590,15 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
           </div>
 
           {/* Definition of Done / Acceptance Criteria */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
             <button
               type="button"
               onClick={() => setShowDod((v) => !v)}
               className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors"
             >
               <div className="flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-zinc-500" strokeWidth={1.75} />
-                <span className="text-sm font-medium text-zinc-300">Definition of Done</span>
+                <Lightbulb className="w-4 h-4 text-[#9CA3AF]" strokeWidth={1.75} />
+                <span className="text-sm font-medium text-[#9CA3AF]">Definition of Done</span>
                 {(task.definition_of_done || task.acceptance_criteria) && (
                   <span className="text-[10px] text-green-500 flex items-center gap-1">
                     <Check className="w-2.5 h-2.5" strokeWidth={2} /> Defined
@@ -606,15 +606,15 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                 )}
               </div>
               {showDod
-                ? <ChevronUp className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
-                : <ChevronDown className="w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+                ? <ChevronUp className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
+                : <ChevronDown className="w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
               }
             </button>
 
             {showDod && (
-              <div className="border-t border-zinc-800 px-5 py-4 space-y-4">
+              <div className="border-t border-[#2A2D35] px-5 py-4 space-y-4">
                 <div>
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2">Done When</p>
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-2">Done When</p>
                   <InlineTextField
                     label="Definition of done"
                     value={task.definition_of_done}
@@ -624,7 +624,7 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                   />
                 </div>
                 <div>
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2">Acceptance Criteria</p>
+                  <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-2">Acceptance Criteria</p>
                   <InlineTextField
                     label="Acceptance criteria"
                     value={task.acceptance_criteria}
@@ -642,22 +642,22 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
 
           {/* Dependencies */}
           {(deps.blocked_by.length > 0 || deps.blocking.length > 0 || addingDep) && (
-            <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-zinc-800">
-                <Link2 className="w-4 h-4 text-zinc-500" strokeWidth={1.75} />
-                <span className="text-sm font-medium text-zinc-300">Dependencies</span>
+            <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#2A2D35]">
+                <Link2 className="w-4 h-4 text-[#9CA3AF]" strokeWidth={1.75} />
+                <span className="text-sm font-medium text-[#9CA3AF]">Dependencies</span>
               </div>
               <div className="px-5 py-4 space-y-4">
                 {deps.blocked_by.length > 0 && (
                   <div>
-                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2">Blocked by</p>
+                    <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-2">Blocked by</p>
                     <div className="space-y-1.5">
                       {deps.blocked_by.map((dep) => (
-                        <div key={dep.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+                        <div key={dep.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-[#1A1D24]/60 border border-[#2A2D35]/50">
                           <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" strokeWidth={1.75} />
-                          <Link href={`/os/tasks/${dep.id}`} className="text-xs text-zinc-300 hover:text-white truncate flex-1">{dep.title}</Link>
+                          <Link href={`/os/tasks/${dep.id}`} className="text-xs text-[#9CA3AF] hover:text-white truncate flex-1">{dep.title}</Link>
                           <OSStatusBadge status={dep.status} className="text-[9px] py-0 px-1 shrink-0" />
-                          <button type="button" aria-label="Remove dependency" onClick={() => void removeDep(dep.id)} className="text-zinc-700 hover:text-red-400 shrink-0">
+                          <button type="button" aria-label="Remove dependency" onClick={() => void removeDep(dep.id)} className="text-[#6B7280] hover:text-red-400 shrink-0">
                             <X className="w-3 h-3" strokeWidth={2} />
                           </button>
                         </div>
@@ -667,12 +667,12 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                 )}
                 {deps.blocking.length > 0 && (
                   <div>
-                    <p className="text-[10px] text-zinc-600 uppercase tracking-widest font-semibold mb-2">Blocking</p>
+                    <p className="text-[10px] text-[#6B7280] uppercase tracking-widest font-semibold mb-2">Blocking</p>
                     <div className="space-y-1.5">
                       {deps.blocking.map((dep) => (
-                        <div key={dep.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+                        <div key={dep.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-[#1A1D24]/60 border border-[#2A2D35]/50">
                           <ShieldAlert className="w-3 h-3 text-yellow-400 shrink-0" strokeWidth={1.75} />
-                          <Link href={`/os/tasks/${dep.id}`} className="text-xs text-zinc-300 hover:text-white truncate flex-1">{dep.title}</Link>
+                          <Link href={`/os/tasks/${dep.id}`} className="text-xs text-[#9CA3AF] hover:text-white truncate flex-1">{dep.title}</Link>
                           <OSStatusBadge status={dep.status} className="text-[9px] py-0 px-1 shrink-0" />
                         </div>
                       ))}
@@ -684,16 +684,16 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
           )}
 
           {/* Comments */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden">
-            <div className="px-5 py-4 border-b border-zinc-800 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-zinc-400" strokeWidth={1.75} />
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#2A2D35] flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#9CA3AF]" strokeWidth={1.75} />
               <span className="text-sm font-medium text-white">
                 Comments
-                {comments.length > 0 && <span className="ml-1.5 text-xs text-zinc-600">({comments.length})</span>}
+                {comments.length > 0 && <span className="ml-1.5 text-xs text-[#6B7280]">({comments.length})</span>}
               </span>
             </div>
             {comments.length > 0 && (
-              <div className="divide-y divide-zinc-800/60">
+              <div className="divide-y divide-[#2A2D35]/40">
                 {comments.map((c) => {
                   const userName = c.byred_users?.name ?? "Team Member"
                   return (
@@ -701,14 +701,14 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                       <OSAvatar userId={c.user_id} fallbackName={userName} size="sm" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2 mb-1.5">
-                          <span className="text-xs font-semibold text-zinc-200">{userName}</span>
-                          <span className="text-[10px] text-zinc-600">
+                          <span className="text-xs font-semibold text-white">{userName}</span>
+                          <span className="text-[10px] text-[#6B7280]">
                             {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                             {" · "}
                             {new Date(c.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                           </span>
                         </div>
-                        <p className="text-sm text-zinc-400 leading-relaxed">{renderMentions(c.comment)}</p>
+                        <p className="text-sm text-[#9CA3AF] leading-relaxed">{renderMentions(c.comment)}</p>
                       </div>
                     </div>
                   )
@@ -726,7 +726,7 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                   placeholder="Add a comment… (@name to mention)"
                   autoResize
                   maxHeight={120}
-                  className="flex-1 px-3 py-2 text-sm bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600 min-h-[36px]"
+                  className="flex-1 px-3 py-2 text-sm bg-[#1A1D24] border border-[#2A2D35] rounded-lg text-white placeholder-[#6B7280] focus:outline-none focus:border-[#2A2D35] min-h-[36px]"
                 />
                 <button
                   type="button"
@@ -736,7 +736,7 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                     "w-9 h-9 rounded-lg flex items-center justify-center transition-colors shrink-0",
                     commentInput.trim() && !submittingComment
                       ? "bg-[#D7261E] text-white hover:bg-[#B51E18]"
-                      : "bg-zinc-800 text-zinc-600 border border-zinc-700"
+                      : "bg-[#1A1D24] text-[#6B7280] border border-[#2A2D35]"
                   )}
                 >
                   {submittingComment
@@ -749,11 +749,11 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
           </div>
 
           {/* Activity placeholder */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-5">
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-5">
             <div className="flex items-center gap-2 mb-3">
-              <Activity className="w-4 h-4 text-zinc-600" strokeWidth={1.75} />
-              <span className="text-sm font-medium text-zinc-500">Activity</span>
-              <span className="text-[10px] text-zinc-700 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded ml-auto">
+              <Activity className="w-4 h-4 text-[#6B7280]" strokeWidth={1.75} />
+              <span className="text-sm font-medium text-[#9CA3AF]">Activity</span>
+              <span className="text-[10px] text-[#6B7280] bg-[#1A1D24] border border-[#2A2D35] px-2 py-0.5 rounded ml-auto">
                 Coming soon
               </span>
             </div>
@@ -764,8 +764,8 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
         <div className="space-y-4">
 
           {/* Core metadata */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
-            <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-3">Details</p>
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-4">
+            <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest mb-3">Details</p>
             <div>
               <MetaRow icon={Tag} label="Status">
                 <div className="flex items-center gap-2">
@@ -775,13 +775,13 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                     disabled={savingField === "status"}
                     title="Task status"
                     aria-label="Task status"
-                    className="bg-transparent text-xs text-zinc-300 border-0 focus:outline-none cursor-pointer"
+                    className="bg-transparent text-xs text-[#9CA3AF] border-0 focus:outline-none cursor-pointer"
                   >
                     {STATUS_OPTIONS.map((s) => (
-                      <option key={s} value={s} className="bg-zinc-900">{s.replace("_", " ")}</option>
+                      <option key={s} value={s} className="bg-[#111318]">{s.replace("_", " ")}</option>
                     ))}
                   </select>
-                  {savingField === "status" && <Loader2 className="w-3 h-3 animate-spin text-zinc-600" strokeWidth={1.75} />}
+                  {savingField === "status" && <Loader2 className="w-3 h-3 animate-spin text-[#6B7280]" strokeWidth={1.75} />}
                 </div>
               </MetaRow>
 
@@ -793,13 +793,13 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                     disabled={savingField === "priority"}
                     title="Task priority"
                     aria-label="Task priority"
-                    className="bg-transparent text-xs text-zinc-300 border-0 focus:outline-none cursor-pointer"
+                    className="bg-transparent text-xs text-[#9CA3AF] border-0 focus:outline-none cursor-pointer"
                   >
                     {PRIORITY_OPTIONS.map((p) => (
-                      <option key={p} value={p} className="bg-zinc-900">{p}</option>
+                      <option key={p} value={p} className="bg-[#111318]">{p}</option>
                     ))}
                   </select>
-                  {savingField === "priority" && <Loader2 className="w-3 h-3 animate-spin text-zinc-600" strokeWidth={1.75} />}
+                  {savingField === "priority" && <Loader2 className="w-3 h-3 animate-spin text-[#6B7280]" strokeWidth={1.75} />}
                 </div>
               </MetaRow>
 
@@ -807,10 +807,10 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                 {owner ? (
                   <div className="flex items-center gap-2">
                     <OSAvatar userId={task.owner_user_id!} size="xs" />
-                    <span className="text-xs text-zinc-300">{owner.name}</span>
+                    <span className="text-xs text-[#9CA3AF]">{owner.name}</span>
                   </div>
                 ) : (
-                  <span className="text-xs text-zinc-600">Unassigned</span>
+                  <span className="text-xs text-[#6B7280]">Unassigned</span>
                 )}
               </MetaRow>
 
@@ -836,16 +836,16 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                     aria-label="Due date"
                     className={cn(
                       "bg-transparent text-xs border-0 focus:outline-none cursor-pointer",
-                      isOverdue ? "text-red-400" : "text-zinc-300"
+                      isOverdue ? "text-red-400" : "text-[#9CA3AF]"
                     )}
                   />
-                  {savingField === "due_date" && <Loader2 className="w-3 h-3 animate-spin text-zinc-600" strokeWidth={1.75} />}
+                  {savingField === "due_date" && <Loader2 className="w-3 h-3 animate-spin text-[#6B7280]" strokeWidth={1.75} />}
                 </div>
               </MetaRow>
 
               {task.estimated_minutes && (
                 <MetaRow icon={Clock} label="Estimate">
-                  <span className="text-xs text-zinc-300">
+                  <span className="text-xs text-[#9CA3AF]">
                     {task.estimated_minutes >= 60
                       ? `${Math.round(task.estimated_minutes / 60)}h`
                       : `${task.estimated_minutes}m`}
@@ -854,14 +854,14 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
               )}
 
               <MetaRow icon={Tag} label="Project">
-                <span className="text-xs text-zinc-300 truncate">{tenantName}</span>
+                <span className="text-xs text-[#9CA3AF] truncate">{tenantName}</span>
               </MetaRow>
 
               {parentTask && (
                 <MetaRow icon={GitBranch} label="Parent">
                   <Link
                     href={`/os/tasks/${parentTask.id}`}
-                    className="text-xs text-zinc-400 hover:text-white truncate flex items-center gap-1 transition-colors"
+                    className="text-xs text-[#9CA3AF] hover:text-white truncate flex items-center gap-1 transition-colors"
                   >
                     {parentTask.title}
                   </Link>
@@ -871,8 +871,8 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
           </div>
 
           {/* Intelligence flags */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
-            <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-4">
+            <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest mb-3 flex items-center gap-1.5">
               <Brain className="w-3 h-3" strokeWidth={1.75} />
               Intelligence Flags
             </p>
@@ -891,35 +891,35 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
           </div>
 
           {/* Add dependency */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+              <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest flex items-center gap-1.5">
                 <Link2 className="w-3 h-3" strokeWidth={1.75} />
                 Dependencies
               </p>
               <button
                 type="button"
                 onClick={() => setAddingDep((v) => !v)}
-                className="text-[10px] text-zinc-600 hover:text-zinc-400 flex items-center gap-0.5 transition-colors"
+                className="text-[10px] text-[#6B7280] hover:text-[#9CA3AF] flex items-center gap-0.5 transition-colors"
               >
                 <Plus className="w-3 h-3" strokeWidth={2} />
                 Add
               </button>
             </div>
             {deps.blocked_by.length === 0 && deps.blocking.length === 0 ? (
-              <p className="text-xs text-zinc-700 italic">No dependencies linked.</p>
+              <p className="text-xs text-[#6B7280] italic">No dependencies linked.</p>
             ) : (
               <div className="space-y-1">
                 {deps.blocked_by.map((d) => (
                   <div key={d.id} className="flex items-center gap-1.5">
                     <AlertTriangle className="w-2.5 h-2.5 text-red-400 shrink-0" strokeWidth={2} />
-                    <Link href={`/os/tasks/${d.id}`} className="text-[10px] text-zinc-400 hover:text-zinc-200 truncate">{d.title}</Link>
+                    <Link href={`/os/tasks/${d.id}`} className="text-[10px] text-[#9CA3AF] hover:text-white truncate">{d.title}</Link>
                   </div>
                 ))}
                 {deps.blocking.map((d) => (
                   <div key={d.id} className="flex items-center gap-1.5">
                     <ShieldAlert className="w-2.5 h-2.5 text-yellow-400 shrink-0" strokeWidth={2} />
-                    <Link href={`/os/tasks/${d.id}`} className="text-[10px] text-zinc-400 hover:text-zinc-200 truncate">{d.title}</Link>
+                    <Link href={`/os/tasks/${d.id}`} className="text-[10px] text-[#9CA3AF] hover:text-white truncate">{d.title}</Link>
                   </div>
                 ))}
               </div>
@@ -927,9 +927,9 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
           </div>
 
           {/* Created at */}
-          <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4">
-            <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-2">Created</p>
-            <p className="text-xs text-zinc-500">
+          <div className="rounded-xl bg-[#111318] border border-[#2A2D35] p-4">
+            <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest mb-2">Created</p>
+            <p className="text-xs text-[#9CA3AF]">
               {new Date(task.created_at ?? "").toLocaleDateString("en-US", {
                 month: "long", day: "numeric", year: "numeric",
               })}

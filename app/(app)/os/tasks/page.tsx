@@ -128,11 +128,11 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
           className="flex items-center gap-1.5 max-w-[140px] text-left"
         >
           {task.description ? (
-            <span className="text-xs text-zinc-400 truncate group-hover/notes:text-zinc-200 transition-colors">
+            <span className="text-xs text-[#9CA3AF] truncate group-hover/notes:text-white transition-colors">
               {task.description.slice(0, 35)}{task.description.length > 35 ? "…" : ""}
             </span>
           ) : (
-            <span className="text-xs text-zinc-700 group-hover/notes:text-zinc-500 transition-colors flex items-center gap-1">
+            <span className="text-xs text-[#6B7280] group-hover/notes:text-[#9CA3AF] transition-colors flex items-center gap-1">
               <Pencil className="w-3 h-3" strokeWidth={1.5} /> Add notes
             </span>
           )}
@@ -143,7 +143,7 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
             onClick={(e) => { e.preventDefault(); void clearNote() }}
             disabled={deleting}
             aria-label="Delete note"
-            className="opacity-0 group-hover/notes:opacity-100 text-zinc-600 hover:text-red-400 transition-all shrink-0"
+            className="opacity-0 group-hover/notes:opacity-100 text-[#6B7280] hover:text-red-400 transition-all shrink-0"
           >
             {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" strokeWidth={2} />}
           </button>
@@ -166,12 +166,12 @@ function NotesCell({ task, onSaved }: { task: Task; onSaved: () => void }) {
         autoResize
         maxHeight={80}
         placeholder="Add notes…"
-        className="flex-1 min-w-[180px] text-xs bg-zinc-800 border border-zinc-600 rounded px-2 py-1 text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-400"
+        className="flex-1 min-w-[180px] text-xs bg-[#1A1D24] border border-[#2A2D35] rounded px-2 py-1 text-white placeholder-[#6B7280] outline-none focus:border-[#9CA3AF]"
       />
       <button type="button" onClick={() => void save()} disabled={saving} aria-label="Save notes" className="text-green-400 hover:text-green-300 mt-0.5 shrink-0">
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2} />}
       </button>
-      <button type="button" onClick={() => { setOpen(false); setValue(task.description ?? "") }} aria-label="Cancel" className="text-zinc-500 hover:text-zinc-300 mt-0.5 shrink-0">
+      <button type="button" onClick={() => { setOpen(false); setValue(task.description ?? "") }} aria-label="Cancel" className="text-[#9CA3AF] hover:text-[#9CA3AF] mt-0.5 shrink-0">
         <X className="w-3.5 h-3.5" strokeWidth={2} />
       </button>
     </div>
@@ -184,7 +184,7 @@ const COLS = "grid-cols-[28px_1fr_100px_90px_80px_80px_180px]"
 const MIN_W = "min-w-[900px]"
 
 const COL_HEADER = (
-  <div className={cn("grid gap-0 px-4 py-2 border-b border-zinc-800/60 text-[10px] font-semibold text-zinc-600 uppercase tracking-widest bg-zinc-950/40", COLS, MIN_W)}>
+  <div className={cn("grid gap-0 px-4 py-2 border-b border-[#2A2D35]/60 text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest bg-[#111318]/60", COLS, MIN_W)}>
     <span />
     <span className="pl-2">Task</span>
     <span>Status</span>
@@ -213,7 +213,7 @@ function TaskRow({
         <button
           type="button"
           onClick={() => setExpandedId(isExpanded ? null : task.id)}
-          className="text-zinc-700 hover:text-zinc-400 transition-colors"
+          className="text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
         >
           {isExpanded
             ? <ChevronDown className="w-3.5 h-3.5" strokeWidth={2} />
@@ -223,7 +223,7 @@ function TaskRow({
         <div className="flex items-center gap-2 min-w-0 pl-2">
           {task.blocker_flag && <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0" strokeWidth={2} />}
           {task.blocked_by_task_id && <GitMerge className="w-3.5 h-3.5 text-yellow-400 shrink-0" strokeWidth={2} aria-label="Has dependency" />}
-          <Link href={`/os/tasks/${task.id}`} className="text-sm text-zinc-200 group-hover:text-white truncate hover:underline">
+          <Link href={`/os/tasks/${task.id}`} className="text-sm text-white group-hover:text-white truncate hover:underline">
             {task.title}
           </Link>
         </div>
@@ -233,14 +233,14 @@ function TaskRow({
 
         <div>
           {task.start_date
-            ? <span className="text-xs text-zinc-500">{fmtDate(task.start_date)}</span>
-            : <span className="text-zinc-700 text-xs">—</span>}
+            ? <span className="text-xs text-[#9CA3AF]">{fmtDate(task.start_date)}</span>
+            : <span className="text-[#6B7280] text-xs">—</span>}
         </div>
 
         <div>
           {task.due_date ? (
             <div className="flex flex-col">
-              <span className={cn("text-xs flex items-center gap-1", overdue > 0 ? "text-red-400" : "text-zinc-500")}>
+              <span className={cn("text-xs flex items-center gap-1", overdue > 0 ? "text-red-400" : "text-[#9CA3AF]")}>
                 {overdue > 0 && <Clock className="w-3 h-3" strokeWidth={2} />}
                 {fmtDate(task.due_date)}
               </span>
@@ -249,7 +249,7 @@ function TaskRow({
               )}
             </div>
           ) : (
-            <span className="text-zinc-700 text-xs">—</span>
+            <span className="text-[#6B7280] text-xs">—</span>
           )}
         </div>
 
@@ -259,22 +259,22 @@ function TaskRow({
       </div>
 
       {isExpanded && (
-        <div className="px-10 py-3 bg-zinc-950/60 border-t border-zinc-800/60">
-          <div className="grid grid-cols-3 gap-6 text-xs text-zinc-400">
+        <div className="px-10 py-3 bg-[#111318]/80 border-t border-[#2A2D35]/60">
+          <div className="grid grid-cols-3 gap-6 text-xs text-[#9CA3AF]">
             <div>
-              <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-2">Notes</p>
+              <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider mb-2">Notes</p>
               <NotesCell task={task} onSaved={onSaved} />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Details</p>
-              <div className="space-y-1 text-zinc-500">
+              <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Details</p>
+              <div className="space-y-1 text-[#9CA3AF]">
                 <p>Est. time: {task.estimated_minutes}m</p>
                 {task.blocked_by_task_id && <p className="text-yellow-400">Blocked by: {task.blocked_by_task_id.slice(0, 8)}…</p>}
                 {task.blocker_flag && <p className="text-red-400">This is a blocker</p>}
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-1">Actions</p>
+              <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Actions</p>
               <Link href={`/os/tasks/${task.id}`} className="text-[#D7261E] hover:text-red-300 text-xs">
                 Open full detail →
               </Link>
@@ -311,7 +311,7 @@ function ProjectSection({
   const display = tenant ? shortName(tenant.name) : "Unassigned Project"
 
   return (
-    <div className="border-b border-zinc-800/40 last:border-0">
+    <div className="border-b border-[#2A2D35]/40 last:border-0">
       <button
         type="button"
         onClick={() => toggleGroup(tenantId)}
@@ -322,11 +322,11 @@ function ProjectSection({
         style={{ borderLeft: `2px solid ${color}` }}
       >
         {isCollapsed
-          ? <ChevronRight className="w-3 h-3 text-zinc-600" strokeWidth={2} />
-          : <ChevronDown className="w-3 h-3 text-zinc-600" strokeWidth={2} />}
+          ? <ChevronRight className="w-3 h-3 text-[#6B7280]" strokeWidth={2} />
+          : <ChevronDown className="w-3 h-3 text-[#6B7280]" strokeWidth={2} />}
         <span className="text-xs font-semibold" style={{ color }}>{display}</span>
-        <span className="text-[10px] text-zinc-600">{taskList.length} tasks</span>
-        {openCount > 0 && <span className="text-[10px] text-zinc-500">{openCount} open</span>}
+        <span className="text-[10px] text-[#6B7280]">{taskList.length} tasks</span>
+        {openCount > 0 && <span className="text-[10px] text-[#9CA3AF]">{openCount} open</span>}
         {overdueCount > 0 && (
           <span className="text-[10px] text-red-500 flex items-center gap-0.5">
             <Clock className="w-2.5 h-2.5" strokeWidth={2} />
@@ -343,7 +343,7 @@ function ProjectSection({
       </button>
 
       {!isCollapsed && (
-        <div className="divide-y divide-zinc-800/30">
+        <div className="divide-y divide-[#2A2D35]/20">
           {taskList.map((task) => (
             <TaskRow
               key={task.id}
@@ -363,7 +363,7 @@ function ProjectSection({
 // ─── Kanban ───────────────────────────────────────────────────────────────────
 
 const KANBAN_COLS: { id: string; label: string; dot: string; bg: string; border: string }[] = [
-  { id: "not_started", label: "Backlog",     dot: "bg-zinc-500",   bg: "bg-zinc-900/60",     border: "border-zinc-800" },
+  { id: "not_started", label: "Backlog",     dot: "bg-zinc-500",   bg: "bg-[#111318]",     border: "border-[#2A2D35]" },
   { id: "in_progress", label: "In Progress", dot: "bg-sky-500",    bg: "bg-sky-950/20",      border: "border-sky-900/50" },
   { id: "blocked",     label: "Blocked",     dot: "bg-red-500",    bg: "bg-red-950/20",      border: "border-red-900/50" },
   { id: "done",        label: "Done",        dot: "bg-green-500",  bg: "bg-green-950/20",    border: "border-green-900/50" },
@@ -393,11 +393,11 @@ function KanbanCard({
         e.dataTransfer.effectAllowed = "move"
         onDragStart(task.id)
       }}
-      className="group/card rounded-lg bg-zinc-800 border border-zinc-700/60 p-3 cursor-grab active:cursor-grabbing hover:border-zinc-600 transition-colors select-none"
+      className="group/card rounded-lg bg-[#1A1D24] border border-[#2A2D35]/60 p-3 cursor-grab active:cursor-grabbing hover:border-[#2A2D35] transition-colors select-none"
     >
       {/* Top row: priority dot + project dot + blocker */}
       <div className="flex items-center gap-1.5 mb-2">
-        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", PRIORITY_DOT[task.priority] ?? "bg-zinc-600")} title={task.priority} />
+        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", PRIORITY_DOT[task.priority] ?? "bg-[#1A1D24]")} title={task.priority} />
         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tColor }} />
         {task.blocker_flag && <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" strokeWidth={2} />}
         {task.blocked_by_task_id && <GitMerge className="w-3 h-3 text-yellow-400 shrink-0" strokeWidth={2} />}
@@ -409,7 +409,7 @@ function KanbanCard({
       {/* Title */}
       <Link
         href={`/os/tasks/${task.id}`}
-        className="block text-xs font-medium text-zinc-200 leading-snug hover:text-white line-clamp-2 mb-2"
+        className="block text-xs font-medium text-white leading-snug hover:text-white line-clamp-2 mb-2"
         onClick={(e) => e.stopPropagation()}
       >
         {task.title}
@@ -417,7 +417,7 @@ function KanbanCard({
 
       {/* Due date */}
       {task.due_date && (
-        <div className={cn("flex items-center gap-1 text-[10px]", overdue > 0 ? "text-red-400" : "text-zinc-600")}>
+        <div className={cn("flex items-center gap-1 text-[10px]", overdue > 0 ? "text-red-400" : "text-[#6B7280]")}>
           <Clock className="w-2.5 h-2.5" strokeWidth={2} />
           {fmtDate(task.due_date)}
           {overdue > 0 && <span className="font-mono">· {overdue}d late</span>}
@@ -474,8 +474,8 @@ function KanbanBoard({
             {/* Column header */}
             <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5">
               <span className={cn("w-2 h-2 rounded-full shrink-0", col.dot)} />
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">{col.label}</span>
-              <span className="ml-auto text-[10px] text-zinc-600 tabular-nums">{colTasks.length}</span>
+              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider">{col.label}</span>
+              <span className="ml-auto text-[10px] text-[#6B7280] tabular-nums">{colTasks.length}</span>
             </div>
 
             {/* Cards */}
@@ -483,9 +483,9 @@ function KanbanBoard({
               {colTasks.length === 0 ? (
                 <div className={cn(
                   "h-16 rounded-lg border border-dashed flex items-center justify-center transition-colors",
-                  isDragTarget ? "border-white/20 bg-white/5" : "border-zinc-800"
+                  isDragTarget ? "border-white/20 bg-white/5" : "border-[#2A2D35]"
                 )}>
-                  <span className="text-[10px] text-zinc-700">
+                  <span className="text-[10px] text-[#6B7280]">
                     {isDragTarget ? "Drop here" : "Empty"}
                   </span>
                 </div>
@@ -733,7 +733,7 @@ export default function OSTasksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Tasks</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-sm text-[#9CA3AF] mt-1">
             {isLoading ? "Loading…" : `${tasks?.length ?? 0} total · ${filtered.length} shown`}
           </p>
         </div>
@@ -754,12 +754,12 @@ export default function OSTasksPage() {
             "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
             tenantFilter === "all"
               ? "bg-white/10 text-white border-white/15"
-              : "text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700"
+              : "text-[#9CA3AF] border-[#2A2D35] hover:text-[#9CA3AF] hover:border-[#2A2D35]"
           )}
         >
           <FolderKanban className="w-3 h-3" strokeWidth={1.75} />
           All Projects
-          <span className="text-[10px] text-zinc-600 ml-0.5">{tasks?.length ?? 0}</span>
+          <span className="text-[10px] text-[#6B7280] ml-0.5">{tasks?.length ?? 0}</span>
         </button>
 
         {tenantsWithTasks.map(({ tenant, total }) => {
@@ -774,7 +774,7 @@ export default function OSTasksPage() {
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 isActive
                   ? "text-white border-transparent"
-                  : "text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200"
+                  : "text-[#9CA3AF] border-[#2A2D35] hover:border-[#2A2D35] hover:text-white"
               )}
               style={isActive ? { borderColor: `${color}40`, background: `${color}15`, color } : {}}
             >
@@ -804,7 +804,7 @@ export default function OSTasksPage() {
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
                 active
                   ? color
-                  : "text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700"
+                  : "text-[#9CA3AF] border-[#2A2D35] hover:text-[#9CA3AF] hover:border-[#2A2D35]"
               )}
             >
               <Icon className="w-3 h-3" strokeWidth={1.75} />
@@ -816,7 +816,7 @@ export default function OSTasksPage() {
           <button
             type="button"
             onClick={() => setQuickFilter("")}
-            className="flex items-center gap-1 text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors"
+            className="flex items-center gap-1 text-[11px] text-[#6B7280] hover:text-[#9CA3AF] transition-colors"
           >
             <X className="w-3 h-3" strokeWidth={2} /> Clear
           </button>
@@ -826,12 +826,12 @@ export default function OSTasksPage() {
       {/* Filter + Group Mode bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48 max-w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tasks…"
-            className="w-full pl-8 pr-3 py-2 text-sm bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+            className="w-full pl-8 pr-3 py-2 text-sm bg-[#111318] border border-[#2A2D35] rounded-lg text-white placeholder-[#6B7280] focus:outline-none focus:border-[#2A2D35]"
           />
         </div>
 
@@ -843,7 +843,7 @@ export default function OSTasksPage() {
               onClick={() => setStatusFilter(s)}
               className={cn(
                 "px-2.5 py-1.5 rounded-lg text-[11px] font-medium capitalize transition-colors",
-                statusFilter === s ? "bg-white/10 text-white border border-white/15" : "text-zinc-500 hover:text-zinc-300"
+                statusFilter === s ? "bg-white/10 text-white border border-white/15" : "text-[#9CA3AF] hover:text-[#9CA3AF]"
               )}
             >
               {s === "all" ? "All Status" : s.replace("_", " ")}
@@ -859,7 +859,7 @@ export default function OSTasksPage() {
               onClick={() => setPriorityFilter(p)}
               className={cn(
                 "px-2.5 py-1.5 rounded-lg text-[11px] font-medium capitalize transition-colors",
-                priorityFilter === p ? "bg-white/10 text-white border border-white/15" : "text-zinc-500 hover:text-zinc-300"
+                priorityFilter === p ? "bg-white/10 text-white border border-white/15" : "text-[#9CA3AF] hover:text-[#9CA3AF]"
               )}
             >
               {p === "all" ? "All Priority" : p}
@@ -870,13 +870,13 @@ export default function OSTasksPage() {
         {/* View + Group mode toggles */}
         <div className="ml-auto flex items-center gap-2">
           {/* View mode: List / Kanban */}
-          <div className="flex items-center gap-1 rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
+          <div className="flex items-center gap-1 rounded-lg bg-[#111318] border border-[#2A2D35] p-0.5">
             <button
               type="button"
               onClick={() => setViewMode("list")}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
-                viewMode === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+                viewMode === "list" ? "bg-white/10 text-white" : "text-[#9CA3AF] hover:text-[#9CA3AF]"
               )}
             >
               <List className="w-3 h-3" strokeWidth={1.75} />
@@ -887,7 +887,7 @@ export default function OSTasksPage() {
               onClick={() => setViewMode("kanban")}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
-                viewMode === "kanban" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+                viewMode === "kanban" ? "bg-white/10 text-white" : "text-[#9CA3AF] hover:text-[#9CA3AF]"
               )}
             >
               <Kanban className="w-3 h-3" strokeWidth={1.75} />
@@ -897,13 +897,13 @@ export default function OSTasksPage() {
 
           {/* Group mode — only in list view, all projects */}
           {viewMode === "list" && tenantFilter === "all" && (
-            <div className="flex items-center gap-1 rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
+            <div className="flex items-center gap-1 rounded-lg bg-[#111318] border border-[#2A2D35] p-0.5">
               <button
                 type="button"
                 onClick={() => setGroupMode("owner")}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
-                  groupMode === "owner" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+                  groupMode === "owner" ? "bg-white/10 text-white" : "text-[#9CA3AF] hover:text-[#9CA3AF]"
                 )}
               >
                 <Users className="w-3 h-3" strokeWidth={1.75} />
@@ -914,7 +914,7 @@ export default function OSTasksPage() {
                 onClick={() => setGroupMode("project")}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-colors",
-                  groupMode === "project" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
+                  groupMode === "project" ? "bg-white/10 text-white" : "text-[#9CA3AF] hover:text-[#9CA3AF]"
                 )}
               >
                 <FolderKanban className="w-3 h-3" strokeWidth={1.75} />
@@ -928,7 +928,7 @@ export default function OSTasksPage() {
       {/* Task board */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-5 h-5 text-zinc-600 animate-spin" strokeWidth={1.75} />
+          <Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" strokeWidth={1.75} />
         </div>
       ) : error ? (
         <div className="px-4 py-3 rounded-lg bg-red-950/40 border border-red-800/40 text-sm text-red-400">
@@ -947,9 +947,9 @@ export default function OSTasksPage() {
         </div>
       ) : tenantFilter !== "all" ? (
         // Single project selected — flat list
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
+        <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-x-auto">
           {COL_HEADER}
-          <div className={cn("divide-y divide-zinc-800/60", MIN_W)}>
+          <div className={cn("divide-y divide-[#2A2D35]/40", MIN_W)}>
             {filtered.map((task) => (
               <TaskRow
                 key={task.id}
@@ -971,31 +971,31 @@ export default function OSTasksPage() {
             const displayName = member?.name ?? "Unassigned"
 
             return (
-              <div key={ownerKey} className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
+              <div key={ownerKey} className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-x-auto">
                 {/* Owner header */}
                 <button
                   type="button"
                   onClick={() => toggleOwner(ownerKey)}
-                  className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors text-left border-b border-zinc-800"
+                  className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors text-left border-b border-[#2A2D35]"
                 >
                   {isCollapsed
-                    ? <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={2} />
-                    : <ChevronDown className="w-4 h-4 text-zinc-600 shrink-0" strokeWidth={2} />}
+                    ? <ChevronRight className="w-4 h-4 text-[#6B7280] shrink-0" strokeWidth={2} />
+                    : <ChevronDown className="w-4 h-4 text-[#6B7280] shrink-0" strokeWidth={2} />}
 
                   {ownerId
                     ? <OSAvatar userId={ownerId} size="sm" />
-                    : <div className="w-6 h-6 rounded-full bg-zinc-700 border border-zinc-600 flex items-center justify-center shrink-0">
-                        <Users className="w-3 h-3 text-zinc-400" strokeWidth={1.75} />
+                    : <div className="w-6 h-6 rounded-full bg-[#1A1D24] border border-[#2A2D35] flex items-center justify-center shrink-0">
+                        <Users className="w-3 h-3 text-[#9CA3AF]" strokeWidth={1.75} />
                       </div>
                   }
 
                   <span className="text-sm font-semibold text-white">{displayName}</span>
                   {member?.role && (
-                    <span className="text-[10px] text-zinc-600 capitalize">{member.role}</span>
+                    <span className="text-[10px] text-[#6B7280] capitalize">{member.role}</span>
                   )}
 
                   <div className="flex items-center gap-3 ml-auto">
-                    <span className="text-xs text-zinc-500">{totalCount} tasks</span>
+                    <span className="text-xs text-[#9CA3AF]">{totalCount} tasks</span>
                     {overdueCount > 0 && (
                       <span className="flex items-center gap-1 text-xs font-semibold text-red-400">
                         <Clock className="w-3.5 h-3.5" strokeWidth={2} />
@@ -1007,7 +1007,7 @@ export default function OSTasksPage() {
 
                 {/* Project sections within owner */}
                 {!isCollapsed && (
-                  <div className={cn("divide-y divide-zinc-800/40", MIN_W)}>
+                  <div className={cn("divide-y divide-[#2A2D35]/40", MIN_W)}>
                     {COL_HEADER}
                     {projects.map(({ tenantId, taskList }) => (
                       <ProjectSection
@@ -1032,9 +1032,9 @@ export default function OSTasksPage() {
         </div>
       ) : (
         // Project-only grouping (original mode)
-        <div className="rounded-xl bg-zinc-900 border border-zinc-800 overflow-x-auto">
+        <div className="rounded-xl bg-[#111318] border border-[#2A2D35] overflow-x-auto">
           {COL_HEADER}
-          <div className={cn("divide-y divide-zinc-800/60", MIN_W)}>
+          <div className={cn("divide-y divide-[#2A2D35]/40", MIN_W)}>
             {(projectGroups ?? []).map(({ tenantId, taskList }) => (
               <ProjectSection
                 key={tenantId}

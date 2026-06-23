@@ -95,7 +95,7 @@ export default function OSProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white font-condensed tracking-tight">Projects</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-sm text-[#9CA3AF] mt-1">
             {isLoading ? "Loading..." : `${groups.length} active workspaces`}
           </p>
         </div>
@@ -115,18 +115,18 @@ export default function OSProjectsPage() {
 
       {/* Search */}
       <div className="relative max-w-80">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" strokeWidth={1.75} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6B7280]" strokeWidth={1.75} />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search projects..."
-          className="w-full pl-8 pr-3 py-2 text-sm bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
+          className="w-full pl-8 pr-3 py-2 text-sm bg-[#111318] border border-[#2A2D35] rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
         />
       </div>
 
       {isLoading && (
         <div className="flex items-center justify-center h-40">
-          <Loader2 className="w-5 h-5 animate-spin text-zinc-600" strokeWidth={1.75} />
+          <Loader2 className="w-5 h-5 animate-spin text-[#6B7280]" strokeWidth={1.75} />
         </div>
       )}
 
@@ -157,7 +157,7 @@ export default function OSProjectsPage() {
             return (
               <div
                 key={group.tenant_id}
-                className="rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors overflow-hidden"
+                className="rounded-xl bg-[#111318] border border-[#2A2D35] hover:border-[#2A2D35] transition-colors overflow-hidden"
               >
                 <div className="px-5 pt-5 pb-4">
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -176,7 +176,7 @@ export default function OSProjectsPage() {
                         )}
                       </div>
                       <h3 className="text-sm font-semibold text-white truncate">{name}</h3>
-                      <p className="text-xs text-zinc-500 mt-0.5">
+                      <p className="text-xs text-[#9CA3AF] mt-0.5">
                         {group.in_progress} in progress &middot; {group.total - group.done} remaining
                       </p>
                     </div>
@@ -184,12 +184,12 @@ export default function OSProjectsPage() {
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-zinc-600">Completion</span>
-                      <span className="text-[10px] text-zinc-500">
+                      <span className="text-[10px] text-[#6B7280]">Completion</span>
+                      <span className="text-[10px] text-[#9CA3AF]">
                         {group.done}/{group.total} tasks &middot; {pct}%
                       </span>
                     </div>
-                    <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#1A1D24] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{ width: `${pct}%`, background: color }}
@@ -198,20 +198,20 @@ export default function OSProjectsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between px-5 py-3 border-t border-zinc-800 bg-black/20">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-[#2A2D35] bg-[#111318]/60">
                   <div className="flex items-center gap-3">
                     {group.members.slice(0, 4).map((m) => (
                       <OSAvatar key={m} userId={m} size="xs" />
                     ))}
                     {group.latest_due && (
-                      <span className="text-xs text-zinc-600">
+                      <span className="text-xs text-[#6B7280]">
                         Latest due {new Date(group.latest_due + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
                     )}
                   </div>
                   <Link
                     href={`/os/boards?tenant=${group.tenant_id}`}
-                    className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200 transition-colors"
+                    className="flex items-center gap-1 text-xs text-[#9CA3AF] hover:text-white transition-colors"
                   >
                     View boards <ArrowRight className="w-3 h-3" />
                   </Link>

@@ -214,18 +214,18 @@ export function CommsClient({
   // ─────────────────────────────────────────────────────────────────────────
   const ChannelsPanel = (
     <div className={cn(
-      "flex flex-col overflow-hidden bg-zinc-900 border-r border-white/[0.07]",
+      "flex flex-col overflow-hidden bg-[#111318] border-r border-white/[0.07]",
       "w-full md:w-[220px] md:min-w-[220px]",
       "absolute inset-0 md:relative md:inset-auto",
       mobileView === 'channels' ? "flex" : "hidden md:flex"
     )}>
       <div className="p-4 pb-2 flex items-center justify-between">
-        <span className="text-[10px] font-bold tracking-[2px] text-zinc-600 uppercase">Channels</span>
+        <span className="text-[10px] font-bold tracking-[2px] text-[#6B7280] uppercase">Channels</span>
         <button
           type="button"
           onClick={() => setShowNewChannel(v => !v)}
           title="New channel"
-          className="w-5 h-5 flex items-center justify-center bg-transparent border border-white/10 rounded text-zinc-600 hover:text-byred-red hover:border-byred-red/40 transition-colors"
+          className="w-5 h-5 flex items-center justify-center bg-transparent border border-white/10 rounded text-[#6B7280] hover:text-byred-red hover:border-byred-red/40 transition-colors"
         >
           <Plus size={11} strokeWidth={2} />
         </button>
@@ -233,8 +233,8 @@ export function CommsClient({
 
       {showNewChannel && (
         <div className="px-3 pb-2">
-          <div className="flex items-center gap-1.5 bg-zinc-950 border border-byred-red/40 rounded px-2 py-1">
-            <Hash size={10} strokeWidth={2} className="text-zinc-600 shrink-0" />
+          <div className="flex items-center gap-1.5 bg-[#07080D] border border-byred-red/40 rounded px-2 py-1">
+            <Hash size={10} strokeWidth={2} className="text-[#6B7280] shrink-0" />
             <input
               autoFocus type="text" placeholder="channel-name"
               value={newChannelName}
@@ -246,7 +246,7 @@ export function CommsClient({
               className="flex-1 bg-transparent border-none outline-none text-zinc-50 text-[11px] min-w-0"
             />
           </div>
-          <p className="text-[9px] text-zinc-700 mt-1 pl-0.5">Enter to create · Esc to cancel</p>
+          <p className="text-[9px] text-[#6B7280] mt-1 pl-0.5">Enter to create · Esc to cancel</p>
         </div>
       )}
 
@@ -262,7 +262,7 @@ export function CommsClient({
                 "border-l-2",
                 active
                   ? "bg-byred-red/[0.08] border-byred-red text-zinc-50 font-semibold pl-[14px]"
-                  : "border-transparent text-zinc-500 hover:text-zinc-400 hover:bg-white/[0.04]"
+                  : "border-transparent text-[#9CA3AF] hover:text-[#9CA3AF] hover:bg-white/[0.04]"
               )}
             >
               <Hash size={11} strokeWidth={1.75} className="shrink-0" />
@@ -271,7 +271,7 @@ export function CommsClient({
           )
         })}
         {tenantChannels.length === 0 && (
-          <p className="text-[11px] text-zinc-700 p-4">No channels yet</p>
+          <p className="text-[11px] text-[#6B7280] p-4">No channels yet</p>
         )}
       </div>
 
@@ -279,7 +279,7 @@ export function CommsClient({
       <button
         type="button"
         onClick={() => setMobileView('chat')}
-        className="md:hidden flex items-center gap-2 p-4 border-t border-white/[0.07] text-zinc-500 text-xs"
+        className="md:hidden flex items-center gap-2 p-4 border-t border-white/[0.07] text-[#9CA3AF] text-xs"
       >
         <ChevronLeft size={14} strokeWidth={2} />
         Back to chat
@@ -292,15 +292,15 @@ export function CommsClient({
   // ─────────────────────────────────────────────────────────────────────────
   const MembersPanel = (
     <div className={cn(
-      "flex flex-col overflow-hidden bg-zinc-900 border-l border-white/[0.07]",
+      "flex flex-col overflow-hidden bg-[#111318] border-l border-white/[0.07]",
       "w-full md:w-[180px] md:min-w-[180px]",
       "absolute inset-0 md:relative md:inset-auto",
       mobileView === 'members' ? "flex" : "hidden md:flex"
     )}>
       <div className="p-4 pb-2 flex items-center gap-1.5">
-        <Users size={11} strokeWidth={1.75} className="text-zinc-600" />
-        <span className="text-[10px] font-bold tracking-[2px] text-zinc-600 uppercase">Members</span>
-        <span className="text-[10px] text-zinc-700 ml-auto">{members.length}</span>
+        <Users size={11} strokeWidth={1.75} className="text-[#6B7280]" />
+        <span className="text-[10px] font-bold tracking-[2px] text-[#6B7280] uppercase">Members</span>
+        <span className="text-[10px] text-[#6B7280] ml-auto">{members.length}</span>
       </div>
       <div className="flex-1 overflow-y-auto scrollbar-none pb-2">
         {members.map(m => {
@@ -321,11 +321,11 @@ export function CommsClient({
               <div className="min-w-0 flex-1">
                 <p className={cn(
                   "text-[11px] font-semibold truncate",
-                  isMe ? "text-zinc-50" : "text-zinc-400"
+                  isMe ? "text-zinc-50" : "text-[#9CA3AF]"
                 )}>
                   {m.name}{isMe ? ' (you)' : ''}
                 </p>
-                {m.role && <p className="text-[9px] text-zinc-700 uppercase tracking-wide">{m.role}</p>}
+                {m.role && <p className="text-[9px] text-[#6B7280] uppercase tracking-wide">{m.role}</p>}
               </div>
             </button>
           )
@@ -336,7 +336,7 @@ export function CommsClient({
       <button
         type="button"
         onClick={() => setMobileView('chat')}
-        className="md:hidden flex items-center gap-2 p-4 border-t border-white/[0.07] text-zinc-500 text-xs"
+        className="md:hidden flex items-center gap-2 p-4 border-t border-white/[0.07] text-[#9CA3AF] text-xs"
       >
         <ChevronLeft size={14} strokeWidth={2} />
         Back to chat
@@ -349,7 +349,7 @@ export function CommsClient({
   // ─────────────────────────────────────────────────────────────────────────
   const ChatPanel = (
     <div className={cn(
-      "flex-1 flex flex-col min-w-0 bg-zinc-950",
+      "flex-1 flex flex-col min-w-0 bg-[#07080D]",
       "absolute inset-0 md:relative md:inset-auto",
       mobileView === 'chat' ? "flex" : "hidden md:flex"
     )}>
@@ -360,24 +360,24 @@ export function CommsClient({
           type="button"
           title="Channels"
           onClick={() => setMobileView('channels')}
-          className="md:hidden w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-zinc-300 -ml-1"
+          className="md:hidden w-8 h-8 flex items-center justify-center text-[#9CA3AF] hover:text-[#9CA3AF] -ml-1"
         >
           <Menu size={18} strokeWidth={1.75} />
         </button>
 
         {activeChannel ? (
           <>
-            <Hash size={14} strokeWidth={1.75} className="text-zinc-600 hidden md:block" />
+            <Hash size={14} strokeWidth={1.75} className="text-[#6B7280] hidden md:block" />
             <span className="text-sm font-bold text-zinc-50 truncate">{activeChannel.name}</span>
             {activeChannel.description && (
               <>
-                <span className="text-zinc-700 text-xs hidden sm:inline">·</span>
-                <span className="text-[11px] text-zinc-600 truncate hidden sm:inline">{activeChannel.description}</span>
+                <span className="text-[#6B7280] text-xs hidden sm:inline">·</span>
+                <span className="text-[11px] text-[#6B7280] truncate hidden sm:inline">{activeChannel.description}</span>
               </>
             )}
           </>
         ) : (
-          <span className="text-[13px] text-zinc-700">Select a channel</span>
+          <span className="text-[13px] text-[#6B7280]">Select a channel</span>
         )}
 
         {/* Mobile: members toggle */}
@@ -385,7 +385,7 @@ export function CommsClient({
           type="button"
           title="Members"
           onClick={() => setMobileView('members')}
-          className="md:hidden ml-auto w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-zinc-300"
+          className="md:hidden ml-auto w-8 h-8 flex items-center justify-center text-[#9CA3AF] hover:text-[#9CA3AF]"
         >
           <Users size={18} strokeWidth={1.75} />
         </button>
@@ -394,7 +394,7 @@ export function CommsClient({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 md:px-5 py-4 scrollbar-none min-h-0">
         {loadingMessages && (
-          <div className="text-center pt-12 text-xs text-zinc-700">Loading…</div>
+          <div className="text-center pt-12 text-xs text-[#6B7280]">Loading…</div>
         )}
         {!loadingMessages && messages.length === 0 && activeChannel && (
           <div className="text-center pt-[15vh]">
@@ -402,7 +402,7 @@ export function CommsClient({
               <Hash size={20} strokeWidth={1.5} className="text-byred-red" />
             </div>
             <p className="text-[15px] font-bold text-zinc-50 mb-1">Welcome to #{activeChannel.name}</p>
-            <p className="text-xs text-zinc-600">{activeChannel.description ?? 'This is the very beginning of this channel.'}</p>
+            <p className="text-xs text-[#6B7280]">{activeChannel.description ?? 'This is the very beginning of this channel.'}</p>
           </div>
         )}
 
@@ -428,16 +428,16 @@ export function CommsClient({
                 {!grouped && (
                   <div className="flex items-baseline gap-2 mb-0.5">
                     <span className="text-xs font-bold text-zinc-50">{name}</span>
-                    <span className="text-[10px] text-zinc-700">{fmt(msg.created_at)}</span>
+                    <span className="text-[10px] text-[#6B7280]">{fmt(msg.created_at)}</span>
                   </div>
                 )}
                 {quotedMsg && (
                   <div className="border-l-2 border-byred-red/40 pl-2 mb-1 flex gap-1 items-baseline">
-                    <span className="text-[11px] font-semibold text-zinc-500 shrink-0">{memberName(quotedMsg.user_id)}</span>
-                    <span className="text-[11px] text-zinc-600 truncate">{quotedMsg.body}</span>
+                    <span className="text-[11px] font-semibold text-[#9CA3AF] shrink-0">{memberName(quotedMsg.user_id)}</span>
+                    <span className="text-[11px] text-[#6B7280] truncate">{quotedMsg.body}</span>
                   </div>
                 )}
-                <p className="text-[13px] text-zinc-200 leading-relaxed break-words whitespace-pre-wrap">
+                <p className="text-[13px] text-white leading-relaxed break-words whitespace-pre-wrap">
                   {renderMentions(msg.body, 'font-semibold text-byred-red')}
                 </p>
               </div>
@@ -446,7 +446,7 @@ export function CommsClient({
                 onClick={() => { setReplyTo(msg); inputRef.current?.focus() }}
                 title="Reply"
                 className={cn(
-                  "w-6 h-6 flex items-center justify-center bg-zinc-900 border border-white/10 rounded text-zinc-500 shrink-0 mt-0.5 transition-opacity",
+                  "w-6 h-6 flex items-center justify-center bg-[#111318] border border-white/10 rounded text-[#9CA3AF] shrink-0 mt-0.5 transition-opacity",
                   isHovered ? "opacity-100" : "opacity-0"
                 )}
               >
@@ -461,17 +461,17 @@ export function CommsClient({
       {/* Compose */}
       <div className="px-4 md:px-5 pt-2 pb-4 border-t border-white/[0.07] shrink-0">
         {replyTo && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-white/[0.07] border-b-0 rounded-t-md text-[11px] text-zinc-500">
-            <CornerUpLeft size={11} strokeWidth={2} className="shrink-0 text-zinc-600" />
-            <span>Replying to <strong className="text-zinc-400">{memberName(replyTo.user_id)}</strong></span>
-            <span className="flex-1 truncate text-zinc-700 text-[11px]">{replyTo.body}</span>
-            <button type="button" title="Cancel reply" onClick={() => setReplyTo(null)} className="text-zinc-600 hover:text-zinc-400">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#111318] border border-white/[0.07] border-b-0 rounded-t-md text-[11px] text-[#9CA3AF]">
+            <CornerUpLeft size={11} strokeWidth={2} className="shrink-0 text-[#6B7280]" />
+            <span>Replying to <strong className="text-[#9CA3AF]">{memberName(replyTo.user_id)}</strong></span>
+            <span className="flex-1 truncate text-[#6B7280] text-[11px]">{replyTo.body}</span>
+            <button type="button" title="Cancel reply" onClick={() => setReplyTo(null)} className="text-[#6B7280] hover:text-[#9CA3AF]">
               <X size={12} strokeWidth={2} />
             </button>
           </div>
         )}
         <div className={cn(
-          "flex gap-2 items-end bg-zinc-900 border border-white/10 px-3 py-2",
+          "flex gap-2 items-end bg-[#111318] border border-white/10 px-3 py-2",
           replyTo ? "rounded-b-lg" : "rounded-lg"
         )}>
           <MentionTextarea
@@ -503,7 +503,7 @@ export function CommsClient({
             <Send size={14} strokeWidth={2} />
           </button>
         </div>
-        <p className="text-[10px] text-zinc-700 mt-1 pl-0.5 hidden md:block">Enter to send · Shift+Enter for new line</p>
+        <p className="text-[10px] text-[#6B7280] mt-1 pl-0.5 hidden md:block">Enter to send · Shift+Enter for new line</p>
       </div>
     </div>
   )

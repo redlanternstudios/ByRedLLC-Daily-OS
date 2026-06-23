@@ -56,7 +56,7 @@ function ScoreBar({ value }: { value: number }) {
           style={{ width: `${(value / 10) * 100}%` }}
         />
       </div>
-      <span className="text-xs text-zinc-400 font-mono w-4">{value}</span>
+      <span className="text-xs text-[#9CA3AF] font-mono w-4">{value}</span>
     </div>
   )
 }
@@ -144,14 +144,14 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
       <div className="lg:col-span-2 space-y-6">
         {/* Breadcrumb */}
         <nav
-          className="flex items-center gap-1.5 text-xs text-zinc-400"
+          className="flex items-center gap-1.5 text-xs text-[#9CA3AF]"
           aria-label="Breadcrumb"
         >
-          <Link href="/tasks" className="hover:text-zinc-700 transition-colors">
+          <Link href="/tasks" className="hover:text-[#6B7280] transition-colors">
             Tasks
           </Link>
           <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-          <span className="text-zinc-500 truncate max-w-[200px]">
+          <span className="text-[#9CA3AF] truncate max-w-[200px]">
             {task.title.slice(0, 40)}
             {task.title.length > 40 ? "..." : ""}
           </span>
@@ -210,7 +210,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
         {/* Blocked by */}
         {task.blocked_by_task_id && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-400">Blocked by:</span>
+            <span className="text-xs text-[#9CA3AF]">Blocked by:</span>
             <Link
               href={`/tasks/${task.blocked_by_task_id}`}
               className="text-xs text-byred-red hover:underline underline-offset-2 font-mono"
@@ -222,15 +222,15 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
         {/* Description */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-500 mb-2">Description</h3>
+          <h3 className="text-sm font-medium text-[#9CA3AF] mb-2">Description</h3>
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               {task.description ? (
-                <div className="prose prose-sm max-w-none text-zinc-600 leading-relaxed">
+                <div className="prose prose-sm max-w-none text-[#6B7280] leading-relaxed">
                   <ReactMarkdown>{task.description}</ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-xs text-zinc-400">No description.</p>
+                <p className="text-xs text-[#9CA3AF]">No description.</p>
               )}
             </CardContent>
           </Card>
@@ -238,13 +238,13 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
         {/* Metadata */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-500 mb-2">Metadata</h3>
+          <h3 className="text-sm font-medium text-[#9CA3AF] mb-2">Metadata</h3>
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               <dl className="space-y-3 text-sm">
                 {task.monday_item_id && (
                   <div className="flex justify-between">
-                    <dt className="text-zinc-400">Monday ID</dt>
+                    <dt className="text-[#9CA3AF]">Monday ID</dt>
                     <dd>
                       <a
                         href={`https://monday.com/boards/item/${task.monday_item_id}`}
@@ -258,27 +258,27 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <dt className="text-zinc-400">Estimated</dt>
-                  <dd className="text-zinc-600 font-mono text-xs">
+                  <dt className="text-[#9CA3AF]">Estimated</dt>
+                  <dd className="text-[#6B7280] font-mono text-xs">
                     {task.estimated_minutes < 60
                       ? `${task.estimated_minutes}m`
                       : `${Math.floor(task.estimated_minutes / 60)}h ${task.estimated_minutes % 60 > 0 ? `${task.estimated_minutes % 60}m` : ""}`}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-400 mb-1.5">Revenue impact</dt>
+                  <dt className="text-[#9CA3AF] mb-1.5">Revenue impact</dt>
                   <dd>
                     <ScoreBar value={task.revenue_impact_score} />
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-400 mb-1.5">Urgency</dt>
+                  <dt className="text-[#9CA3AF] mb-1.5">Urgency</dt>
                   <dd>
                     <ScoreBar value={task.urgency_score} />
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-zinc-400">Owner</dt>
+                  <dt className="text-[#9CA3AF]">Owner</dt>
                   <dd>
                     {task.owner_user_id ? (
                       <div className="flex items-center gap-1.5">
@@ -287,19 +287,19 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                             {initials}
                           </span>
                         </div>
-                        <span className="text-xs text-zinc-600">
+                        <span className="text-xs text-[#6B7280]">
                           {displayName}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-zinc-400">Unassigned</span>
+                      <span className="text-xs text-[#9CA3AF]">Unassigned</span>
                     )}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-zinc-400">Created</dt>
+                  <dt className="text-[#9CA3AF]">Created</dt>
                   <dd
-                    className="text-xs text-zinc-500 font-mono"
+                    className="text-xs text-[#9CA3AF] font-mono"
                     title={format(parseISO(task.created_at), "PPpp")}
                   >
                     {formatDistanceToNow(parseISO(task.created_at), {
@@ -317,9 +317,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
         {/* Activity */}
         <div>
-          <h3 className="text-sm font-medium text-zinc-500 mb-2">Activity</h3>
+          <h3 className="text-sm font-medium text-[#9CA3AF] mb-2">Activity</h3>
           {activities.length === 0 ? (
-            <p className="text-xs text-zinc-400">No activity.</p>
+            <p className="text-xs text-[#9CA3AF]">No activity.</p>
           ) : (
             <div className="divide-y divide-zinc-100">
               {activities.map((a) => (
@@ -335,13 +335,13 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
         {/* AI Actions */}
         <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-3">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-[#6B7280] uppercase tracking-wide">
               AI Actions
             </h3>
           </CardHeader>
           <CardContent className="space-y-3">
             {aiMode === "HUMAN_ONLY" && (
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-[#9CA3AF]">
                 This task is marked human-only.
               </p>
             )}
@@ -363,7 +363,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               aiMode === "AI_EXECUTE") && (
               <Button
                 variant="outline"
-                className="w-full border-zinc-300 text-zinc-600 hover:text-zinc-800 hover:bg-zinc-50 text-sm gap-2"
+                className="w-full border-zinc-300 text-[#6B7280] hover:text-zinc-800 hover:bg-zinc-50 text-sm gap-2"
                 onClick={() => handleAiAction("draft")}
                 disabled={aiLoading}
               >
@@ -388,12 +388,12 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     <AlertDialogTitle className="text-zinc-800">
                       Auto-execute this task?
                     </AlertDialogTitle>
-                    <AlertDialogDescription className="text-zinc-500">
+                    <AlertDialogDescription className="text-[#9CA3AF]">
                       This will run without further confirmation. Continue?
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="border-zinc-300 text-zinc-600 hover:text-zinc-800">
+                    <AlertDialogCancel className="border-zinc-300 text-[#6B7280] hover:text-zinc-800">
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -414,13 +414,13 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {aiResult && (
               <div className="mt-3 rounded-md border border-zinc-200 bg-zinc-50 p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] text-zinc-400 uppercase tracking-widest">
+                  <span className="text-[10px] text-[#9CA3AF] uppercase tracking-widest">
                     {aiResult.type === "assist" ? "AI Suggestions" : "Draft"}
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-6 h-6 text-zinc-400 hover:text-zinc-700"
+                    className="w-6 h-6 text-[#9CA3AF] hover:text-[#6B7280]"
                     onClick={() => {
                       navigator.clipboard.writeText(aiResult.content)
                       toast.success("Copied.")
@@ -429,7 +429,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     <Copy className="w-3 h-3" strokeWidth={1.75} />
                   </Button>
                 </div>
-                <div className="prose prose-xs max-w-none text-zinc-600 text-xs leading-relaxed overflow-y-auto max-h-48">
+                <div className="prose prose-xs max-w-none text-[#6B7280] text-xs leading-relaxed overflow-y-auto max-h-48">
                   <ReactMarkdown>{aiResult.content}</ReactMarkdown>
                 </div>
               </div>
@@ -440,7 +440,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
         {/* Settings */}
         <Card className="bg-white border-zinc-200 shadow-sm">
           <CardHeader className="pb-3">
-            <h3 className="text-sm font-condensed font-semibold text-zinc-600 uppercase tracking-wide">
+            <h3 className="text-sm font-condensed font-semibold text-[#6B7280] uppercase tracking-wide">
               Settings
             </h3>
           </CardHeader>
@@ -449,7 +449,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             <div className="flex items-center justify-between">
               <Label
                 htmlFor="blocker-toggle"
-                className="text-xs text-zinc-500 cursor-pointer"
+                className="text-xs text-[#9CA3AF] cursor-pointer"
               >
                 Blocker
               </Label>
@@ -463,9 +463,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
             {/* Status */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Status</Label>
+              <Label className="text-xs text-[#9CA3AF]">Status</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
+                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-[#6B7280]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-zinc-200 shadow-md">
@@ -479,7 +479,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     <SelectItem
                       key={s}
                       value={s}
-                      className="text-xs text-zinc-600 capitalize"
+                      className="text-xs text-[#6B7280] capitalize"
                     >
                       {s.replace("_", " ")}
                     </SelectItem>
@@ -490,9 +490,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
             {/* Priority */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">Priority</Label>
+              <Label className="text-xs text-[#9CA3AF]">Priority</Label>
               <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
+                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-[#6B7280]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-zinc-200 shadow-md">
@@ -500,7 +500,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                     <SelectItem
                       key={p}
                       value={p}
-                      className="text-xs text-zinc-600 capitalize"
+                      className="text-xs text-[#6B7280] capitalize"
                     >
                       {p}
                     </SelectItem>
@@ -511,9 +511,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
             {/* AI Mode */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-zinc-400">AI Mode</Label>
+              <Label className="text-xs text-[#9CA3AF]">AI Mode</Label>
               <Select value={aiMode} onValueChange={setAiMode}>
-                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-zinc-600">
+                <SelectTrigger className="h-8 bg-white border-zinc-300 text-xs text-[#6B7280]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-zinc-200 shadow-md">
@@ -522,7 +522,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                       <SelectItem
                         key={m}
                         value={m}
-                        className="text-xs text-zinc-600"
+                        className="text-xs text-[#6B7280]"
                       >
                         {m}
                       </SelectItem>
@@ -535,11 +535,11 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             {/* Blocker reason */}
             {blockerFlag && (
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Blocker reason</Label>
+                <Label className="text-xs text-[#9CA3AF]">Blocker reason</Label>
                 <Textarea
                   value={blockerReason}
                   onChange={(e) => setBlockerReason(e.target.value)}
-                  className="text-xs bg-white border-zinc-300 text-zinc-600 focus-visible:ring-byred-red min-h-[60px]"
+                  className="text-xs bg-white border-zinc-300 text-[#6B7280] focus-visible:ring-byred-red min-h-[60px]"
                   placeholder="Describe what is blocking this task..."
                 />
               </div>

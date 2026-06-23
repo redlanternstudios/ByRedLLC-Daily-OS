@@ -194,12 +194,12 @@ export function CommsClient({
       {/* Left: Channels */}
       <div style={{
         width: 220, minWidth: 220,
-        background: '#18181B',
+        background: '#1A1D24',
         borderRight: '1px solid rgba(255,255,255,0.07)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
         <div style={{ padding: '16px 16px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#52525B', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#6B7280', textTransform: 'uppercase' }}>
             Channels
           </span>
           <button
@@ -209,10 +209,10 @@ export function CommsClient({
             style={{
               width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 3,
-              cursor: 'pointer', color: '#52525B',
+              cursor: 'pointer', color: '#6B7280',
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#D7261E'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(215,38,30,0.4)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#52525B'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#6B7280'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)' }}
           >
             <Plus size={11} strokeWidth={2} />
           </button>
@@ -222,9 +222,9 @@ export function CommsClient({
           <div style={{ padding: '0 12px 8px' }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              background: '#111112', border: '1px solid rgba(215,38,30,0.4)', borderRadius: 5, padding: '4px 8px',
+              background: '#111318', border: '1px solid rgba(215,38,30,0.4)', borderRadius: 5, padding: '4px 8px',
             }}>
-              <Hash size={10} strokeWidth={2} style={{ color: '#52525B', flexShrink: 0 }} />
+              <Hash size={10} strokeWidth={2} style={{ color: '#6B7280', flexShrink: 0 }} />
               <input
                 autoFocus type="text" placeholder="channel-name"
                 value={newChannelName}
@@ -236,7 +236,7 @@ export function CommsClient({
                 style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#FAFAFA', fontSize: 11, fontFamily: 'inherit', minWidth: 0 }}
               />
             </div>
-            <p style={{ fontSize: 9, color: '#3F3F46', marginTop: 3, paddingLeft: 2 }}>Enter to create · Esc to cancel</p>
+            <p style={{ fontSize: 9, color: '#6B7280', marginTop: 3, paddingLeft: 2 }}>Enter to create · Esc to cancel</p>
           </div>
         )}
 
@@ -253,11 +253,11 @@ export function CommsClient({
                   background: active ? 'rgba(215,38,30,0.08)' : 'transparent',
                   borderLeft: active ? '2px solid #D7261E' : '2px solid transparent',
                   borderTop: 'none', borderRight: 'none', borderBottom: 'none',
-                  cursor: 'pointer', color: active ? '#FAFAFA' : '#71717A',
+                  cursor: 'pointer', color: active ? '#FAFAFA' : '#9CA3AF',
                   fontSize: 12, fontWeight: active ? 600 : 400, fontFamily: 'inherit', textAlign: 'left',
                 }}
                 onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.color = '#A1A1AA'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' } }}
-                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.color = '#71717A'; (e.currentTarget as HTMLElement).style.background = 'transparent' } }}
+                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.color = '#9CA3AF'; (e.currentTarget as HTMLElement).style.background = 'transparent' } }}
               >
                 <Hash size={11} strokeWidth={1.75} style={{ flexShrink: 0 }} />
                 {ch.name}
@@ -265,33 +265,33 @@ export function CommsClient({
             )
           })}
           {tenantChannels.length === 0 && (
-            <p style={{ fontSize: 11, color: '#3F3F46', padding: '8px 16px' }}>No channels yet</p>
+            <p style={{ fontSize: 11, color: '#6B7280', padding: '8px 16px' }}>No channels yet</p>
           )}
         </div>
       </div>
 
       {/* Center: Messages */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#0F0F10' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#111318' }}>
         <div style={{ height: 52, padding: '0 20px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
           {activeChannel ? (
             <>
-              <Hash size={14} strokeWidth={1.75} style={{ color: '#52525B' }} />
+              <Hash size={14} strokeWidth={1.75} style={{ color: '#6B7280' }} />
               <span style={{ fontSize: 14, fontWeight: 700, color: '#FAFAFA' }}>{activeChannel.name}</span>
               {activeChannel.description && (
                 <>
-                  <span style={{ color: '#3F3F46', fontSize: 12 }}>·</span>
-                  <span style={{ fontSize: 11, color: '#52525B' }}>{activeChannel.description}</span>
+                  <span style={{ color: '#6B7280', fontSize: 12 }}>·</span>
+                  <span style={{ fontSize: 11, color: '#6B7280' }}>{activeChannel.description}</span>
                 </>
               )}
             </>
           ) : (
-            <span style={{ fontSize: 13, color: '#3F3F46' }}>Select a channel</span>
+            <span style={{ fontSize: 13, color: '#6B7280' }}>Select a channel</span>
           )}
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', scrollbarWidth: 'none', minHeight: 0 }}>
           {loadingMessages && (
-            <div style={{ textAlign: 'center', paddingTop: 48, fontSize: 12, color: '#3F3F46' }}>Loading…</div>
+            <div style={{ textAlign: 'center', paddingTop: 48, fontSize: 12, color: '#6B7280' }}>Loading…</div>
           )}
           {!loadingMessages && messages.length === 0 && activeChannel && (
             <div style={{ textAlign: 'center', paddingTop: '15vh' }}>
@@ -299,7 +299,7 @@ export function CommsClient({
                 <Hash size={20} strokeWidth={1.5} style={{ color: '#D7261E' }} />
               </div>
               <p style={{ fontSize: 15, fontWeight: 700, color: '#FAFAFA', marginBottom: 4 }}>Welcome to #{activeChannel.name}</p>
-              <p style={{ fontSize: 12, color: '#52525B' }}>{activeChannel.description ?? 'This is the very beginning of this channel.'}</p>
+              <p style={{ fontSize: 12, color: '#6B7280' }}>{activeChannel.description ?? 'This is the very beginning of this channel.'}</p>
             </div>
           )}
 
@@ -325,16 +325,16 @@ export function CommsClient({
                   {!grouped && (
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#FAFAFA' }}>{name}</span>
-                      <span style={{ fontSize: 10, color: '#3F3F46' }}>{fmt(msg.created_at)}</span>
+                      <span style={{ fontSize: 10, color: '#6B7280' }}>{fmt(msg.created_at)}</span>
                     </div>
                   )}
                   {quotedMsg && (
                     <div style={{ borderLeft: '2px solid rgba(215,38,30,0.4)', paddingLeft: 8, marginBottom: 4, display: 'flex', gap: 4, alignItems: 'baseline' }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: '#71717A', flexShrink: 0 }}>{memberName(quotedMsg.user_id)}</span>
-                      <span style={{ fontSize: 11, color: '#52525B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{quotedMsg.body}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', flexShrink: 0 }}>{memberName(quotedMsg.user_id)}</span>
+                      <span style={{ fontSize: 11, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{quotedMsg.body}</span>
                     </div>
                   )}
-                  <p style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 1.55, wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: 0 }}>
+                  <p style={{ fontSize: 13, color: '#FAFAFA', lineHeight: 1.55, wordBreak: 'break-word', whiteSpace: 'pre-wrap', margin: 0 }}>
                     {renderMentions(msg.body, 'font-semibold text-[#D7261E]')}
                   </p>
                 </div>
@@ -345,8 +345,8 @@ export function CommsClient({
                   style={{
                     opacity: isHovered ? 1 : 0, width: 26, height: 26,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: '#18181B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4,
-                    cursor: 'pointer', color: '#71717A', flexShrink: 0,
+                    background: '#1A1D24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4,
+                    cursor: 'pointer', color: '#9CA3AF', flexShrink: 0,
                     transition: 'opacity 120ms', marginTop: 2,
                   }}
                 >
@@ -361,16 +361,16 @@ export function CommsClient({
         {/* Compose */}
         <div style={{ padding: '8px 20px 16px', borderTop: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
           {replyTo && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', background: '#18181B', border: '1px solid rgba(255,255,255,0.07)', borderBottom: 'none', borderRadius: '6px 6px 0 0', fontSize: 11, color: '#71717A' }}>
-              <CornerUpLeft size={11} strokeWidth={2} style={{ flexShrink: 0, color: '#52525B' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', background: '#1A1D24', border: '1px solid rgba(255,255,255,0.07)', borderBottom: 'none', borderRadius: '6px 6px 0 0', fontSize: 11, color: '#9CA3AF' }}>
+              <CornerUpLeft size={11} strokeWidth={2} style={{ flexShrink: 0, color: '#6B7280' }} />
               <span>Replying to <strong style={{ color: '#A1A1AA' }}>{memberName(replyTo.user_id)}</strong></span>
-              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3F3F46', fontSize: 11 }}>{replyTo.body}</span>
-              <button type="button" onClick={() => setReplyTo(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#52525B', padding: 0, display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#6B7280', fontSize: 11 }}>{replyTo.body}</span>
+              <button type="button" onClick={() => setReplyTo(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6B7280', padding: 0, display: 'flex', alignItems: 'center' }}>
                 <X size={12} strokeWidth={2} />
               </button>
             </div>
           )}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', background: '#18181B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: replyTo ? '0 0 8px 8px' : 8, padding: '8px 10px 8px 14px' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', background: '#1A1D24', border: '1px solid rgba(255,255,255,0.1)', borderRadius: replyTo ? '0 0 8px 8px' : 8, padding: '8px 10px 8px 14px' }}>
             <MentionTextarea
               ref={inputRef}
               value={input}
@@ -392,16 +392,16 @@ export function CommsClient({
               <Send size={13} strokeWidth={2} />
             </button>
           </div>
-          <p style={{ fontSize: 10, color: '#3F3F46', marginTop: 4, paddingLeft: 2 }}>Enter to send · Shift+Enter for new line</p>
+          <p style={{ fontSize: 10, color: '#6B7280', marginTop: 4, paddingLeft: 2 }}>Enter to send · Shift+Enter for new line</p>
         </div>
       </div>
 
       {/* Right: Members */}
-      <div style={{ width: 180, minWidth: 180, background: '#18181B', borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ width: 180, minWidth: 180, background: '#1A1D24', borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '16px 14px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Users size={11} strokeWidth={1.75} style={{ color: '#52525B' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#52525B', textTransform: 'uppercase' }}>Members</span>
-          <span style={{ fontSize: 10, color: '#3F3F46', marginLeft: 'auto' }}>{members.length}</span>
+          <Users size={11} strokeWidth={1.75} style={{ color: '#6B7280' }} />
+          <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: '#6B7280', textTransform: 'uppercase' }}>Members</span>
+          <span style={{ fontSize: 10, color: '#6B7280', marginLeft: 'auto' }}>{members.length}</span>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'none', paddingBottom: 8 }}>
           {members.map(m => {

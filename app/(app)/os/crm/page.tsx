@@ -34,7 +34,7 @@ type Contact = {
 const STATUS_CLASSES: Record<string, string> = {
   active: "bg-green-500/10 text-green-400 border border-green-500/30",
   prospect: "bg-sky-500/10 text-sky-400 border border-sky-500/30",
-  inactive: "bg-zinc-500/10 text-zinc-400 border border-zinc-500/30",
+  inactive: "bg-zinc-500/10 text-[#9CA3AF] border border-zinc-500/30",
   churned: "bg-[#D7261E]/10 text-[#D7261E] border border-[#D7261E]/30",
 }
 
@@ -134,12 +134,12 @@ export default function OSCRMPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-condensed font-bold text-white tracking-tight">CRM</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-[#9CA3AF] mt-0.5">
             {companies.length} {companies.length === 1 ? "company" : "companies"} · {contacts.length} contacts
           </p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 text-xs" onClick={() => { setShowAddContact(true); setShowAddCompany(false) }}>
+          <Button size="sm" variant="outline" className="border-[#2A2D35] text-[#9CA3AF] hover:text-white hover:border-[#2A2D35] text-xs" onClick={() => { setShowAddContact(true); setShowAddCompany(false) }}>
             <User className="w-3.5 h-3.5 mr-1.5" /> Add contact
           </Button>
           <Button size="sm" className="bg-[#D7261E] hover:bg-[#B51E18] text-white text-xs" onClick={() => { setShowAddCompany(true); setShowAddContact(false) }}>
@@ -150,28 +150,28 @@ export default function OSCRMPage() {
 
       {/* Add company form */}
       {showAddCompany && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-          <p className="text-xs font-semibold text-zinc-400 mb-3 uppercase tracking-wider">New company</p>
+        <div className="bg-[#111318] border border-[#2A2D35] rounded-lg p-4">
+          <p className="text-xs font-semibold text-[#9CA3AF] mb-3 uppercase tracking-wider">New company</p>
           <form onSubmit={addCompany} className="grid grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1">
-              <Label className="text-xs text-zinc-500">Name *</Label>
-              <Input value={cName} onChange={e => setCName(e.target.value)} required className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="Acme Corp" />
+              <Label className="text-xs text-[#9CA3AF]">Name *</Label>
+              <Input value={cName} onChange={e => setCName(e.target.value)} required className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="Acme Corp" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Industry</Label>
-              <Input value={cIndustry} onChange={e => setCIndustry(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="Technology" />
+              <Label className="text-xs text-[#9CA3AF]">Industry</Label>
+              <Input value={cIndustry} onChange={e => setCIndustry(e.target.value)} className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="Technology" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Website</Label>
-              <Input value={cWebsite} onChange={e => setCWebsite(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="https://acme.com" />
+              <Label className="text-xs text-[#9CA3AF]">Website</Label>
+              <Input value={cWebsite} onChange={e => setCWebsite(e.target.value)} className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="https://acme.com" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Status</Label>
+              <Label className="text-xs text-[#9CA3AF]">Status</Label>
               <Select value={cStatus} onValueChange={setCStatus}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectTrigger className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-[#111318] border-[#2A2D35]">
                   {["active", "prospect", "inactive", "churned"].map(s => (
-                    <SelectItem key={s} value={s} className="text-zinc-300 capitalize">{s}</SelectItem>
+                    <SelectItem key={s} value={s} className="text-[#9CA3AF] capitalize">{s}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -180,7 +180,7 @@ export default function OSCRMPage() {
               <Button type="submit" size="sm" disabled={cSaving} className="bg-[#D7261E] hover:bg-[#B51E18] text-white text-xs">
                 {cSaving ? "Saving…" : "Save company"}
               </Button>
-              <Button type="button" size="sm" variant="ghost" className="text-zinc-500 text-xs" onClick={() => setShowAddCompany(false)}>Cancel</Button>
+              <Button type="button" size="sm" variant="ghost" className="text-[#9CA3AF] text-xs" onClick={() => setShowAddCompany(false)}>Cancel</Button>
             </div>
           </form>
         </div>
@@ -188,44 +188,44 @@ export default function OSCRMPage() {
 
       {/* Add contact form */}
       {showAddContact && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-          <p className="text-xs font-semibold text-zinc-400 mb-3 uppercase tracking-wider">New contact</p>
+        <div className="bg-[#111318] border border-[#2A2D35] rounded-lg p-4">
+          <p className="text-xs font-semibold text-[#9CA3AF] mb-3 uppercase tracking-wider">New contact</p>
           <form onSubmit={addContact} className="grid grid-cols-2 gap-3">
             <div className="col-span-2 space-y-1">
-              <Label className="text-xs text-zinc-500">Name *</Label>
-              <Input value={ctName} onChange={e => setCtName(e.target.value)} required className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="Jane Smith" />
+              <Label className="text-xs text-[#9CA3AF]">Name *</Label>
+              <Input value={ctName} onChange={e => setCtName(e.target.value)} required className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="Jane Smith" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Email</Label>
-              <Input type="email" value={ctEmail} onChange={e => setCtEmail(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="jane@acme.com" />
+              <Label className="text-xs text-[#9CA3AF]">Email</Label>
+              <Input type="email" value={ctEmail} onChange={e => setCtEmail(e.target.value)} className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="jane@acme.com" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Phone</Label>
-              <Input value={ctPhone} onChange={e => setCtPhone(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="+1 555 0100" />
+              <Label className="text-xs text-[#9CA3AF]">Phone</Label>
+              <Input value={ctPhone} onChange={e => setCtPhone(e.target.value)} className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="+1 555 0100" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Role</Label>
-              <Input value={ctRole} onChange={e => setCtRole(e.target.value)} className="bg-zinc-800 border-zinc-700 text-zinc-200 text-sm" placeholder="CEO" />
+              <Label className="text-xs text-[#9CA3AF]">Role</Label>
+              <Input value={ctRole} onChange={e => setCtRole(e.target.value)} className="bg-[#1A1D24] border-[#2A2D35] text-white text-sm" placeholder="CEO" />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Company</Label>
+              <Label className="text-xs text-[#9CA3AF]">Company</Label>
               <Select value={ctCompany} onValueChange={setCtCompany}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm"><SelectValue placeholder="None" /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
-                  <SelectItem value="" className="text-zinc-500">None</SelectItem>
+                <SelectTrigger className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm"><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent className="bg-[#111318] border-[#2A2D35]">
+                  <SelectItem value="" className="text-[#9CA3AF]">None</SelectItem>
                   {companies.map(c => (
-                    <SelectItem key={c.id} value={c.id} className="text-zinc-300">{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id} className="text-[#9CA3AF]">{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-zinc-500">Status</Label>
+              <Label className="text-xs text-[#9CA3AF]">Status</Label>
               <Select value={ctStatus} onValueChange={setCtStatus}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700 text-zinc-300 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectTrigger className="bg-[#1A1D24] border-[#2A2D35] text-[#9CA3AF] text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-[#111318] border-[#2A2D35]">
                   {["active", "prospect", "inactive"].map(s => (
-                    <SelectItem key={s} value={s} className="text-zinc-300 capitalize">{s}</SelectItem>
+                    <SelectItem key={s} value={s} className="text-[#9CA3AF] capitalize">{s}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -234,14 +234,14 @@ export default function OSCRMPage() {
               <Button type="submit" size="sm" disabled={ctSaving} className="bg-[#D7261E] hover:bg-[#B51E18] text-white text-xs">
                 {ctSaving ? "Saving…" : "Save contact"}
               </Button>
-              <Button type="button" size="sm" variant="ghost" className="text-zinc-500 text-xs" onClick={() => setShowAddContact(false)}>Cancel</Button>
+              <Button type="button" size="sm" variant="ghost" className="text-[#9CA3AF] text-xs" onClick={() => setShowAddContact(false)}>Cancel</Button>
             </div>
           </form>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-zinc-800 pb-0">
+      <div className="flex gap-1 border-b border-[#2A2D35] pb-0">
         {(["companies", "contacts"] as const).map(t => (
           <button
             type="button"
@@ -249,44 +249,44 @@ export default function OSCRMPage() {
             onClick={() => setTab(t)}
             className={cn(
               "text-xs font-medium px-3 py-2 capitalize border-b-2 -mb-px transition-colors",
-              tab === t ? "border-[#D7261E] text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"
+              tab === t ? "border-[#D7261E] text-white" : "border-transparent text-[#9CA3AF] hover:text-[#9CA3AF]"
             )}
           >
             {t} {t === "companies" ? `(${companies.length})` : `(${contacts.length})`}
           </button>
         ))}
         {selectedCompany && tab === "contacts" && (
-          <span className="ml-auto flex items-center gap-1 text-xs text-zinc-500 pb-2">
-            <span className="text-zinc-400">{selectedCompany.name}</span>
-            <button type="button" onClick={() => setSelectedCompany(null)} className="text-zinc-600 hover:text-zinc-300 ml-1">✕</button>
+          <span className="ml-auto flex items-center gap-1 text-xs text-[#9CA3AF] pb-2">
+            <span className="text-[#9CA3AF]">{selectedCompany.name}</span>
+            <button type="button" onClick={() => setSelectedCompany(null)} className="text-[#6B7280] hover:text-[#9CA3AF] ml-1">✕</button>
           </span>
         )}
       </div>
 
-      {loading && <p className="text-xs text-zinc-600 py-8 text-center">Loading…</p>}
+      {loading && <p className="text-xs text-[#6B7280] py-8 text-center">Loading…</p>}
 
       {/* Companies list */}
       {!loading && tab === "companies" && (
         <div className="space-y-1.5">
           {companies.length === 0 && (
-            <p className="text-xs text-zinc-600 py-8 text-center">No companies yet. Add your first client above.</p>
+            <p className="text-xs text-[#6B7280] py-8 text-center">No companies yet. Add your first client above.</p>
           )}
           {companies.map(co => (
             <div
               key={co.id}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-center gap-3 hover:border-zinc-700 transition-colors cursor-pointer group"
+              className="bg-[#111318] border border-[#2A2D35] rounded-lg px-4 py-3 flex items-center gap-3 hover:border-[#2A2D35] transition-colors cursor-pointer group"
               onClick={() => { setSelectedCompany(co); setTab("contacts") }}
             >
-              <div className="w-7 h-7 rounded-md bg-zinc-800 flex items-center justify-center shrink-0">
-                <Building2 className="w-3.5 h-3.5 text-zinc-500" />
+              <div className="w-7 h-7 rounded-md bg-[#1A1D24] flex items-center justify-center shrink-0">
+                <Building2 className="w-3.5 h-3.5 text-[#9CA3AF]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-zinc-200 truncate">{co.name}</p>
-                <p className="text-xs text-zinc-600 truncate">{co.industry ?? "—"}{co.website ? ` · ${co.website}` : ""}</p>
+                <p className="text-sm font-medium text-white truncate">{co.name}</p>
+                <p className="text-xs text-[#6B7280] truncate">{co.industry ?? "—"}{co.website ? ` · ${co.website}` : ""}</p>
               </div>
               <div className="flex items-center gap-2">
                 {statusBadge(co.status)}
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-700 group-hover:text-zinc-500 transition-colors" />
+                <ChevronRight className="w-3.5 h-3.5 text-[#6B7280] group-hover:text-[#9CA3AF] transition-colors" />
               </div>
             </div>
           ))}
@@ -297,33 +297,33 @@ export default function OSCRMPage() {
       {!loading && tab === "contacts" && (
         <div className="space-y-1.5">
           {visibleContacts.length === 0 && (
-            <p className="text-xs text-zinc-600 py-8 text-center">
+            <p className="text-xs text-[#6B7280] py-8 text-center">
               {selectedCompany ? `No contacts for ${selectedCompany.name}.` : "No contacts yet."}
             </p>
           )}
           {visibleContacts.map(ct => (
-            <div key={ct.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-center gap-3 hover:border-zinc-700 transition-colors">
+            <div key={ct.id} className="bg-[#111318] border border-[#2A2D35] rounded-lg px-4 py-3 flex items-center gap-3 hover:border-[#2A2D35] transition-colors">
               <div className="w-7 h-7 rounded-full bg-[#D7261E]/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-[#D7261E]">
                 {ct.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-zinc-200 truncate">{ct.name}</p>
-                  {ct.role && <span className="text-[10px] text-zinc-600">{ct.role}</span>}
+                  <p className="text-sm font-medium text-white truncate">{ct.name}</p>
+                  {ct.role && <span className="text-[10px] text-[#6B7280]">{ct.role}</span>}
                 </div>
                 <div className="flex items-center gap-3 mt-0.5">
                   {ct.email && (
-                    <a href={`mailto:${ct.email}`} className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                    <a href={`mailto:${ct.email}`} className="flex items-center gap-1 text-xs text-[#9CA3AF] hover:text-[#9CA3AF] transition-colors">
                       <Mail className="w-3 h-3" />{ct.email}
                     </a>
                   )}
                   {ct.phone && (
-                    <span className="flex items-center gap-1 text-xs text-zinc-600">
+                    <span className="flex items-center gap-1 text-xs text-[#6B7280]">
                       <Phone className="w-3 h-3" />{ct.phone}
                     </span>
                   )}
                   {ct.os_companies && (
-                    <span className="flex items-center gap-1 text-xs text-zinc-600">
+                    <span className="flex items-center gap-1 text-xs text-[#6B7280]">
                       <Building2 className="w-3 h-3" />{ct.os_companies.name}
                     </span>
                   )}

@@ -135,7 +135,7 @@ function NavItem({
         collapsed ? "justify-center p-2.5" : "px-3 py-1.5",
         active
           ? "bg-[#D7261E]/10 text-white font-medium border-l-2 border-[#D7261E] rounded-l-none pl-[10px]"
-          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5",
+          : "text-[#9CA3AF] hover:text-[#9CA3AF] hover:bg-white/5",
         placeholder && !active && "opacity-40 pointer-events-none"
       )}
     >
@@ -144,7 +144,7 @@ function NavItem({
         <>
           <span className="truncate">{label}</span>
           {placeholder && (
-            <span className="ml-auto text-[9px] text-zinc-700 font-medium tracking-widest uppercase">
+            <span className="ml-auto text-[9px] text-[#6B7280] font-medium tracking-widest uppercase">
               Soon
             </span>
           )}
@@ -157,7 +157,7 @@ function NavItem({
     return (
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>{inner}</TooltipTrigger>
-        <TooltipContent side="right" className="text-xs bg-zinc-900 border-zinc-700 text-zinc-200">
+        <TooltipContent side="right" className="text-xs bg-[#111318] border-[#2A2D35] text-white">
           {label}{placeholder ? " (Soon)" : ""}
         </TooltipContent>
       </Tooltip>
@@ -207,7 +207,7 @@ function SidebarContent({
 
         {/* Logo */}
         <div className={cn(
-          "shrink-0 flex items-center justify-center border-b border-zinc-800/60",
+          "shrink-0 flex items-center justify-center border-b border-[#2A2D35]/60",
           collapsed ? "h-16 px-2" : "h-24 px-3"
         )}>
           <Link href="/os/dashboard" onClick={onNavClick} className="block">
@@ -272,11 +272,11 @@ function SidebarContent({
 
         {/* Collapse toggle (desktop) */}
         {!isMobile && (
-          <div className="px-3 py-2 border-t border-zinc-800/60">
+          <div className="px-3 py-2 border-t border-[#2A2D35]/60">
             <button
               onClick={toggleCollapsed}
               className={cn(
-                "w-full flex items-center text-zinc-600 hover:text-zinc-400 hover:bg-white/5 rounded-md transition-colors text-xs py-1.5",
+                "w-full flex items-center text-[#6B7280] hover:text-[#9CA3AF] hover:bg-white/5 rounded-md transition-colors text-xs py-1.5",
                 collapsed ? "justify-center px-2" : "gap-2 px-2"
               )}
             >
@@ -294,7 +294,7 @@ function SidebarContent({
 
         {/* User block */}
         <div className={cn(
-          "border-t border-zinc-800/60",
+          "border-t border-[#2A2D35]/60",
           collapsed ? "p-2" : "p-3"
         )}>
           <Link
@@ -310,8 +310,8 @@ function SidebarContent({
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-medium text-zinc-300 truncate">{displayName}</p>
-                <p className="text-[10px] text-zinc-600 truncate capitalize">{displayRole}</p>
+                <p className="text-xs font-medium text-[#9CA3AF] truncate">{displayName}</p>
+                <p className="text-[10px] text-[#6B7280] truncate capitalize">{displayRole}</p>
               </div>
             )}
           </Link>
@@ -332,7 +332,7 @@ export function AppSidebar() {
   if (isMobile) {
     return (
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent side="left" className="w-60 p-0 bg-zinc-950 border-r border-zinc-800">
+        <SheetContent side="left" className="w-60 p-0 bg-[#07080D] border-r border-[#2A2D35]">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <SidebarContent collapsed={false} onNavClick={() => setIsMobileOpen(false)} />
         </SheetContent>
@@ -359,7 +359,7 @@ export function MobileMenuButton() {
   return (
     <button
       onClick={toggleMobile}
-      className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-md transition-colors"
+      className="w-8 h-8 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:bg-white/5 rounded-md transition-colors"
       aria-label="Open menu"
     >
       <Menu className="w-5 h-5" strokeWidth={1.75} />
