@@ -135,7 +135,7 @@ Task {
   id, tenant_id, title, description, status, priority, due_date,
   estimated_minutes, ai_mode, blocker_flag, blocker_reason,
   blocked_by_task_id, owner_user_id, revenue_impact_score (0–10),
-  urgency_score (0–10), monday_item_id, created_at
+  urgency_score (0–10), created_at
 }
 
 Lead {
@@ -202,9 +202,6 @@ The login form at `/login` needs to be wired to Supabase Auth. Currently it sets
 3. Add middleware (`middleware.ts`) to protect `/(app)/*` routes — redirect unauthenticated users to `/login`
 4. Wire login form to `supabase.auth.signInWithPassword()`
 5. Wire sidebar user block to real session user
-
-### 8c. MONDAY.COM INTEGRATION
-Tasks have a `monday_item_id` field. The design intention is a two-way sync between byred_os tasks and Monday.com items. Not started. Will need Monday.com API credentials and a webhook/sync layer.
 
 ### 8d. AI ACTIONS (REAL)
 The AI Actions card on `/tasks/[id]` simulates Suggest / Draft / Execute with hardcoded mock strings. Needs to be wired to a real AI provider. **Groq is already connected as an integration in this v0 project.** Recommended path:
@@ -291,7 +288,6 @@ All of these can be added in the v0 project Settings → Vars panel without leav
 - AI mode is a first-class concept — every task is tagged with how much AI involvement is allowed
 - The Daily Brief is the morning anchor — it shows on topbar popover and is the centerpiece of `/today`
 - Revenue impact score + urgency score drive sort order on Command Center (not just due date)
-- Monday.com sync is in scope for later — tasks already have a `monday_item_id` field for this
 
 ---
 
