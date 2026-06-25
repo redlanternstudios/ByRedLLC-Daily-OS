@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Folder,
   Cpu,
+  Sparkles,
   Flame,
   BarChart,
   Radio,
@@ -74,6 +75,7 @@ const NAV_GROUPS = [
     items: [
       { label: "Lantern AI", href: "/os/ai",   icon: Cpu },
       { label: "KPIs",       href: "/os/kpis", icon: BarChart },
+      { label: "Planner",    href: "/os/planner", icon: Sparkles },
     ],
   },
   {
