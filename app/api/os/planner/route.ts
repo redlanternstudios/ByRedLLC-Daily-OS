@@ -7,6 +7,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 const MODEL = "claude-sonnet-4-6"
 
+// Allow longer structured generation (default cut would clip the plan).
+export const maxDuration = 60
+
 // ── Schemas ──────────────────────────────────────────────────────────────
 const draftSchema = z.object({
   restated_goal: z.string(),
@@ -113,7 +116,7 @@ ${answers ? `ANSWERS / EXTRA CONTEXT FROM USER:\n${answers}` : ""}`,
         model: anthropic(MODEL),
         schema: planSchema,
         prompt: `You are a senior agile project manager. Build a complete, ready to execute plan for "${tenantName}" based on the goal and the confirmed golden path.
-Break the work into epics. Each epic has small, shippable stories. Every story MUST include: a clear title, a user story line in the form "As a X, I want Y, so that Z", a short description, 3 to 6 testable acceptance criteria, a definition of done checklist (3 to 6 items), a priority, a realistic estimate in minutes, and an honest capability rating.
+Keep the plan focused and fast to produce: at most 5 epics, and at most 4 small shippable stories per epic. Prioritise the essential path to launch and do not pad. Every story MUST include: a clear title, a user story line in the form "As a X, I want Y, so that Z", a short description, 3 to 4 testable acceptance criteria, a definition of done checklist (3 to 4 items), a priority, a realistic estimate in minutes, and an honest capability rating.
 
 CAPABILITY RATING (be strict and truthful):
 - "ai_can_complete": an AI assistant could fully finish this from inside a project tool with no human action needed (for example: writing copy, drafting an email template, producing a spec, structuring a data schema, generating checklists).
