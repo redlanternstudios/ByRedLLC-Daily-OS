@@ -393,14 +393,14 @@ export default function OSTodayPage() {
             t.priority === "critical" ||
             t.priority === "urgent" ||
             (t.due_date != null && t.due_date <= today_date) ||
-            t.urgency_score >= 8
+            (t.urgency_score ?? 0) >= 8
         )
         // Hard fallback: show ALL active tasks in this bucket so it's never empty
         return exact.length > 0 ? exact : active.slice(0, 10)
       }
       case "money_moves":
         return active.filter(
-          (t) => t.revenue_impact_score >= 7 ||
+          (t) => (t.revenue_impact_score ?? 0) >= 7 ||
             t.priority === "high" ||
             t.priority === "critical"
         )
