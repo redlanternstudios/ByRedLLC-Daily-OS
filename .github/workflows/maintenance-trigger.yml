@@ -1,0 +1,39 @@
+name: LanternKeeper Weekly Trigger
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  trigger-maintenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Fire maintenance webhook to SwarmClaw
+        id: webhook
+        run: |
+          RESPONSE=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"agent":"MAINTENANCE","trigger":"scheduled_weekly","run_type":"weekly","source":"github_actions"}' \
+            ${{ secrets.SWARMCLAW_RAILWAY_URL }}/webhook)
+          echo "HTTP status: $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "::error::SwarmClaw webhook returned $RESPONSE"
+            exit 1
+          fi
+
+      - name: Open issue if webhook failed
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '[MAINTENANCE] Weekly trigger failed',
+              body: 'LanternKeeper weekly trigger failed. Check Railway SwarmClaw.',
+              labels: ['maintenance']
+            })
