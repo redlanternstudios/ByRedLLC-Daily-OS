@@ -31,6 +31,30 @@ These lanes are the starting map, not a final legal or HR roster.
 - Mohamed: AI Front Desk support and warm-intro outreach lane.
 - Codex: PM execution support, OS cleanup, code changes, audits, receipts, and verification.
 
+## Active Directory Cleanup
+
+Verified on 2026-06-29:
+
+- Active user directory before cleanup: 22.
+- Active user directory after cleanup: 12.
+- Deactivated 10 obvious test/smoke accounts with zero active tasks.
+- No account with active tasks was deactivated.
+- Created KP review task `f1e173ff-efdf-4960-87d6-8b87d6bc2878` for ambiguous real-looking or duplicate zero-task accounts.
+- Closed `02c7f866-6a3a-4d60-8aca-913754caae64` after the cleanup receipt was logged.
+
+Obvious test/smoke accounts deactivated:
+
+- `hirewire-flow-test-20260514`
+- `rory.test.hirewire`
+- `johnnytestv0`
+- `real-e2e`
+- `codex-prove-fit-smoke`
+- `faith`
+- `Amina Test`
+- `amina.test.sister`
+- `circle.test`
+- `amina` using a temporary `yapmail.com` address
+
 ## Live Alignment Snapshot
 
 Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
@@ -53,10 +77,9 @@ Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
 
 ## Cleanup Order
 
-1. Confirm real operators versus test or duplicate accounts.
-2. Reduce Rory overload by cancelling stale work, moving lane-correct work, and escalating L2 tasks.
-3. Keep KP's My Dashboard focused on PM decisions, critical revenue work, and proof gates.
-4. Log verified receipts for each material alignment pass.
+1. Reduce Rory overload by cancelling stale work, moving lane-correct work, and escalating L2 tasks.
+2. Keep KP's My Dashboard focused on PM decisions, critical revenue work, and proof gates.
+3. Log verified receipts for each material alignment pass.
 
 ## Completed Intake Cleanup
 
@@ -79,6 +102,7 @@ Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
   - `0b6ce7d9-71a4-48e7-869b-3e62f8bb7bc4`
   - `7ea1ec7d-0fe7-4850-8248-82871e526693`
   - `583388fb-e21f-41fa-ae53-43c2917eb628`
+- Active directory cleanup receipt: `fc90bbe6-d224-4d69-869c-1638339378c1`.
 
 ## Undo Path
 
