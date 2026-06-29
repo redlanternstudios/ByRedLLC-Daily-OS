@@ -9,7 +9,9 @@ import {
   Flame,
   FolderKanban,
   Lightbulb,
+  ListChecks,
   ShieldCheck,
+  Target,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -18,6 +20,7 @@ import { createClient } from "@/lib/supabase/server"
 import { requireAuth } from "@/lib/auth"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSPriorityBadge, OSStatusBadge } from "@/components/byred/os/os-badge"
+import { MyDashboardTaskActions } from "@/components/byred/os/my-dashboard-task-actions"
 import type { ByredTask, OsAgentReceipt } from "@/types/database"
 
 type TeamMember = {
@@ -131,6 +134,31 @@ function StatCard({
   )
 }
 
+function CommandCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  label: string
+  value: string | number
+  detail: string
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
+}) {
+  return (
+    <div className="rounded-lg border border-[#2A2D35] bg-[#111318] p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Icon className="h-3.5 w-3.5 text-[#D7261E]" strokeWidth={1.75} />
+        <p className="text-[10px] font-condensed font-semibold uppercase tracking-widest text-[#6B7280]">
+          {label}
+        </p>
+      </div>
+      <p className="text-sm font-semibold leading-snug text-white line-clamp-2">{value}</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-[#9CA3AF]">{detail}</p>
+    </div>
+  )
+}
+
 function EmptyState({ label }: { label: string }) {
   return <p className="px-2 py-6 text-center text-xs text-[#6B7280]">{label}</p>
 }
@@ -147,16 +175,17 @@ function TaskRow({
   const color = tenants.get(task.tenant_id)?.color ?? "#D7261E"
 
   return (
-    <Link
-      href={`/os/tasks/${task.id}`}
-      className="block rounded-md border border-[#2A2D35]/70 bg-[#0D0D0F] px-3 py-3 hover:border-[#3A3D46] hover:bg-[#151820] transition-colors"
-    >
+    <div className="rounded-md border border-[#2A2D35]/70 bg-[#0D0D0F] px-3 py-3 transition-colors hover:border-[#3A3D46] hover:bg-[#151820]">
       <div className="flex items-start gap-3">
         <span className="mt-1 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-xs font-medium text-white leading-snug line-clamp-2">{task.title}</p>
-            <ArrowRight className="w-3.5 h-3.5 text-[#6B7280] shrink-0 mt-0.5" strokeWidth={1.75} />
+            <Link href={`/os/tasks/${task.id}`} className="text-xs font-medium text-white leading-snug line-clamp-2 hover:text-red-200">
+              {task.title}
+            </Link>
+            <Link href={`/os/tasks/${task.id}`} aria-label="Open task">
+              <ArrowRight className="w-3.5 h-3.5 text-[#6B7280] shrink-0 mt-0.5 hover:text-white" strokeWidth={1.75} />
+            </Link>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] text-[#9CA3AF]">{tenantName(task, tenants)}</span>
@@ -174,9 +203,12 @@ function TaskRow({
           {task.blocker_reason && (
             <p className="mt-2 text-[10px] text-red-400 line-clamp-2">Blocker: {task.blocker_reason}</p>
           )}
+          <div className="mt-3 border-t border-[#2A2D35]/50 pt-2">
+            <MyDashboardTaskActions taskId={task.id} status={task.status} blockerFlag={task.blocker_flag} />
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
@@ -264,6 +296,9 @@ export default async function MyDashboardPage() {
     }, new Map<string, ByredTask[]>())
   ).sort((a, b) => b[1].length - a[1].length)
 
+  const primaryMove = doFirst[0]
+  const proofRule = receipts[0]
+
   return (
     <div className="max-w-7xl space-y-6">
       <div className="flex flex-col gap-4 border-b border-white/[0.06] pb-5 lg:flex-row lg:items-end lg:justify-between">
@@ -292,9 +327,36 @@ export default async function MyDashboardPage() {
         <StatCard label="Money Impact" value={myHighRevenue.length} icon={WalletCards} accent="w-4 h-4 text-green-300" />
       </div>
 
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+        <CommandCard
+          label="Primary Move"
+          value={primaryMove?.title ?? "No KP-owned task is currently demanding first move."}
+          detail={primaryMove ? `${tenantName(primaryMove, tenantMap)} / due ${formatDue(primaryMove.due_date)}` : "Keep the lane clean and review team risk."}
+          icon={Target}
+        />
+        <CommandCard
+          label="Clearance Pressure"
+          value={`${myDueOrOverdue.length} due or overdue`}
+          detail="Work these before opening new lanes unless a blocker or money task outranks them."
+          icon={ListChecks}
+        />
+        <CommandCard
+          label="Decision Pressure"
+          value={`${decisionQueue.length} items need PM attention`}
+          detail="Use this to separate your decision work from normal execution work."
+          icon={Lightbulb}
+        />
+        <CommandCard
+          label="Learning Guardrail"
+          value={proofRule ? "Verified receipt available" : "No verified receipt yet"}
+          detail="Agents can reuse only verified web-app receipts and universal mindset lessons."
+          icon={ShieldCheck}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <div className="space-y-5 xl:col-span-2">
-          <Section title="Do First" subtitle="Highest leverage KP-owned tasks" icon={CheckCircle2}>
+          <Section title="Do First" subtitle="Highest leverage KP-owned tasks; clear only when proof exists" icon={CheckCircle2}>
             <div className="space-y-2">
               {doFirst.length > 0 ? (
                 doFirst.map((task) => (
