@@ -24,6 +24,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/os": "Home",
   "/os/dashboard": "Home",
   "/os/today": "Today",
+  "/os/my-dashboard": "My Dashboard",
   "/os/projects": "Projects",
   "/os/boards": "Boards",
   "/os/tasks": "Tasks",
