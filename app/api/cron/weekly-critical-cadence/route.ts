@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendEmail } from "@/lib/email"
+import { dateOnly, isOverdue, scoreCriticalCadenceTask, weekStartFor } from "@/lib/weekly-critical-cadence"
 import type { ByredTask } from "@/types/database"
+
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
 
 type UserRow = {
   id: string
@@ -21,11 +25,6 @@ type TaskWithSignal = ByredTask & {
   owner_name: string
 }
 
-function dateOnly(value: string | null) {
-  if (!value) return null
-  return value.includes("T") ? value.split("T")[0] : value
-}
-
 function formatDue(value: string | null) {
   const due = dateOnly(value)
   if (!due) return "No due date"
@@ -36,15 +35,6 @@ function formatDue(value: string | null) {
   })
 }
 
-function isOpen(task: ByredTask) {
-  return task.status !== "done" && task.status !== "cancelled"
-}
-
-function isOverdue(task: ByredTask, today: string) {
-  const due = dateOnly(task.due_date)
-  return isOpen(task) && !!due && due < today
-}
-
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -52,16 +42,6 @@ function escapeHtml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#039;")
-}
-
-function scoreTask(task: ByredTask, today: string) {
-  let score = 0
-  if (task.priority === "critical") score += 100
-  if (task.status === "blocked" || task.blocker_flag) score += 45
-  if (isOverdue(task, today)) score += 35
-  score += task.revenue_impact_score ?? 0
-  score += task.urgency_score ?? 0
-  return score
 }
 
 function buildCadence({
@@ -78,7 +58,7 @@ function buildCadence({
   const topTasks = tasks.slice(0, 12)
   const kpTopTasks = kpTasks.slice(0, 8)
 
-  const subject = `Weekly Critical Cadence: ${topTasks.length} critical OS tasks`
+  const subject = `Weekly Critical Cadence: ${tasks.length} critical OS tasks`
 
   const textLines = [
     "Weekly Critical Cadence",
@@ -143,13 +123,22 @@ function buildCadence({
 }
 
 export async function GET(request: Request) {
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    return NextResponse.json({ error: "CRON_SECRET is not configured" }, { status: 500 })
+  }
+
   const authHeader = request.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const url = new URL(request.url)
+  const dryRun = url.searchParams.get("dry_run") === "1"
+  const force = url.searchParams.get("force") === "1"
   const supabase = createAdminClient()
   const today = new Date().toISOString().split("T")[0]
+  const weekStart = weekStartFor(today)
 
   try {
     const [usersRes, tenantsRes, tasksRes] = await Promise.all([
@@ -190,7 +179,7 @@ export async function GET(request: Request) {
       .filter((task) => task.priority === "critical" || task.status === "blocked" || !!task.blocker_flag)
       .map((task) => ({
         ...task,
-        signal: scoreTask(task, today),
+        signal: scoreCriticalCadenceTask(task, today),
         tenant_name: tenantMap.get(task.tenant_id)?.name ?? "Workspace",
         owner_name: task.owner_user_id ? userMap.get(task.owner_user_id)?.name ?? "Unassigned" : "Unassigned",
       }))
@@ -203,6 +192,59 @@ export async function GET(request: Request) {
     const kpTasks = criticalTasks.filter((task) => task.owner_user_id === kp.id)
     const cadence = buildCadence({ tasks: criticalTasks, kpTasks, today })
     const to = process.env.WEEKLY_CRITICAL_CADENCE_TO ?? kp.email
+    const stats = {
+      critical: criticalTasks.length,
+      kp_owned: kpTasks.length,
+      blocked: criticalTasks.filter((task) => task.status === "blocked" || task.blocker_flag).length,
+      overdue: criticalTasks.filter((task) => isOverdue(task, today)).length,
+    }
+
+    const tenantId = criticalTasks[0]?.tenant_id ?? tenants[0]?.id
+    if (!tenantId) {
+      return NextResponse.json({ error: "No active tenant available for cadence receipt" }, { status: 500 })
+    }
+
+    if (dryRun) {
+      return NextResponse.json({
+        ok: true,
+        dry_run: true,
+        sent: false,
+        recipient: to,
+        week_start: weekStart,
+        stats,
+        preview: {
+          subject: cadence.subject,
+          text: cadence.text,
+        },
+      })
+    }
+
+    if (!force) {
+      const { data: existingReceipt, error: receiptLookupError } = await (supabase as any)
+        .from("os_agent_receipts")
+        .select("id, created_at, summary")
+        .eq("source_surface", "Weekly Critical Cadence Agent")
+        .gte("created_at", `${weekStart}T00:00:00.000Z`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle() as {
+          data: { id: string; created_at: string; summary: string } | null
+          error: { message: string } | null
+        }
+
+      if (receiptLookupError) throw new Error(receiptLookupError.message)
+      if (existingReceipt) {
+        return NextResponse.json({
+          ok: true,
+          skipped: true,
+          reason: "weekly_cadence_already_recorded",
+          receipt: existingReceipt,
+          week_start: weekStart,
+          stats,
+        })
+      }
+    }
+
     const emailResult = await sendEmail({
       to,
       subject: cadence.subject,
@@ -210,35 +252,35 @@ export async function GET(request: Request) {
       text: cadence.text,
     })
 
-    const tenantId = criticalTasks[0]?.tenant_id ?? tenants[0]?.id
-    if (tenantId) {
-      await (supabase as any).from("os_agent_receipts").insert({
-        created_by_user_id: kp.id,
-        tenant_id: tenantId,
-        receipt_type: "verification",
-        source_surface: "Weekly Critical Cadence Agent",
-        related_task_id: criticalTasks[0]?.id ?? null,
-        related_project_id: null,
-        summary: `Weekly critical cadence generated for ${criticalTasks.length} active critical/high-risk tasks and sent to ${to}.`,
-        lesson: "Weekly cadence agents should read live OS task state, prioritize critical/blocking work, and keep proof status separate from task completion.",
-        proof_url_or_path: "https://www.byredlanternos.com/os/my-dashboard",
-        verification_status: "verified",
-        agent_family: "web_app",
-        framework_scope: "mindset_universal",
-      })
+    const deliveryStatus = emailResult.ok ? "email_sent" : "email_not_sent"
+    const { data: receipt, error: receiptError } = await (supabase as any).from("os_agent_receipts").insert({
+      created_by_user_id: kp.id,
+      tenant_id: tenantId,
+      receipt_type: "verification",
+      source_surface: "Weekly Critical Cadence Agent",
+      related_task_id: criticalTasks[0]?.id ?? null,
+      related_project_id: null,
+      summary: `Weekly critical cadence generated for week ${weekStart}: ${criticalTasks.length} active critical/high-risk tasks, delivery ${deliveryStatus} to ${to}.`,
+      lesson: "Weekly cadence agents should read live OS task state, prioritize critical/blocking work, avoid duplicate weekly sends, and keep proof status separate from task completion.",
+      proof_url_or_path: "https://www.byredlanternos.com/os/my-dashboard",
+      verification_status: "verified",
+      agent_family: "web_app",
+      framework_scope: "mindset_universal",
+    }).select("id, created_at, summary").single() as {
+      data: { id: string; created_at: string; summary: string } | null
+      error: { message: string } | null
     }
+
+    if (receiptError) throw new Error(receiptError.message)
 
     return NextResponse.json({
       ok: true,
       sent: emailResult.ok,
       email: emailResult,
       recipient: to,
-      stats: {
-        critical: criticalTasks.length,
-        kp_owned: kpTasks.length,
-        blocked: criticalTasks.filter((task) => task.status === "blocked" || task.blocker_flag).length,
-        overdue: criticalTasks.filter((task) => isOverdue(task, today)).length,
-      },
+      week_start: weekStart,
+      receipt,
+      stats,
     })
   } catch (error) {
     console.error("[weekly-critical-cadence]", error)
