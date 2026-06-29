@@ -62,24 +62,28 @@ Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
 - Active tasks: 279.
 - Initial unassigned active tasks: 43.
 - Current verified unassigned active tasks after cleanup: 0.
-- Rory active tasks: 133.
-- Rory critical tasks: 36.
-- Rory overdue tasks: 83.
+- Initial Rory active tasks: 138.
+- Current verified Rory active tasks after load balancing: 63.
+- Current verified Rory critical tasks after load balancing: 30.
+- Current verified Rory overdue tasks after load balancing: 26.
 - KP active tasks: 39.
 - KP critical tasks: 12.
 
 ## OS Control Tasks
 
-- `ee613171-a92d-4033-8f9f-db2c6efe9c98` - Team Alignment: lock real-team lanes and unassigned intake.
-- `02c7f866-6a3a-4d60-8aca-913754caae64` - Team Alignment: separate real team from test accounts.
-- `c37f2313-71e9-4af6-aa85-415add291884` - Team Alignment: triage 43 unassigned tasks.
-- `b87113f8-1910-41fc-af38-25c5c07e9a34` - Team Alignment: load-balance Rory's active task stack.
+- `ee613171-a92d-4033-8f9f-db2c6efe9c98` - Team Alignment: lock real-team lanes and unassigned intake. Status: done.
+- `02c7f866-6a3a-4d60-8aca-913754caae64` - Team Alignment: separate real team from test accounts. Status: done.
+- `c37f2313-71e9-4af6-aa85-415add291884` - Team Alignment: triage 43 unassigned tasks. Status: done.
+- `b87113f8-1910-41fc-af38-25c5c07e9a34` - Team Alignment: load-balance Rory's active task stack. Status: done.
+- `f1e173ff-efdf-4960-87d6-8b87d6bc2878` - Team Alignment: confirm ambiguous external and duplicate accounts. Status: blocked for KP review.
+- `fb97ea05-14b2-44ce-95aa-5164147a3809` - Team Alignment: review Homira operations load after Rory rebalance. Status: blocked for KP review.
 
-## Cleanup Order
+## Remaining Cleanup Order
 
-1. Reduce Rory overload by cancelling stale work, moving lane-correct work, and escalating L2 tasks.
-2. Keep KP's My Dashboard focused on PM decisions, critical revenue work, and proof gates.
-3. Log verified receipts for each material alignment pass.
+1. Review ambiguous real-looking or duplicate zero-task accounts before deactivation.
+2. Review Homira's operations/admin load after the Rory rebalance.
+3. Keep KP's My Dashboard focused on PM decisions, critical revenue work, and proof gates.
+4. Log verified receipts for each material alignment pass.
 
 ## Completed Intake Cleanup
 
@@ -92,6 +96,16 @@ Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
 - Routed 6 authority or unclear tasks to KP as blocked.
 - Closed `c37f2313-71e9-4af6-aa85-415add291884` after live read-back confirmed active unassigned tasks were 0.
 
+## Completed Rory Load Balancing
+
+- Rory active task count moved from 138 to 63.
+- Routed 24 authority/legal/spend/strategic tasks to KP as blocked.
+- Routed 49 ops/brand/admin tasks to Homira.
+- Routed 2 field/compliance tasks to Basheer.
+- Kept HireWire technical/build-proof work and AI Front Desk execution work with Rory.
+- Created follow-up task `fb97ea05-14b2-44ce-95aa-5164147a3809` because Homira became the heaviest operations/admin lane after the rebalance.
+- Closed `b87113f8-1910-41fc-af38-25c5c07e9a34` after the live read-back verified the new Rory load.
+
 ## Receipt
 
 - OS agent receipt: `d3e3e5b5-fa40-4db5-90d8-a81f05cb5ba0`.
@@ -103,6 +117,8 @@ Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
   - `7ea1ec7d-0fe7-4850-8248-82871e526693`
   - `583388fb-e21f-41fa-ae53-43c2917eb628`
 - Active directory cleanup receipt: `fc90bbe6-d224-4d69-869c-1638339378c1`.
+- Rory load-balancing receipt: `22c997f4-fd57-4bb8-94bc-ffddcd51f9fc`.
+- Main Team Alignment closure receipt: `c7955303-6a7e-4c97-b4ee-e028265c089e`.
 
 ## Undo Path
 
