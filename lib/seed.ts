@@ -37,6 +37,9 @@ export const SEED_TASKS: Task[] = [
     revenue_impact_score: 10,
     urgency_score: 10,
     created_at: '2026-04-18T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'tk-2',
@@ -55,6 +58,9 @@ export const SEED_TASKS: Task[] = [
     revenue_impact_score: 9,
     urgency_score: 10,
     created_at: '2026-04-18T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'tk-3',
@@ -73,6 +79,9 @@ export const SEED_TASKS: Task[] = [
     revenue_impact_score: 7,
     urgency_score: 10,
     created_at: '2026-04-10T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'tk-4',
@@ -91,6 +100,9 @@ export const SEED_TASKS: Task[] = [
     revenue_impact_score: 6,
     urgency_score: 9,
     created_at: '2026-04-15T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'tk-5',
@@ -109,6 +121,9 @@ export const SEED_TASKS: Task[] = [
     revenue_impact_score: 3,
     urgency_score: 2,
     created_at: '2026-04-18T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
   },
 ];
 
