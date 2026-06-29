@@ -54,7 +54,7 @@ const focusProjects: FocusProject[] = [
     title: "BeautyByRed LLC",
     status: "Homira lashing / eyelash business",
     detail: "Keep Homira's beauty operations, lash services, and customer flow visible.",
-    match: /beauty\s*by\s*red|beautybyred|lash|eyelash|homira/i,
+    match: /beauty\s*by\s*red|beautybyred|lash|eyelash/i,
   },
 ]
 
