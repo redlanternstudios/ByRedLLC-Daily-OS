@@ -30,6 +30,34 @@ type TeamMember = {
   avatar_url: string | null
 }
 
+type FocusProject = {
+  title: string
+  status: string
+  detail: string
+  match: RegExp
+}
+
+const focusProjects: FocusProject[] = [
+  {
+    title: "Authentic Hadith",
+    status: "App Store live",
+    detail: "Keep live-store receipts, release follow-ups, and app proof clean.",
+    match: /authentic hadith/i,
+  },
+  {
+    title: "Amina",
+    status: "Live web",
+    detail: "Track web health, content, and next-feature proof without launch noise.",
+    match: /\bamina\b/i,
+  },
+  {
+    title: "BeautyByRed LLC",
+    status: "Homira lashing / eyelash business",
+    detail: "Keep Homira's beauty operations, lash services, and customer flow visible.",
+    match: /beauty\s*by\s*red|beautybyred|lash|eyelash|homira/i,
+  },
+]
+
 const priorityWeight: Record<string, number> = {
   critical: 0,
   high: 1,
@@ -85,6 +113,11 @@ function formatDue(value: string | null) {
 
 function tenantName(task: ByredTask, tenants: Map<string, { name: string; color?: string | null }>) {
   return tenants.get(task.tenant_id)?.name ?? "Workspace"
+}
+
+function isFocusProjectTask(task: ByredTask, tenants: Map<string, { name: string; color?: string | null }>, project: FocusProject) {
+  const haystack = `${tenantName(task, tenants)} ${task.title} ${task.description ?? ""}`
+  return project.match.test(haystack)
 }
 
 function Section({
@@ -159,6 +192,72 @@ function CommandCard({
   )
 }
 
+function FocusProjectCard({
+  project,
+  tasks,
+  tenants,
+}: {
+  project: FocusProject
+  tasks: ByredTask[]
+  tenants: Map<string, { name: string; color?: string | null }>
+}) {
+  const blockedCount = tasks.filter((task) => task.blocker_flag || task.status === "blocked").length
+  const nextTask = tasks[0]
+
+  return (
+    <div className="rounded-lg border border-[#2A2D35] bg-[#111318] p-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-condensed font-semibold uppercase tracking-widest text-[#D7261E]">
+            {project.status}
+          </p>
+          <h2 className="mt-1 truncate text-lg font-condensed font-bold uppercase tracking-tight text-white">
+            {project.title}
+          </h2>
+        </div>
+        <span className="rounded-full border border-[#2A2D35] px-2 py-1 text-[10px] font-semibold text-[#9CA3AF]">
+          {tasks.length} open
+        </span>
+      </div>
+      <p className="min-h-10 text-xs leading-relaxed text-[#9CA3AF]">{project.detail}</p>
+      <div className="mt-4 rounded-md border border-[#2A2D35]/70 bg-[#0D0D0F] p-3">
+        <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-wider text-[#6B7280]">
+          <span>Current signal</span>
+          <span>{blockedCount} blocked</span>
+        </div>
+        {nextTask ? (
+          <Link href={`/os/tasks/${nextTask.id}`} className="mt-2 block text-xs font-medium leading-snug text-white line-clamp-2 hover:text-red-200">
+            {nextTask.title}
+            <span className="ml-2 text-[10px] font-normal text-[#6B7280]">
+              {tenantName(nextTask, tenants)} / {formatDue(nextTask.due_date)}
+            </span>
+          </Link>
+        ) : (
+          <p className="mt-2 text-xs text-green-300">No open task pressure showing.</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SignalStrip({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: string | number
+  detail: string
+}) {
+  return (
+    <div className="rounded-lg border border-[#2A2D35]/80 bg-[#0D0D0F] px-4 py-3">
+      <p className="text-[10px] font-condensed font-semibold uppercase tracking-widest text-[#6B7280]">{label}</p>
+      <p className="mt-2 text-xl font-condensed font-bold uppercase leading-none text-white">{value}</p>
+      <p className="mt-1 text-[11px] leading-relaxed text-[#9CA3AF]">{detail}</p>
+    </div>
+  )
+}
+
 function EmptyState({ label }: { label: string }) {
   return <p className="px-2 py-6 text-center text-xs text-[#6B7280]">{label}</p>
 }
@@ -167,10 +266,14 @@ function TaskRow({
   task,
   owner,
   tenants,
+  compact = false,
+  showActions = true,
 }: {
   task: ByredTask
   owner?: TeamMember | null
   tenants: Map<string, { name: string; color?: string | null }>
+  compact?: boolean
+  showActions?: boolean
 }) {
   const color = tenants.get(task.tenant_id)?.color ?? "#D7261E"
 
@@ -200,12 +303,14 @@ function TaskRow({
               </span>
             )}
           </div>
-          {task.blocker_reason && (
+          {!compact && task.blocker_reason && (
             <p className="mt-2 text-[10px] text-red-400 line-clamp-2">Blocker: {task.blocker_reason}</p>
           )}
-          <div className="mt-3 border-t border-[#2A2D35]/50 pt-2">
-            <MyDashboardTaskActions taskId={task.id} status={task.status} blockerFlag={task.blocker_flag} />
-          </div>
+          {showActions && (
+            <div className="mt-3 border-t border-[#2A2D35]/50 pt-2">
+              <MyDashboardTaskActions taskId={task.id} status={task.status} blockerFlag={task.blocker_flag} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -257,13 +362,13 @@ export default async function MyDashboardPage() {
   const teamById = new Map(team.map((member) => [member.id, member]))
 
   const myTasks = tasks.filter((task) => task.owner_user_id === profileId).sort(sortForAction(today))
-  const doFirst = myTasks.slice(0, 5)
+  const doFirst = myTasks.slice(0, 3)
   const myBlocked = myTasks.filter((task) => task.blocker_flag || task.status === "blocked")
   const myCritical = myTasks.filter((task) => task.priority === "critical")
   const myHighRevenue = myTasks.filter((task) => (task.revenue_impact_score ?? 0) >= 7)
   const myDueOrOverdue = myTasks.filter((task) => isDueToday(task, today) || isOverdue(task, today))
 
-  const decisionQueue = tasks
+  const decisionQueueAll = tasks
     .filter((task) =>
       task.owner_user_id === profileId
       || task.blocker_flag
@@ -271,21 +376,26 @@ export default async function MyDashboardPage() {
       || task.priority === "critical"
     )
     .sort(sortForAction(today))
-    .slice(0, 8)
+  const decisionQueue = decisionQueueAll.slice(0, 4)
 
-  const teamWatchlist = tasks
+  const teamWatchlistAll = tasks
     .filter((task) =>
       task.owner_user_id !== profileId
       && !!task.owner_user_id
       && (task.blocker_flag || task.status === "blocked" || task.priority === "critical" || isOverdue(task, today))
     )
     .sort(sortForAction(today))
-    .slice(0, 8)
+  const teamWatchlist = teamWatchlistAll.slice(0, 5)
 
-  const unassigned = tasks
+  const unassignedAll = tasks
     .filter((task) => !task.owner_user_id)
     .sort(sortForAction(today))
-    .slice(0, 8)
+  const unassigned = unassignedAll.slice(0, 4)
+
+  const focusProjectCards = focusProjects.map((project) => ({
+    project,
+    tasks: tasks.filter((task) => isFocusProjectTask(task, tenantMap, project)).sort(sortForAction(today)),
+  }))
 
   const projectLanes = Array.from(
     myTasks.reduce((map, task) => {
@@ -294,10 +404,11 @@ export default async function MyDashboardPage() {
       map.set(task.tenant_id, list)
       return map
     }, new Map<string, ByredTask[]>())
-  ).sort((a, b) => b[1].length - a[1].length)
+  ).sort((a, b) => b[1].length - a[1].length).slice(0, 4)
 
   const primaryMove = doFirst[0]
   const proofRule = receipts[0]
+  const visibleTaskRows = doFirst.length + decisionQueue.length + teamWatchlist.length + unassigned.length + projectLanes.reduce((count, [, laneTasks]) => count + Math.min(laneTasks.length, 2), 0)
 
   return (
     <div className="max-w-7xl space-y-6">
@@ -310,13 +421,26 @@ export default async function MyDashboardPage() {
             My Dashboard
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-[#9CA3AF]">
-            Your personal lane for owned work, PM decisions, team risk, and verified web-app agent learning.
+            Your personal lane for active projects, proof-backed PM decisions, and the few tasks that need attention now.
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-[#6B7280]">
           <ShieldCheck className="w-4 h-4 text-[#D7261E]" strokeWidth={1.75} />
-          Web-app receipts + universal mindset only
+          Verified receipts + universal mindset only
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+        {focusProjectCards.map(({ project, tasks: projectTasks }) => (
+          <FocusProjectCard key={project.title} project={project} tasks={projectTasks} tenants={tenantMap} />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <SignalStrip label="Visible task load" value={visibleTaskRows} detail="Dashboard rows shown after priority trimming." />
+        <SignalStrip label="Hidden for calm" value={Math.max(tasks.length - visibleTaskRows, 0)} detail="Still searchable in Tasks, not dumped here." />
+        <SignalStrip label="Active focus" value="3 projects" detail="Authentic Hadith, Amina, and BeautyByRed LLC." />
+        <SignalStrip label="Proof trail" value={receipts.length} detail="Verified receipts available for agent learning." />
       </div>
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
@@ -342,7 +466,7 @@ export default async function MyDashboardPage() {
         />
         <CommandCard
           label="Decision Pressure"
-          value={`${decisionQueue.length} items need PM attention`}
+          value={`${decisionQueueAll.length} items need PM attention`}
           detail="Use this to separate your decision work from normal execution work."
           icon={Lightbulb}
         />
@@ -384,9 +508,14 @@ export default async function MyDashboardPage() {
                       <span className="text-[10px] text-[#6B7280]">{laneTasks.length} open</span>
                     </div>
                     <div className="space-y-2">
-                      {laneTasks.slice(0, 3).map((task) => (
-                        <TaskRow key={task.id} task={task} owner={teamById.get(task.owner_user_id ?? "")} tenants={tenantMap} />
+                      {laneTasks.slice(0, 2).map((task) => (
+                        <TaskRow key={task.id} task={task} owner={teamById.get(task.owner_user_id ?? "")} tenants={tenantMap} compact showActions={false} />
                       ))}
+                      {laneTasks.length > 2 && (
+                        <Link href="/os/tasks" className="block rounded-md border border-[#2A2D35]/60 px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] hover:border-[#3A3D46] hover:text-white">
+                          View {laneTasks.length - 2} more in Tasks
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -398,11 +527,11 @@ export default async function MyDashboardPage() {
         </div>
 
         <div className="space-y-5">
-          <Section title="Decision Queue" subtitle="PM attention inferred from current task signals" icon={Lightbulb}>
+          <Section title="Decision Queue" subtitle={`${decisionQueueAll.length} total; showing the top ${decisionQueue.length}`} icon={Lightbulb}>
             <div className="space-y-2">
               {decisionQueue.length > 0 ? (
                 decisionQueue.map((task) => (
-                  <TaskRow key={task.id} task={task} owner={teamById.get(task.owner_user_id ?? "")} tenants={tenantMap} />
+                  <TaskRow key={task.id} task={task} owner={teamById.get(task.owner_user_id ?? "")} tenants={tenantMap} compact />
                 ))
               ) : (
                 <EmptyState label="No decision pressure showing right now." />
@@ -410,7 +539,7 @@ export default async function MyDashboardPage() {
             </div>
           </Section>
 
-          <Section title="Agent Learning" subtitle="Verified web-app receipts plus universal mindset" icon={Brain}>
+          <Section title="Agent Learning" subtitle="Verified OS receipts plus universal mindset" icon={Brain}>
             {receipts.length > 0 ? (
               <div className="space-y-2">
                 {receipts.map((receipt) => (
@@ -427,18 +556,18 @@ export default async function MyDashboardPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState label="No verified web-app receipts yet." />
+              <EmptyState label="No verified OS receipts yet." />
             )}
           </Section>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-        <Section title="Team Watchlist" subtitle="Non-KP work that can still affect your lane" icon={Users}>
+        <Section title="Team Watchlist" subtitle={`${teamWatchlistAll.length} total risks; showing the top ${teamWatchlist.length}`} icon={Users}>
           <div className="space-y-2">
             {teamWatchlist.length > 0 ? (
               teamWatchlist.map((task) => (
-                <TaskRow key={task.id} task={task} owner={teamById.get(task.owner_user_id ?? "")} tenants={tenantMap} />
+                <TaskRow key={task.id} task={task} owner={teamById.get(task.owner_user_id ?? "")} tenants={tenantMap} compact showActions={false} />
               ))
             ) : (
               <EmptyState label="No high-risk team tasks found." />
@@ -446,11 +575,11 @@ export default async function MyDashboardPage() {
           </div>
         </Section>
 
-        <Section title="Unassigned Intake" subtitle="Open work that needs an owner" icon={CircleDashed}>
+        <Section title="Unassigned Intake" subtitle={`${unassignedAll.length} total; showing the top ${unassigned.length}`} icon={CircleDashed}>
           <div className="space-y-2">
             {unassigned.length > 0 ? (
               unassigned.map((task) => (
-                <TaskRow key={task.id} task={task} tenants={tenantMap} />
+                <TaskRow key={task.id} task={task} tenants={tenantMap} compact />
               ))
             ) : (
               <EmptyState label="No unassigned open tasks found." />
