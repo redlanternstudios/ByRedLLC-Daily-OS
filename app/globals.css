@@ -315,6 +315,63 @@
 .os-panel          { background-color: #18181B; }
 .os-border         { border-color: rgba(255,255,255,0.07); }
 
+/* Codex-style readability pass for the authenticated OS shell.
+   Keeps the dense command surface, but removes tiny uppercase microtext. */
+.os-readable {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.os-readable .font-condensed {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.os-readable .uppercase {
+  text-transform: none;
+}
+
+.os-readable .tracking-wide,
+.os-readable .tracking-wider,
+.os-readable .tracking-widest,
+.os-readable .tracking-\[0\.35em\] {
+  letter-spacing: 0;
+}
+
+.os-readable .text-\[8px\],
+.os-readable .text-\[9px\] {
+  font-size: 11px;
+  line-height: 1rem;
+}
+
+.os-readable .text-\[10px\] {
+  font-size: 12px;
+  line-height: 1.05rem;
+}
+
+.os-readable .text-\[11px\],
+.os-readable .text-xs {
+  font-size: 13px;
+  line-height: 1.25rem;
+}
+
+.os-readable .text-sm {
+  font-size: 15px;
+  line-height: 1.45rem;
+}
+
+.os-readable .text-base {
+  font-size: 16px;
+  line-height: 1.5rem;
+}
+
+.os-readable input,
+.os-readable textarea,
+.os-readable select,
+.os-readable button {
+  font-family: inherit;
+}
+
 /* Subtle white fill used for hover states inside dark OS panels */
 .hover\:bg-white\/3:hover  { background-color: rgba(255,255,255,0.03); }
 .bg-white\/8               { background-color: rgba(255,255,255,0.08); }
