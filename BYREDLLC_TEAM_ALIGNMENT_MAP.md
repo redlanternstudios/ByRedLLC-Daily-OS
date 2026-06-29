@@ -36,7 +36,8 @@ These lanes are the starting map, not a final legal or HR roster.
 Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
 
 - Active tasks: 279.
-- Unassigned active tasks: 43.
+- Initial unassigned active tasks: 43.
+- Current verified unassigned active tasks after cleanup: 0.
 - Rory active tasks: 133.
 - Rory critical tasks: 36.
 - Rory overdue tasks: 83.
@@ -53,16 +54,31 @@ Live audit source: `byred_users`, `byred_tenants`, and `byred_tasks`.
 ## Cleanup Order
 
 1. Confirm real operators versus test or duplicate accounts.
-2. Review unassigned tasks and route each to assign, cancel, block for KP, or backlog.
-3. Reduce Rory overload by cancelling stale work, moving lane-correct work, and escalating L2 tasks.
-4. Keep KP's My Dashboard focused on PM decisions, critical revenue work, and proof gates.
-5. Log verified receipts for each material alignment pass.
+2. Reduce Rory overload by cancelling stale work, moving lane-correct work, and escalating L2 tasks.
+3. Keep KP's My Dashboard focused on PM decisions, critical revenue work, and proof gates.
+4. Log verified receipts for each material alignment pass.
+
+## Completed Intake Cleanup
+
+- Cancelled 5 stale Team Pulse 2022 tasks.
+- Routed 5 L2/legal/spend tasks to KP as blocked.
+- Routed 4 Davier/Muf AI Front Desk tasks to KP as blocked because those named operators did not have verified OS user rows.
+- Routed 6 Paradise field/service tasks to Basheer.
+- Routed 12 Paradise ops/vendor/admin tasks to Homira.
+- Routed 5 technical proof tasks to Rory.
+- Routed 6 authority or unclear tasks to KP as blocked.
+- Closed `c37f2313-71e9-4af6-aa85-415add291884` after live read-back confirmed active unassigned tasks were 0.
 
 ## Receipt
 
 - OS agent receipt: `d3e3e5b5-fa40-4db5-90d8-a81f05cb5ba0`.
 - Main task comment: `f4b85540-bb39-409b-98d4-a8a029415219`.
 - Main task activity: `e531900c-8eba-4598-800e-6a7acab60191`.
+- Unassigned cleanup receipts:
+  - `1f777712-79df-4fbc-9390-6b35bbe665b9`
+  - `0b6ce7d9-71a4-48e7-869b-3e62f8bb7bc4`
+  - `7ea1ec7d-0fe7-4850-8248-82871e526693`
+  - `583388fb-e21f-41fa-ae53-43c2917eb628`
 
 ## Undo Path
 
