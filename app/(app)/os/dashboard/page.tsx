@@ -32,14 +32,14 @@ function StatCard({
   return (
     <Link
       href={href}
-      className="flex items-center gap-4 p-4 rounded-lg bg-[#111318] border border-[#2A2D35] hover:border-[#2A2D35]/80 hover:bg-[#1A1D24] transition-all group"
+      className="flex min-h-24 items-center gap-4 rounded-lg border border-[#2A2D35] bg-[#111318] p-4 transition-colors hover:border-[#3A3D46] hover:bg-[#1A1D24] group"
     >
       <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", accent)}>
         <Icon className="w-5 h-5" strokeWidth={1.75} />
       </div>
-      <div>
-        <p className="text-3xl font-bold text-[#D7261E] font-condensed leading-none tabular-nums">{value}</p>
-        <p className="text-[11px] text-[#6B7280] mt-1 uppercase tracking-wider font-condensed">{label}</p>
+      <div className="min-w-0">
+        <p className="text-3xl font-bold text-[#D7261E] leading-none tabular-nums">{value}</p>
+        <p className="mt-1 text-sm font-medium leading-snug text-[#9CA3AF]">{label}</p>
       </div>
       <ArrowRight className="w-4 h-4 text-[#6B7280] ml-auto group-hover:text-[#D7261E] transition-colors" strokeWidth={1.75} />
     </Link>
@@ -103,16 +103,16 @@ export default async function OSDashboardPage() {
   return (
     <div className="space-y-8 max-w-6xl">
       {/* Header */}
-      <div className="flex items-end justify-between border-b border-white/[0.06] pb-5">
-        <div>
-          <p className="text-[10px] font-condensed font-semibold tracking-widest text-[#D7261E]/70 uppercase mb-1">
+      <div className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="mb-1 text-sm font-medium leading-snug text-[#9CA3AF]">
             By Red, LLC. — Internal Operations
           </p>
-          <h1 className="text-3xl font-bold text-white font-condensed tracking-tight uppercase">
+          <h1 className="text-2xl font-bold leading-tight text-white">
             Command Center
           </h1>
         </div>
-        <p className="text-xs text-[#6B7280] font-condensed tabular-nums">
+        <p className="shrink-0 text-sm leading-snug text-[#6B7280] tabular-nums">
           {new Date().toLocaleDateString("en-US", {
             weekday: "short", month: "short", day: "numeric", year: "numeric",
           })}
@@ -157,11 +157,11 @@ export default async function OSDashboardPage() {
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#2A2D35] bg-[#1A1D24]/40">
             <div className="flex items-center gap-2">
               <FolderKanban className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
-              <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Active Work</span>
+              <span className="text-sm font-semibold leading-snug text-white">Active Work</span>
             </div>
             <Link
               href="/os/tasks"
-              className="text-[10px] text-[#6B7280] hover:text-[#9CA3AF] transition-colors flex items-center gap-1 font-condensed uppercase tracking-wider"
+              className="flex items-center gap-1 text-sm leading-snug text-[#6B7280] transition-colors hover:text-[#9CA3AF]"
             >
               All tasks <ArrowRight className="w-3 h-3" />
             </Link>
@@ -180,14 +180,14 @@ export default async function OSDashboardPage() {
                   className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.03] transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
+                    <div className="mb-2 flex min-w-0 flex-wrap items-center gap-2">
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: group.color }}
                       />
-                      <p className="text-sm font-medium text-white truncate">{group.name}</p>
+                      <p className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-white">{group.name}</p>
                       {group.criticalCount > 0 && (
-                        <span className="text-[9px] font-bold text-red-400 bg-red-950 border border-red-800/50 px-1.5 py-0.5 rounded uppercase tracking-wide">
+                        <span className="shrink-0 rounded border border-red-800/50 bg-red-950 px-2 py-0.5 text-xs font-semibold leading-none text-red-400">
                           {group.criticalCount} critical
                         </span>
                       )}
@@ -199,7 +199,7 @@ export default async function OSDashboardPage() {
                           style={{ width: `${group.pct}%`, backgroundColor: group.color }}
                         />
                       </div>
-                      <span className="text-xs text-[#9CA3AF] shrink-0 tabular-nums">
+                      <span className="shrink-0 text-sm text-[#9CA3AF] tabular-nums">
                         {group.done}/{group.total}
                       </span>
                     </div>
@@ -217,15 +217,15 @@ export default async function OSDashboardPage() {
           <div className="rounded-lg bg-[#111318] border border-[#2A2D35] overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-[#2A2D35] bg-white/[0.02]">
               <AlertTriangle className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
-              <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Blockers</span>
+              <span className="text-sm font-semibold leading-snug text-white">Blockers</span>
               {blockedTasks.length > 0 && (
-                <span className="ml-auto text-[10px] font-bold text-[#D7261E] bg-[#D7261E]/10 border border-[#D7261E]/30 px-1.5 py-0.5 rounded">
+                <span className="ml-auto rounded border border-[#D7261E]/30 bg-[#D7261E]/10 px-2 py-0.5 text-xs font-bold leading-none text-[#D7261E]">
                   {blockedTasks.length}
                 </span>
               )}
             </div>
             {blockedTasks.length === 0 ? (
-              <p className="text-xs text-[#6B7280] px-4 py-4">No active blockers.</p>
+              <p className="px-4 py-4 text-sm text-[#6B7280]">No active blockers.</p>
             ) : (
               <div className="divide-y divide-[#2A2D35]/40">
                 {blockedTasks.slice(0, 4).map((task) => (
@@ -236,9 +236,9 @@ export default async function OSDashboardPage() {
                   >
                     <CheckSquare className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" strokeWidth={1.75} />
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-white truncate">{task.title}</p>
+                      <p className="truncate text-sm font-medium leading-snug text-white">{task.title}</p>
                       {task.blocker_reason && (
-                        <p className="text-[10px] text-[#6B7280] truncate mt-0.5">{task.blocker_reason}</p>
+                        <p className="mt-0.5 truncate text-xs leading-snug text-[#6B7280]">{task.blocker_reason}</p>
                       )}
                     </div>
                   </Link>
@@ -251,26 +251,26 @@ export default async function OSDashboardPage() {
           <div className="rounded-lg bg-[#111318] border border-[#2A2D35] overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-[#2A2D35] bg-white/[0.02]">
               <Users className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
-              <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Team</span>
+              <span className="text-sm font-semibold leading-snug text-white">Team</span>
             </div>
             <div className="px-4 py-3 space-y-2.5">
               {team.slice(0, 5).map((member) => (
                 <div key={member.id} className="flex items-center gap-2.5">
-                  <OSAvatar name={member.name} size="sm" />
+                  <OSAvatar name={member.name} avatarUrl={member.avatar_url} size="sm" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-[#9CA3AF] truncate">{member.name}</p>
-                    <p className="text-[10px] text-[#6B7280]">
+                    <p className="truncate text-sm font-medium leading-snug text-[#9CA3AF]">{member.name}</p>
+                    <p className="text-xs leading-snug text-[#6B7280]">
                       {taskCountByOwner[member.id] ?? 0} tasks
                     </p>
                   </div>
                 </div>
               ))}
               {team.length === 0 && (
-                <p className="text-xs text-[#6B7280] py-2">No team members found.</p>
+                <p className="py-2 text-sm text-[#6B7280]">No team members found.</p>
               )}
             </div>
             <div className="px-4 py-2 border-t border-[#2A2D35]">
-              <Link href="/os/team" className="text-xs text-[#9CA3AF] hover:text-[#9CA3AF] transition-colors">
+              <Link href="/os/team" className="text-sm text-[#9CA3AF] transition-colors hover:text-white">
                 View team
               </Link>
             </div>
@@ -283,11 +283,11 @@ export default async function OSDashboardPage() {
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#2A2D35] bg-white/[0.02]">
           <div className="flex items-center gap-2">
             <CheckSquare className="w-3.5 h-3.5 text-[#D7261E]" strokeWidth={1.75} />
-            <span className="text-xs font-semibold text-white font-condensed uppercase tracking-wider">Recent Tasks</span>
+            <span className="text-sm font-semibold leading-snug text-white">Recent Tasks</span>
           </div>
           <Link
             href="/os/tasks"
-            className="text-[10px] text-[#6B7280] hover:text-zinc-400 transition-colors flex items-center gap-1 font-condensed uppercase tracking-wider"
+            className="flex items-center gap-1 text-sm leading-snug text-[#6B7280] transition-colors hover:text-[#9CA3AF]"
           >
             All tasks <ArrowRight className="w-3 h-3" />
           </Link>
@@ -302,11 +302,11 @@ export default async function OSDashboardPage() {
               <Link
                 key={task.id}
                 href={`/os/tasks/${task.id}`}
-                className="flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] transition-colors group"
+                className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-white/[0.03] group"
               >
                 <div className="flex-1 min-w-0 flex items-center gap-3">
                   <OSStatusBadge status={task.status ?? "not_started"} taskId={task.id} />
-                  <span className="text-sm text-white truncate group-hover:text-white transition-colors">
+                  <span className="truncate text-sm font-medium leading-snug text-white transition-colors group-hover:text-white">
                     {task.title}
                   </span>
                   {task.blocker_flag && (
