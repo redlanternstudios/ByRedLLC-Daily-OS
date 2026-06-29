@@ -37,7 +37,9 @@ function expandRecurring(evt: FakeEvent, rangeFrom: Date, rangeTo: Date): FakeEv
 
   const results: FakeEvent[] = []
   const durationMs = new Date(evt.ends_at).getTime() - new Date(evt.starts_at).getTime()
-  const recEnd = evt.recurrence_end ? new Date(evt.recurrence_end) : rangeTo
+  const recEnd = evt.recurrence_end
+    ? new Date(evt.recurrence_end.includes("T") ? evt.recurrence_end : `${evt.recurrence_end}T23:59:59.999Z`)
+    : rangeTo
 
   let cursor = new Date(evt.starts_at)
 

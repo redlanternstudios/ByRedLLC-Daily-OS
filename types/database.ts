@@ -527,6 +527,86 @@ export type Database = {
         }
         Relationships: []
       }
+      os_agent_receipts: {
+        Row: {
+          agent_family: string
+          created_at: string
+          created_by_user_id: string | null
+          framework_scope: string
+          id: string
+          lesson: string
+          proof_url_or_path: string
+          receipt_type: string
+          related_project_id: string | null
+          related_task_id: string | null
+          source_surface: string
+          summary: string
+          tenant_id: string
+          verification_status: string
+        }
+        Insert: {
+          agent_family?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          framework_scope?: string
+          id?: string
+          lesson: string
+          proof_url_or_path: string
+          receipt_type: string
+          related_project_id?: string | null
+          related_task_id?: string | null
+          source_surface: string
+          summary: string
+          tenant_id: string
+          verification_status?: string
+        }
+        Update: {
+          agent_family?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          framework_scope?: string
+          id?: string
+          lesson?: string
+          proof_url_or_path?: string
+          receipt_type?: string
+          related_project_id?: string | null
+          related_task_id?: string | null
+          source_surface?: string
+          summary?: string
+          tenant_id?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_agent_receipts_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_agent_receipts_related_project_id_fkey"
+            columns: ["related_project_id"]
+            isOneToOne: false
+            referencedRelation: "os_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_agent_receipts_related_task_id_fkey"
+            columns: ["related_task_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_agent_receipts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -575,6 +655,10 @@ export type ByredActivityUpdate = Database["public"]["Tables"]["byred_activities
 export type ByredDailyBrief = Database["public"]["Tables"]["byred_daily_briefs"]["Row"]
 export type ByredDailyBriefInsert = Database["public"]["Tables"]["byred_daily_briefs"]["Insert"]
 export type ByredDailyBriefUpdate = Database["public"]["Tables"]["byred_daily_briefs"]["Update"]
+
+export type OsAgentReceipt = Database["public"]["Tables"]["os_agent_receipts"]["Row"]
+export type OsAgentReceiptInsert = Database["public"]["Tables"]["os_agent_receipts"]["Insert"]
+export type OsAgentReceiptUpdate = Database["public"]["Tables"]["os_agent_receipts"]["Update"]
 
 // Daily brief summary structure
 export type DailyBriefSummary = {

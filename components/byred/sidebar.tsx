@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
+  UserRoundCheck,
   FolderKanban,
   Trello,
   ListTodo,
@@ -51,6 +52,7 @@ const NAV_GROUPS = [
     items: [
       { label: "Home",     href: "/os/dashboard", icon: LayoutDashboard },
       { label: "Today",    href: "/os/today",     icon: Flame },
+      { label: "My Dashboard", href: "/os/my-dashboard", icon: UserRoundCheck },
       { label: "Tasks",    href: "/os/tasks",     icon: ListTodo },
       { label: "Calendar", href: "/os/calendar",  icon: Calendar },
     ],

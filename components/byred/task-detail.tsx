@@ -47,16 +47,17 @@ import { TaskComments } from "@/components/byred/task-comments"
 import { useUser } from "@/lib/context/user-context"
 import type { Task, Activity } from "@/types/db"
 
-function ScoreBar({ value }: { value: number }) {
+function ScoreBar({ value }: { value: number | null }) {
+  const score = value ?? 0
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
         <div
           className="h-full bg-byred-red rounded-full transition-all"
-          style={{ width: `${(value / 10) * 100}%` }}
+          style={{ width: `${(score / 10) * 100}%` }}
         />
       </div>
-      <span className="text-xs text-[#9CA3AF] font-mono w-4">{value}</span>
+      <span className="text-xs text-[#9CA3AF] font-mono w-4">{score}</span>
     </div>
   )
 }
@@ -84,10 +85,12 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
   const [title, setTitle] = useState(task.title)
   const [editingTitle, setEditingTitle] = useState(false)
-  const [blockerFlag, setBlockerFlag] = useState(task.blocker_flag)
+  const [blockerFlag, setBlockerFlag] = useState(task.blocker_flag ?? false)
   const [aiResult, setAiResult] = useState<AiActionResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [status, setStatus] = useState(task.status ?? "not_started")
+  const estimatedMinutes = task.estimated_minutes ?? 0
+  const createdAt = task.created_at ?? new Date().toISOString()
   const [priority, setPriority] = useState(task.priority ?? "medium")
   const [aiMode, setAiMode] = useState<string>(task.ai_mode ?? "HUMAN_ONLY")
   const [blockerReason, setBlockerReason] = useState(task.blocker_reason ?? "")
@@ -242,30 +245,12 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               <dl className="space-y-3 text-sm">
-<<<<<<< HEAD
-                {task.monday_item_id && (
-                  <div className="flex justify-between">
-                    <dt className="text-[#9CA3AF]">Monday ID</dt>
-                    <dd>
-                      <a
-                        href={`https://monday.com/boards/item/${task.monday_item_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-mono text-byred-red hover:underline"
-                      >
-                        {task.monday_item_id}
-                      </a>
-                    </dd>
-                  </div>
-                )}
-=======
->>>>>>> 056da98e8e407109a23c9bb5b8bfa50b5384980c
                 <div className="flex justify-between">
                   <dt className="text-[#9CA3AF]">Estimated</dt>
                   <dd className="text-[#6B7280] font-mono text-xs">
-                    {task.estimated_minutes < 60
-                      ? `${task.estimated_minutes}m`
-                      : `${Math.floor(task.estimated_minutes / 60)}h ${task.estimated_minutes % 60 > 0 ? `${task.estimated_minutes % 60}m` : ""}`}
+                    {estimatedMinutes < 60
+                      ? `${estimatedMinutes}m`
+                      : `${Math.floor(estimatedMinutes / 60)}h ${estimatedMinutes % 60 > 0 ? `${estimatedMinutes % 60}m` : ""}`}
                   </dd>
                 </div>
                 <div>
@@ -303,9 +288,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                   <dt className="text-[#9CA3AF]">Created</dt>
                   <dd
                     className="text-xs text-[#9CA3AF] font-mono"
-                    title={format(parseISO(task.created_at), "PPpp")}
+                    title={format(parseISO(createdAt), "PPpp")}
                   >
-                    {formatDistanceToNow(parseISO(task.created_at), {
+                    {formatDistanceToNow(parseISO(createdAt), {
                       addSuffix: true,
                     })}
                   </dd>
