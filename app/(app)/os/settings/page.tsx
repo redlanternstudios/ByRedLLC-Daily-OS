@@ -1,12 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
-  CheckCircle, XCircle, LogOut, AlertTriangle, User, Cpu, Plug, Building2
+  CheckCircle, XCircle, LogOut, AlertTriangle, User, Cpu, Plug, Building2,
+  Camera, Trash2,
 } from "lucide-react"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
-import { signOutAction, updateProfileAction } from "@/app/(app)/settings/actions"
+import {
+  removeProfilePhotoAction,
+  signOutAction,
+  updateProfileAction,
+  updateProfilePhotoAction,
+} from "@/app/(app)/settings/actions"
 import { cn } from "@/lib/utils"
 
 const AI_MODES = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"] as const
@@ -54,17 +61,27 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 export default function OSSettingsPage() {
+  const router = useRouter()
   const currentUser = useUser()
   const activeTenant = useActiveTenant()
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [fullName, setFullName] = useState(currentUser?.profile?.name ?? "")
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.profile?.avatar_url ?? null)
   const [aiMode, setAiMode] = useState<string>("HUMAN_ONLY")
   const [saving, setSaving] = useState(false)
   const [editingName, setEditingName] = useState(false)
+  const [photoPending, startPhotoTransition] = useTransition()
 
   const userEmail = currentUser?.profile?.email ?? currentUser?.authUser?.email ?? ""
   const userRole = currentUser?.profile?.role ?? "member"
   const tenants = currentUser?.tenants ?? []
+  const initials = (fullName || userEmail || "User")
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
 
   async function handleSaveName() {
     setSaving(true)
@@ -77,7 +94,41 @@ export default function OSSettingsPage() {
     } else {
       toast.success("Name updated.")
       setEditingName(false)
+      router.refresh()
     }
+  }
+
+  function handlePhotoSelected(file: File | undefined) {
+    if (!file) return
+
+    const fd = new FormData()
+    fd.append("avatar", file)
+
+    startPhotoTransition(async () => {
+      const result = await updateProfilePhotoAction(fd)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      setAvatarUrl(result.avatarUrl ?? null)
+      toast.success("Profile picture updated.")
+      router.refresh()
+    })
+  }
+
+  function handleRemovePhoto() {
+    startPhotoTransition(async () => {
+      const result = await removeProfilePhotoAction()
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      setAvatarUrl(null)
+      toast.success("Profile picture removed.")
+      router.refresh()
+    })
   }
 
   async function handleSignOut() {
@@ -94,6 +145,56 @@ export default function OSSettingsPage() {
 
       {/* Profile */}
       <Section icon={User} title="Profile">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-[#2A2D35]">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-14 h-14 rounded-full bg-[#D7261E]/20 border border-[#D7261E]/30 overflow-hidden flex items-center justify-center shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-bold text-[#D7261E]">{initials}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-white truncate">{fullName || userEmail}</p>
+              <p className="text-[11px] text-[#6B7280]">JPG, PNG, or WebP · 5 MB max</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(event) => handlePhotoSelected(event.target.files?.[0])}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={photoPending}
+              className="w-8 h-8 rounded-lg border border-[#2A2D35] text-[#9CA3AF] hover:text-white hover:border-[#9CA3AF]/60 disabled:opacity-50 flex items-center justify-center transition-colors"
+              aria-label="Upload profile picture"
+              title="Upload profile picture"
+            >
+              <Camera className="w-4 h-4" strokeWidth={1.75} />
+            </button>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                disabled={photoPending}
+                className="w-8 h-8 rounded-lg border border-[#2A2D35] text-[#9CA3AF] hover:text-red-300 hover:border-red-900/60 disabled:opacity-50 flex items-center justify-center transition-colors"
+                aria-label="Remove profile picture"
+                title="Remove profile picture"
+              >
+                <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+              </button>
+            )}
+          </div>
+        </div>
         <Row label="Full name">
           {editingName ? (
             <div className="flex items-center gap-2">
