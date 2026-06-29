@@ -31,20 +31,31 @@ type OSAvatarProps = {
   userId?: string | null
   /** Explicit name override — used when you already have the name (e.g. comment join) */
   fallbackName?: string
+  /** Explicit photo override — used when joined rows already include avatar_url */
+  avatarUrl?: string | null
   /** Legacy: pass a name directly (no lookup). Still supported for non-user contexts. */
   name?: string
   size?: "xs" | "sm" | "md"
   className?: string
 }
 
-export function OSAvatar({ userId, fallbackName, name, size = "sm", className }: OSAvatarProps) {
+export function OSAvatar({ userId, fallbackName, avatarUrl, name, size = "sm", className }: OSAvatarProps) {
   const user = useUser()
 
   // Resolve display name: userId lookup > fallbackName > name prop > "?"
   let displayName = name ?? fallbackName ?? "?"
+  let resolvedAvatarUrl = avatarUrl ?? null
   if (userId && user?.directory) {
-    const entry = user.directory.find((d) => d.id === userId)
-    if (entry) displayName = entry.name
+    if (user.profile?.id === userId) {
+      displayName = user.profile.name
+      resolvedAvatarUrl = resolvedAvatarUrl ?? user.profile.avatar_url
+    } else {
+      const entry = user.directory.find((d) => d.id === userId)
+      if (entry) {
+        displayName = entry.name
+        resolvedAvatarUrl = resolvedAvatarUrl ?? entry.avatar_url ?? null
+      }
+    }
   }
 
   const initials = getInitials(displayName)
@@ -59,13 +70,17 @@ export function OSAvatar({ userId, fallbackName, name, size = "sm", className }:
     <div
       title={displayName !== "?" ? displayName : undefined}
       className={cn(
-        "rounded-full flex items-center justify-center font-semibold shrink-0 border border-white/5",
-        colorFromName(displayName),
+        "rounded-full flex items-center justify-center font-semibold shrink-0 border border-white/5 overflow-hidden",
+        resolvedAvatarUrl ? "bg-[#111318] text-white" : colorFromName(displayName),
         sizeClass,
         className
       )}
     >
-      {initials}
+      {resolvedAvatarUrl ? (
+        <img src={resolvedAvatarUrl} alt="" className="w-full h-full object-cover" />
+      ) : (
+        initials
+      )}
     </div>
   )
 }

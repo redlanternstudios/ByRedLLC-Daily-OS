@@ -101,6 +101,7 @@ export function AppTopbar() {
   // User display info
   const displayName =
     currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
+  const avatarUrl = currentUser?.profile?.avatar_url ?? null
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
@@ -266,12 +267,16 @@ export function AppTopbar() {
         {/* Avatar — links to OS settings */}
         <Link
           href="/os/settings"
-          className="w-7 h-7 rounded-full bg-[#D7261E]/20 border border-[#D7261E]/30 flex items-center justify-center cursor-pointer hover:border-[#D7261E]/50 transition-colors"
+          className="w-7 h-7 rounded-full bg-[#D7261E]/20 border border-[#D7261E]/30 flex items-center justify-center cursor-pointer hover:border-[#D7261E]/50 transition-colors overflow-hidden"
           aria-label="User settings"
         >
-          <span className="text-xs font-semibold text-[#D7261E]">
-            {initials}
-          </span>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xs font-semibold text-[#D7261E]">
+              {initials}
+            </span>
+          )}
         </Link>
       </div>
     </header>
