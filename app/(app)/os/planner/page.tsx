@@ -18,8 +18,9 @@ type Story = {
   acceptance_criteria: string[]; definition_of_done: string[]
   priority: "critical" | "high" | "medium" | "low"; estimate_minutes: number
   capability: Capability; capability_reason: string; assignee_name?: string
+  issue_type?: string; story_points?: number; start_date?: string; labels?: string[]
 }
-type Plan = { project_name: string; project_summary: string; epics: { name: string; goal: string; stories: Story[] }[] }
+type Plan = { project_name: string; project_summary: string; project_overview?: string; epics: { name: string; goal: string; stories: Story[] }[] }
 type Mode = "HUMAN_ONLY" | "AI_DRAFT" | "AI_EXECUTE"
 type Sel = { on: boolean; mode: Mode }
 
@@ -84,9 +85,10 @@ export default function PlannerPage() {
       const k = sel[keyOf(ei, si)]; if (!k || !k.on) return
       items.push({ epic_name: e.name, title: s.title, user_story: s.user_story, description: s.description,
         acceptance_criteria: s.acceptance_criteria, definition_of_done: s.definition_of_done,
-        priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name })
+        priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name,
+        issue_type: s.issue_type, story_points: s.story_points, start_date: s.start_date, labels: s.labels })
     }))
-    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, items })
+    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, project_overview: plan!.project_overview, items })
     setCreated(j); setStep("done")
   })
 
@@ -199,7 +201,9 @@ export default function PlannerPage() {
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-sm text-white font-medium">{s.title}</p>
                             <div className="flex items-center gap-2 shrink-0">
+                              {s.issue_type && <span className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">{s.issue_type}</span>}
                               <span className="text-[10px] font-semibold" style={{ color: prio[s.priority] }}>{s.priority}</span>
+                              {s.story_points != null && <span className="text-[10px] text-[#D1D5DB] font-mono">{s.story_points}pt</span>}
                               <span className="text-[10px] text-[#6B7280]">{s.estimate_minutes}m</span>
                               {s.assignee_name && <span className="text-[10px] text-[#9CA3AF]">· {s.assignee_name}</span>}
                             </div>
