@@ -35,15 +35,20 @@ export async function GET(_req: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { data: tasks } = await sa
-    .from("byred_tasks")
-    .select("id, title, status, priority, tenant_id, owner_user_id, due_date, start_date, blocker_flag, blocked_by_task_id, estimated_minutes, ai_mode, epic, order_index, issue_type, story_points, labels")
-    .eq("project_id", id)
-    .neq("status", "cancelled")
-    .order("epic", { ascending: true })
-    .order("order_index", { ascending: true })
+  const [{ data: tasks }, { data: sprints }] = await Promise.all([
+    sa.from("byred_tasks")
+      .select("id, title, status, priority, tenant_id, owner_user_id, due_date, start_date, blocker_flag, blocked_by_task_id, estimated_minutes, ai_mode, epic, order_index, issue_type, story_points, labels, sprint_id")
+      .eq("project_id", id)
+      .neq("status", "cancelled")
+      .order("epic", { ascending: true })
+      .order("order_index", { ascending: true }),
+    sa.from("os_sprints")
+      .select("id, name, goal, status, start_date, end_date")
+      .eq("project_id", id)
+      .order("created_at", { ascending: true }),
+  ])
 
-  return NextResponse.json({ project, tasks: tasks ?? [] })
+  return NextResponse.json({ project, tasks: tasks ?? [], sprints: sprints ?? [] })
 }
 
 /** PATCH /api/os/projects/[id] — edit project fields (overview, name, status), tenant-scoped. */

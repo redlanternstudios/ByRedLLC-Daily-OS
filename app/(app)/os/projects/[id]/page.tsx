@@ -4,7 +4,7 @@ import { use, useRef, useState } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import ReactMarkdown from "react-markdown"
-import { ArrowLeft, Clock, AlertTriangle, GitMerge, Loader2, AlertCircle, Bot, PencilLine, LayoutGrid, Table2, GanttChartSquare, FileText, Check, X } from "lucide-react"
+import { ArrowLeft, Clock, AlertTriangle, GitMerge, Loader2, AlertCircle, Bot, PencilLine, LayoutGrid, Table2, GanttChartSquare, FileText, Check, X, Rocket, Plus } from "lucide-react"
 import { OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { cn } from "@/lib/utils"
@@ -15,9 +15,11 @@ type Task = {
   blocker_flag: boolean; blocked_by_task_id: string | null; estimated_minutes: number
   ai_mode: string; epic: string | null; order_index: number
   issue_type: string | null; story_points: number | null; labels: string[] | null
+  sprint_id: string | null
 }
 type Project = { id: string; name: string; description: string | null; overview: string | null; status: string; tenant_id: string }
 type Member = { id: string; name: string }
+type Sprint = { id: string; name: string; goal: string | null; status: string; start_date: string | null; end_date: string | null }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -41,6 +43,7 @@ const TABS = [
   { id: "overview", label: "Overview", icon: FileText },
   { id: "board", label: "Board", icon: LayoutGrid },
   { id: "table", label: "Table", icon: Table2 },
+  { id: "sprints", label: "Sprints", icon: Rocket },
   { id: "timeline", label: "Timeline", icon: GanttChartSquare },
 ] as const
 type TabId = (typeof TABS)[number]["id"]
@@ -82,7 +85,7 @@ function TaskCard({ task, onDragStart, isDragging }: { task: Task; onDragStart: 
 
 export default function ProjectBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { data, isLoading, error, mutate } = useSWR<{ project: Project; tasks: Task[] }>(`/api/os/projects/${id}`, fetcher)
+  const { data, isLoading, error, mutate } = useSWR<{ project: Project; tasks: Task[]; sprints: Sprint[] }>(`/api/os/projects/${id}`, fetcher)
   const { data: memberData } = useSWR<{ members: Member[] }>("/api/os/members", fetcher)
   const members = memberData?.members ?? []
 
@@ -104,6 +107,21 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
     if (!task || task.status === targetStatus) return
     await patchTask(tid, { status: targetStatus })
   }
+  async function createSprint() {
+    const n = (data?.sprints.length ?? 0) + 1
+    const start = new Date(); const end = new Date(Date.now() + 14 * 86400000)
+    const iso = (d: Date) => d.toISOString().slice(0, 10)
+    await fetch("/api/os/sprints", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_id: id, name: `Sprint ${n}`, start_date: iso(start), end_date: iso(end) }),
+    })
+    mutate()
+  }
+  async function patchSprint(sprintId: string, fields: Record<string, unknown>) {
+    mutate((prev) => prev ? { ...prev, sprints: prev.sprints.map((s) => s.id === sprintId ? { ...s, ...fields } : s) } : prev, false)
+    await fetch(`/api/os/sprints/${sprintId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fields) })
+    mutate()
+  }
   async function saveOverview() {
     mutate((prev) => prev ? { ...prev, project: { ...prev.project, overview: overviewDraft } } : prev, false)
     setEditingOverview(false)
@@ -113,7 +131,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" /></div>
   if (error || !data?.project) return <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-red-950/40 border border-red-800/40 text-red-400 text-sm"><AlertCircle className="w-4 h-4 shrink-0" /> Failed to load this project.</div>
 
-  const { project, tasks } = data
+  const { project, tasks, sprints } = data
   const total = tasks.length
   const done = tasks.filter((t) => t.status === "done").length
   const pct = total ? Math.round((done / total) * 100) : 0
@@ -253,10 +271,88 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
         </div>
       )}
 
+      {/* SPRINTS — backlog + sprints with assign, velocity, burndown */}
+      {tab === "sprints" && (
+        <SprintsView tasks={tasks} sprints={sprints} onCreate={createSprint}
+          onAssign={(taskId, sprintId) => patchTask(taskId, { sprint_id: sprintId })}
+          onSprintStatus={(sid, status) => patchSprint(sid, { status })} />
+      )}
+
       {/* TIMELINE — lightweight bars from start_date → due_date */}
       {tab === "timeline" && <Timeline tasks={tasks} epics={epics} byEpic={byEpic} />}
 
       {total === 0 && tab !== "overview" && <p className="text-sm text-[#9CA3AF]">No tasks in this project yet.</p>}
+    </div>
+  )
+}
+
+function SprintRows({ rows, sprints, onAssign }: { rows: Task[]; sprints: Sprint[]; onAssign: (taskId: string, sprintId: string | null) => void }) {
+  if (rows.length === 0) return <p className="text-[11px] text-[#6B7280] px-1 py-2">No tasks here.</p>
+  return (
+    <div className="space-y-1">
+      {rows.map((t) => (
+        <div key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded bg-[#1A1D24] border border-[#2A2D35]/60">
+          <TypeBadge type={t.issue_type} />
+          <Link href={`/os/tasks/${t.id}`} className="flex-1 min-w-0 text-xs text-white truncate hover:underline">{t.title}</Link>
+          {t.story_points != null && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#2A2D35] text-[#D1D5DB] font-mono">{t.story_points}</span>}
+          {t.owner_user_id && <OSAvatar userId={t.owner_user_id} size="xs" />}
+          <select value={t.sprint_id ?? ""} onChange={(e) => onAssign(t.id, e.target.value || null)} className="bg-transparent border border-[#2A2D35] rounded px-1.5 py-1 text-[10px] text-[#9CA3AF] max-w-[110px]">
+            <option value="" className="bg-[#1A1D24]">Backlog</option>
+            {sprints.map((s) => <option key={s.id} value={s.id} className="bg-[#1A1D24]">{s.name}</option>)}
+          </select>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SprintsView({ tasks, sprints, onCreate, onAssign, onSprintStatus }: {
+  tasks: Task[]; sprints: Sprint[]
+  onCreate: () => void
+  onAssign: (taskId: string, sprintId: string | null) => void
+  onSprintStatus: (sprintId: string, status: string) => void
+}) {
+  const backlog = tasks.filter((t) => !t.sprint_id)
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button onClick={onCreate} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs text-[#9CA3AF] hover:text-white"><Plus className="w-3.5 h-3.5" /> New sprint</button>
+      </div>
+
+      {sprints.map((sprint) => {
+        const st = tasks.filter((t) => t.sprint_id === sprint.id)
+        const totalPts = st.reduce((s, t) => s + (t.story_points ?? 0), 0)
+        const donePts = st.filter((t) => t.status === "done").reduce((s, t) => s + (t.story_points ?? 0), 0)
+        const pct = totalPts ? Math.round((donePts / totalPts) * 100) : 0
+        const statusColor = sprint.status === "active" ? "#4ADE80" : sprint.status === "completed" ? "#9CA3AF" : "#FBBF24"
+        return (
+          <div key={sprint.id} className="rounded-xl border border-[#2A2D35] bg-[#0E0F13]/40 p-4">
+            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Rocket className="w-4 h-4 text-[#D92532]" />
+                <span className="text-sm font-semibold text-white">{sprint.name}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium uppercase" style={{ color: statusColor, backgroundColor: `${statusColor}1f` }}>{sprint.status}</span>
+                {sprint.start_date && <span className="text-[10px] text-[#6B7280]">{sprint.start_date} → {sprint.end_date ?? "?"}</span>}
+              </div>
+              <div className="flex items-center gap-2">
+                {sprint.status === "planned" && <button onClick={() => onSprintStatus(sprint.id, "active")} className="px-2 py-1 rounded bg-green-900/40 border border-green-700/50 text-[10px] text-green-300">Start</button>}
+                {sprint.status === "active" && <button onClick={() => onSprintStatus(sprint.id, "completed")} className="px-2 py-1 rounded bg-[#1A1D24] border border-[#2A2D35] text-[10px] text-[#9CA3AF]">Complete</button>}
+              </div>
+            </div>
+            {/* velocity + burndown */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-1.5 flex-1 max-w-xs bg-[#1A1D24] rounded-full overflow-hidden"><div className="h-full bg-green-500 rounded-full" style={{ width: `${pct}%` }} /></div>
+              <span className="text-[10px] text-[#9CA3AF] font-mono">{donePts}/{totalPts} pts done · {st.length} tasks · {totalPts - donePts} pts left</span>
+            </div>
+            <SprintRows rows={st} sprints={sprints} onAssign={onAssign} />
+          </div>
+        )
+      })}
+
+      <div className="rounded-xl border border-dashed border-[#2A2D35] bg-transparent p-4">
+        <div className="flex items-center gap-2 mb-2"><span className="text-sm font-semibold text-[#9CA3AF]">Backlog</span><span className="text-[10px] text-[#6B7280] font-mono">{backlog.length}</span></div>
+        <SprintRows rows={backlog} sprints={sprints} onAssign={onAssign} />
+      </div>
     </div>
   )
 }
