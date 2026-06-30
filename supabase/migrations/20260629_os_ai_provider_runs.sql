@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS os_ai_provider_runs (
   id                           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at                   timestamptz NOT NULL DEFAULT now(),
   created_by_user_id           uuid        REFERENCES byred_users(id) ON DELETE SET NULL,
-  tenant_id                    uuid        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
+  tenant_id                    text        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
   provider                     text        NOT NULL CHECK (provider IN ('groq','gemini','deepseek','glm','anthropic','codex')),
   model                        text        NOT NULL CHECK (length(trim(model)) > 0),
   lane                         text        NOT NULL CHECK (lane IN ('operator','fast_brief','visual_context','code_review','agentic_engineering')),

@@ -6,7 +6,7 @@
 
 CREATE TABLE IF NOT EXISTS os_calendar_events (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id            uuid        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
+  tenant_id            text        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
   project_id           uuid        REFERENCES os_projects(id) ON DELETE SET NULL,
   board_id             uuid        REFERENCES os_boards(id) ON DELETE SET NULL,
   task_id              uuid        REFERENCES os_tasks(id) ON DELETE SET NULL,
