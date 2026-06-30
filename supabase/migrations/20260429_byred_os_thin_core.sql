@@ -7,7 +7,7 @@
 -- ─── os_projects ─────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS os_projects (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id            uuid        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
+  tenant_id            text        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
   name                 text        NOT NULL CHECK (length(trim(name)) > 0),
   description          text,
   status               text        NOT NULL DEFAULT 'active'
@@ -43,7 +43,7 @@ CREATE POLICY "Authenticated users can update projects"
 CREATE TABLE IF NOT EXISTS os_boards (
   id                   uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id           uuid        REFERENCES os_projects(id) ON DELETE CASCADE,
-  tenant_id            uuid        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
+  tenant_id            text        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
   name                 text        NOT NULL CHECK (length(trim(name)) > 0),
   description          text,
   board_type           text        NOT NULL DEFAULT 'kanban'
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS os_tasks (
   board_id             uuid        REFERENCES os_boards(id) ON DELETE SET NULL,
   phase_id             uuid        REFERENCES os_phases(id) ON DELETE SET NULL,
   project_id           uuid        REFERENCES os_projects(id) ON DELETE SET NULL,
-  tenant_id            uuid        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
+  tenant_id            text        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
   title                text        NOT NULL CHECK (length(trim(title)) > 0),
   description          text,
   status               text        NOT NULL DEFAULT 'not_started'

@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS os_agent_receipts (
   id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at            timestamptz NOT NULL DEFAULT now(),
   created_by_user_id    uuid        REFERENCES byred_users(id) ON DELETE SET NULL,
-  tenant_id             uuid        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
+  tenant_id             text        NOT NULL REFERENCES byred_tenants(id) ON DELETE RESTRICT,
   receipt_type          text        NOT NULL CHECK (receipt_type IN ('feature','task','bug','verification','decision','lesson')),
   source_surface        text        NOT NULL CHECK (length(trim(source_surface)) > 0),
   agent_family          text        NOT NULL DEFAULT 'web_app' CHECK (agent_family IN ('web_app','ios','ops','comms','sales','universal')),
