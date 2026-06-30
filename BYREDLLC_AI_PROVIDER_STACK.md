@@ -16,9 +16,9 @@ This ByRedLLC file is a project adapter. It defines how ByRedLLC consumes the sh
 
 ## ByRedLLC Operating Rule
 
-Gemini, DeepSeek, and Groq are complementary intelligence providers for ByRedLLC OS. They must improve planning, feature review, UI critique, code reasoning, brief generation, and test design without becoming required dependencies for normal OS work.
+Gemini, DeepSeek, GLM, and Groq are complementary intelligence providers for ByRedLLC OS. They must improve planning, feature review, UI critique, code reasoning, brief generation, and test design without becoming required dependencies for normal OS work.
 
-Core flows that must work without Gemini, DeepSeek, or Groq:
+Core flows that must work without Gemini, DeepSeek, GLM, or Groq:
 
 - Sign in and tenant-scoped OS navigation
 - My Dashboard, Tasks, Projects, Today, and Team Pulse data views
@@ -34,6 +34,7 @@ Core flows that must work without Gemini, DeepSeek, or Groq:
 | Groq | Open-weight speed lane | Fast daily briefs, task triage, repeatable summaries | Briefs can degrade without blocking task data |
 | Gemini | Complement | Multimodal review, screenshots, large context, dashboard UX critique | Optional only |
 | DeepSeek | Complement | Code reasoning, implementation options, cost-aware second-pass review | Optional only |
+| GLM / Z.AI | Complement | Agentic engineering, 1M-token context, controlled reasoning effort | Optional only |
 
 ## Verified Model Defaults
 
@@ -42,6 +43,7 @@ Core flows that must work without Gemini, DeepSeek, or Groq:
 | Groq | `GROQ_MODEL` | `openai/gpt-oss-120b` | Groq deprecation docs recommend it as the replacement for `llama-3.3-70b-versatile`, which shuts down on 2026-08-16. |
 | Gemini | `GEMINI_MODEL` | `gemini-2.5-flash` | Google model docs list `gemini-2.5-flash` for large-scale, low-latency, high-volume agentic use cases. |
 | DeepSeek | `DEEPSEEK_MODEL` | `deepseek-v4-flash` | DeepSeek docs list `deepseek-v4-flash` and note `deepseek-chat` retires on 2026-07-24. |
+| GLM / Z.AI | `GLM_MODEL` | `glm-5.2` | Z.AI docs list `glm-5.2` as the latest GLM model, strongest for coding, with 1M context and `reasoning_effort` control. |
 
 ## Environment
 
@@ -56,8 +58,10 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 DEEPSEEK_API_KEY=
 DEEPSEEK_MODEL=deepseek-v4-flash
+ZAI_API_KEY=
+GLM_MODEL=glm-5.2
 GROQ_MODEL=openai/gpt-oss-120b
-OS_AI_COMPLEMENTARY_PROVIDERS=gemini,deepseek
+OS_AI_COMPLEMENTARY_PROVIDERS=gemini,deepseek,glm
 ```
 
 ## Verification Surface
@@ -76,7 +80,7 @@ Authenticated read-only advisor endpoint:
 /api/os/ai/advisor
 ```
 
-This endpoint lets DeepSeek produce implementation plans, bug hypotheses, test plans, and code-review notes from verified OS receipts. It cannot mutate data, close tasks, deploy, send email, or mark work complete.
+This endpoint lets DeepSeek or GLM produce implementation plans, bug hypotheses, test plans, and code-review notes from verified OS receipts. It cannot mutate data, close tasks, deploy, send email, or mark work complete.
 
 ## Agent Learning Boundary
 

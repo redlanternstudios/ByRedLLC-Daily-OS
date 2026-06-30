@@ -1,8 +1,8 @@
 import "server-only"
 
-export type OsAiProviderId = "anthropic" | "groq" | "gemini" | "deepseek"
+export type OsAiProviderId = "anthropic" | "groq" | "gemini" | "deepseek" | "glm"
 export type OsAiProviderRole = "primary" | "complement" | "fallback"
-export type OsAiProviderLane = "operator" | "fast_brief" | "visual_context" | "code_review"
+export type OsAiProviderLane = "operator" | "fast_brief" | "visual_context" | "code_review" | "agentic_engineering"
 
 export type OsAiProviderConfig = {
   id: OsAiProviderId
@@ -23,6 +23,7 @@ const DEFAULT_MODELS: Record<OsAiProviderId, string> = {
   groq: "openai/gpt-oss-120b",
   gemini: "gemini-2.5-flash",
   deepseek: "deepseek-v4-flash",
+  glm: "glm-5.2",
 }
 
 const PROVIDER_META: Record<OsAiProviderId, Omit<OsAiProviderConfig, "role" | "configured" | "model">> = {
@@ -66,6 +67,16 @@ const PROVIDER_META: Record<OsAiProviderId, Omit<OsAiProviderConfig, "role" | "c
     failureMode: "Code-review assistance is disabled; existing Codex/GitHub flow remains intact.",
     verificationRule: "Use for implementation plans, bug hypotheses, and second-pass reviews; Codex executes and verifies.",
   },
+  glm: {
+    id: "glm",
+    label: "GLM / Z.AI",
+    lane: "agentic_engineering",
+    envKey: "ZAI_API_KEY",
+    mutationAllowed: false,
+    strengths: ["long-horizon agentic engineering", "large-context code reasoning", "controlled reasoning effort"],
+    failureMode: "GLM advisor assistance is disabled; Codex and other configured providers continue working.",
+    verificationRule: "Use for long-context implementation strategy and agentic engineering review; Codex executes and verifies.",
+  },
 }
 
 function hasValue(value: string | undefined) {
@@ -73,7 +84,7 @@ function hasValue(value: string | undefined) {
 }
 
 function parseProviderList(value: string | undefined): OsAiProviderId[] {
-  if (!value) return ["gemini", "deepseek"]
+  if (!value) return ["gemini", "deepseek", "glm"]
 
   return value
     .split(",")
@@ -117,6 +128,10 @@ export function getGroqModel() {
 
 export function getDeepSeekModel() {
   return modelFor("deepseek")
+}
+
+export function getGlmModel() {
+  return modelFor("glm")
 }
 
 export function getProviderStatusForClient() {

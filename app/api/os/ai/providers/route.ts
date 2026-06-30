@@ -12,7 +12,7 @@ export async function GET() {
 
   return NextResponse.json({
     mode: "optional_complementary_providers",
-    dependency_rule: "Core OS task, dashboard, and receipt flows must work without Gemini, DeepSeek, or Groq configured.",
+    dependency_rule: "Core OS task, dashboard, and receipt flows must work without Gemini, DeepSeek, GLM, or Groq configured.",
     authority_rule: "Complementary providers advise only. Codex executes, verifies, and records receipts.",
     providers: getProviderStatusForClient(),
     verified_receipt_rule: "Feature agents can use only verified OS receipts as reusable learning context.",
