@@ -37,6 +37,19 @@ Reusable solution patterns. Recipes need proof and a clear lane.
 - Proof bundle: `BYREDLLC_OPERATING_RECEIPT.md` 19:53 PT.
 - Reuse when: KP asks for a lighter, more professional dashboard or operating cockpit.
 
+### RECIPE: Clickable Monthly Project Drilldown
+- Problem: project cards need to show the clear task list for the current month without sending KP away from My Dashboard.
+- Minimal pattern:
+  1. Keep project matching and task bucketing server-side against `byred_tasks`.
+  2. Pass compact serializable project summaries into one client component.
+  3. Make project cards selectable buttons, not separate command centers.
+  4. Split selected-project work into `Needs Attention`, `Due In [Month]`, and `Unscheduled Backlog`.
+  5. Put overdue, blocked, or blocker-flagged tasks in the attention lane before normal monthly work.
+  6. Keep every task row linked to its task detail page for full execution context.
+  7. Pull the UI through Codex's in-app browser for visual/click proof whenever the bridge is available.
+- Proof bundle: `BYREDLLC_OPERATING_RECEIPT.md` 20:32 PT.
+- Reuse when: KP asks to click a project, business lane, or product sector and see month-specific work.
+
 ## Provider-Team Recipes
 
 ### RECIPE: Provider Team Before Codex Execution

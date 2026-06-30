@@ -85,6 +85,20 @@ Latest local verification before merge:
 
 ## AI Provider Router Receipt
 
+Latest verified: 2026-06-29 20:32 PT
+
+- `SAAS TEAM MODE` used for `/os/my-dashboard` monthly project drilldown work.
+- User-visible implementation: Project Sector cards now behave as selectable dashboard controls and feed an inline monthly project panel for `Authentic Hadith`, `Amina`, and `BeautyByRed LLC`.
+- Monthly panel structure: `Needs Attention` for overdue/blocked/blocker-flagged tasks, `Due In [Month]` for remaining open tasks due in the current calendar month, and `Unscheduled Backlog` for open matched tasks without due dates.
+- Source of truth preserved: project matching and monthly task bucketing are built server-side from `byred_tasks`; no new API route, no database migration, and no competing project/task system were introduced.
+- Code surfaces changed: `app/(app)/os/my-dashboard/page.tsx`, `components/byred/os/project-month-drilldown.tsx`, and `next.config.mjs`.
+- Learning-loop capture: added the dashboard UX lesson to `learning-loop/LEARNING_LEDGER.md` and reusable recipe to `learning-loop/RECIPES.md`.
+- Verification: `pnpm exec tsc --noEmit --pretty false` passed; `pnpm build` passed.
+- Local server recovery note: existing port `3000` process stopped responding to `curl`; the stale listener was stopped and a fresh `pnpm dev` server started on `http://localhost:3000`.
+- UI proof standard: KP explicitly set UI work to be pulled through Codex's in-app browser first whenever available.
+- Browser proof: signed-in Codex in-app browser loaded `http://127.0.0.1:3000/os/my-dashboard`, rendered `Salam Alaikum, Keymon.`, `Project Sectors`, and `Monthly Project View`; clicking the `Amina` project card changed the selected panel heading to `Amina / June 2026`; relevant browser logs had no app errors.
+- Responsive proof: temporary 390x844 Codex browser viewport rendered the monthly project view with 3 project buttons and no horizontal overflow; selected panel proof showed `Amina / June 2026` and no horizontal overflow.
+
 Latest verified: 2026-06-29 20:04 PT
 
 - GitHub save receipt: committed dashboard/provider/learning-loop work to `main` with commit `4da8215` (`Add SaaS team dashboard learning loop`) and pushed to `https://github.com/redlanternstudios/ByRedLLC-Daily-OS.git`.

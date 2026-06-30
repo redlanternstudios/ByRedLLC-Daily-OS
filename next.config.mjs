@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: ["127.0.0.1"],
   // Do not let a single TypeScript/ESLint slip from rapid v0 edits block a
   // production deploy. Type errors are still surfaced locally + in PR checks.
   eslint: { ignoreDuringBuilds: true },

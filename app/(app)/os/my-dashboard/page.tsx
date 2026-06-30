@@ -22,6 +22,7 @@ import { requireAuth } from "@/lib/auth"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSPriorityBadge, OSStatusBadge } from "@/components/byred/os/os-badge"
 import { MyDashboardTaskActions } from "@/components/byred/os/my-dashboard-task-actions"
+import { ProjectMonthDrilldown, type DashboardProjectSummary, type DashboardProjectTask } from "@/components/byred/os/project-month-drilldown"
 import type { ByredTask, OsAgentReceipt } from "@/types/database"
 
 type TeamMember = {
@@ -120,6 +121,25 @@ function formatDue(value: string | null) {
   return new Date(`${due}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
+function dateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function currentMonthWindow(date: Date) {
+  const start = new Date(date.getFullYear(), date.getMonth(), 1)
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+  const label = date.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+  return { start: dateKey(start), end: dateKey(end), label }
+}
+
+function isDueInRange(task: ByredTask, start: string, end: string) {
+  const due = dateOnly(task.due_date)
+  return !!due && due >= start && due <= end
+}
+
 function tenantName(task: ByredTask, tenants: Map<string, { name: string; color?: string | null }>) {
   return tenants.get(task.tenant_id)?.name ?? "Workspace"
 }
@@ -127,6 +147,32 @@ function tenantName(task: ByredTask, tenants: Map<string, { name: string; color?
 function isFocusProjectTask(task: ByredTask, tenants: Map<string, { name: string; color?: string | null }>, project: FocusProject) {
   const haystack = `${tenantName(task, tenants)} ${task.title} ${task.description ?? ""}`
   return project.match.test(haystack)
+}
+
+function toDashboardProjectTask(
+  task: ByredTask,
+  tenants: Map<string, { name: string; color?: string | null }>,
+  teamById: Map<string, TeamMember>,
+): DashboardProjectTask {
+  const owner = task.owner_user_id ? teamById.get(task.owner_user_id) : null
+
+  return {
+    id: task.id,
+    title: task.title,
+    status: task.status,
+    priority: task.priority,
+    dueLabel: formatDue(task.due_date),
+    tenantName: tenantName(task, tenants),
+    tenantColor: tenants.get(task.tenant_id)?.color ?? "#9A6A12",
+    owner: owner
+      ? {
+          id: owner.id,
+          name: owner.name,
+          avatarUrl: owner.avatar_url,
+        }
+      : null,
+    blockerReason: task.blocker_reason,
+  }
 }
 
 function Section({
@@ -270,62 +316,6 @@ function OperatingOrderCard({
   )
 }
 
-function FocusProjectCard({
-  project,
-  tasks,
-  tenants,
-}: {
-  project: FocusProject
-  tasks: ByredTask[]
-  tenants: Map<string, { name: string; color?: string | null }>
-}) {
-  const blockedCount = tasks.filter((task) => task.blocker_flag || task.status === "blocked").length
-  const nextTask = tasks[0]
-
-  return (
-    <div className="rounded-lg border border-[#E3D7BC] border-t-4 bg-white p-4 shadow-sm" style={{ borderTopColor: project.accent }}>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span
-              className="rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-wider"
-              style={{ borderColor: `${project.accent}66`, color: project.accent }}
-            >
-              {project.sector}
-            </span>
-            <span className="text-[10px] font-condensed font-semibold uppercase tracking-widest text-[#8A610F]">
-              {project.status}
-            </span>
-          </div>
-          <h2 className="mt-1 truncate text-lg font-condensed font-bold uppercase tracking-tight text-[#171717]">
-            {project.title}
-          </h2>
-        </div>
-        <span className="rounded-full border border-[#E3D7BC] bg-[#FBF7ED] px-2 py-1 text-[10px] font-semibold text-[#5F5A51]">
-          {tasks.length} open
-        </span>
-      </div>
-      <p className="min-h-10 text-xs leading-relaxed text-[#5F5A51]">{project.detail}</p>
-      <div className="mt-4 rounded-md border border-[#E8DEC7] bg-[#FBF7ED] p-3">
-        <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-wider text-[#6B6254]">
-          <span>Current signal</span>
-          <span>{blockedCount} blocked</span>
-        </div>
-        {nextTask ? (
-          <Link href={`/os/tasks/${nextTask.id}`} className="mt-2 block text-xs font-medium leading-snug text-[#171717] line-clamp-2 hover:text-[#8A610F]">
-            {nextTask.title}
-            <span className="ml-2 text-[10px] font-normal text-[#6B6254]">
-              {tenantName(nextTask, tenants)} / {formatDue(nextTask.due_date)}
-            </span>
-          </Link>
-        ) : (
-          <p className="mt-2 text-xs text-[#8A610F]">No open task pressure showing.</p>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function SignalStrip({
   label,
   value,
@@ -410,7 +400,9 @@ export default async function MyDashboardPage() {
   const profileId = user.profile?.id ?? null
   const tenantIds = user.tenants.map((tenant) => tenant.id)
   const tenantMap = new Map(user.tenants.map((tenant) => [tenant.id, { name: tenant.name, color: tenant.color }]))
-  const today = new Date().toISOString().split("T")[0]
+  const now = new Date()
+  const today = dateKey(now)
+  const monthWindow = currentMonthWindow(now)
 
   if (!profileId || tenantIds.length === 0) {
     return (
@@ -478,10 +470,30 @@ export default async function MyDashboardPage() {
     .sort(sortForAction(today))
   const unassigned = unassignedAll.slice(0, 4)
 
-  const focusProjectCards = focusProjects.map((project) => ({
-    project,
-    tasks: tasks.filter((task) => isFocusProjectTask(task, tenantMap, project)).sort(sortForAction(today)),
-  }))
+  const focusProjectCards: DashboardProjectSummary[] = focusProjects.map((project) => {
+    const projectTasks = tasks.filter((task) => isFocusProjectTask(task, tenantMap, project)).sort(sortForAction(today))
+    const attentionTasks = projectTasks.filter((task) => isOverdue(task, today) || task.blocker_flag || task.status === "blocked")
+    const attentionIds = new Set(attentionTasks.map((task) => task.id))
+    const monthTasks = projectTasks.filter((task) => !attentionIds.has(task.id) && isDueInRange(task, monthWindow.start, monthWindow.end))
+    const unscheduledTasks = projectTasks.filter((task) => !attentionIds.has(task.id) && !dateOnly(task.due_date))
+    const blockedCount = projectTasks.filter((task) => task.blocker_flag || task.status === "blocked").length
+    const monthCount = projectTasks.filter((task) => isDueInRange(task, monthWindow.start, monthWindow.end)).length
+
+    return {
+      id: project.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      title: project.title,
+      sector: project.sector,
+      status: project.status,
+      detail: project.detail,
+      accent: project.accent,
+      openCount: projectTasks.length,
+      blockedCount,
+      monthCount,
+      attentionTasks: attentionTasks.map((task) => toDashboardProjectTask(task, tenantMap, teamById)),
+      monthTasks: monthTasks.map((task) => toDashboardProjectTask(task, tenantMap, teamById)),
+      unscheduledTasks: unscheduledTasks.map((task) => toDashboardProjectTask(task, tenantMap, teamById)),
+    }
+  })
 
   const projectLanes = Array.from(
     myTasks.reduce((map, task) => {
@@ -618,13 +630,9 @@ export default async function MyDashboardPage() {
         <DashboardSectionHeader
           eyebrow="Project Sectors"
           title="Separate businesses and product lanes"
-          detail="Each card is labeled by sector first, then project name, so the work lanes do not depend on color alone."
+          detail="Click a project to see the tasks due this month, the work that needs attention, and the backlog that still needs a date."
         />
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-          {focusProjectCards.map(({ project, tasks: projectTasks }) => (
-            <FocusProjectCard key={project.title} project={project} tasks={projectTasks} tenants={tenantMap} />
-          ))}
-        </div>
+        <ProjectMonthDrilldown projects={focusProjectCards} monthLabel={monthWindow.label} />
       </div>
 
       <div className="space-y-3">
