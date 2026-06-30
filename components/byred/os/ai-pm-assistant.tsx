@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { AlertTriangle, Brain, CheckCircle2, ClipboardList, Lightbulb, Loader2, ShieldCheck, Target } from "lucide-react"
+import { AlertTriangle, Brain, CheckCircle2, ClipboardList, Lightbulb, Loader2, Send, ShieldCheck, Target } from "lucide-react"
 
 export type AiPmTaskSignal = {
   title: string
@@ -68,7 +68,16 @@ type AiPmAssistantProps = {
   context: AiPmDashboardContext
 }
 
-const actions = [
+type AiPmAction = {
+  id: string
+  label: string
+  detail: string
+  icon: typeof ClipboardList
+  purpose: string
+  prompt: string
+}
+
+const actions: AiPmAction[] = [
   {
     id: "month-plan",
     label: "Plan Month",
@@ -101,7 +110,7 @@ const actions = [
     purpose: "implementation_plan",
     prompt: "Operate as Keymon's enterprise PM assistant inside My Dashboard. Convert the dashboard direction into board-ready tasks. For each task specify project lane, owner/routing, priority, due timing, definition of done, proof requirement, blocker dependency, and whether KP approval is required.",
   },
-] as const
+]
 
 const aiPmOperatingContract = {
   identity: "Keymon's embedded AI PM inside ByRedLLC My Dashboard",
@@ -289,117 +298,130 @@ function ResultPanel({ result }: { result: AdvisorResult }) {
   const blockedDecisions = cleanList(result.blocked_decisions)
   const delegationPlan = cleanList(result.delegation_plan)
   const kpQuestions = cleanList(result.questions_for_kp)
+  const actionStack = priorityStack.slice(0, 3)
+  const firstAction = actionStack[0]
+  const decisionText = kpQuestions[0] ?? blockedDecisions[0]
 
   return (
-    <div className="rounded-lg border border-[#D7B85E] bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center gap-2">
-        <CheckCircle2 className="h-4 w-4 text-[#8A610F]" strokeWidth={1.75} />
-        <p className="text-[10px] font-condensed font-semibold uppercase tracking-widest text-[#8A610F]">
-          AI PM Readout
-        </p>
-      </div>
-      <div className="space-y-3">
-        {(result.executive_summary || result.operating_mode) && (
-          <div className="rounded-md border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B6254]">
-              {result.operating_mode ?? "PM Mode"}
-            </p>
-            {result.executive_summary && (
-              <p className="mt-1 text-sm leading-relaxed text-[#3F3A32]">{result.executive_summary}</p>
-            )}
-          </div>
-        )}
-        <div>
-          <h3 className="text-sm font-semibold text-[#171717]">Recommendation</h3>
-          <p className="mt-1 text-sm leading-relaxed text-[#3F3A32]">
-            {result.recommendation ?? "No recommendation returned."}
-          </p>
+    <div className="rounded-lg border border-[#D7B85E] bg-white shadow-sm">
+      <div className="flex items-center gap-2 border-b border-[#E8DEC7] bg-[#FCFAF5] px-4 py-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#D7B85E] bg-white">
+          <Brain className="h-3.5 w-3.5 text-[#8A610F]" strokeWidth={1.75} />
         </div>
-        {priorityStack.length > 0 && (
+        <div className="min-w-0">
+          <p className="text-[10px] font-condensed font-semibold uppercase tracking-widest text-[#8A610F]">AI PM</p>
+          <p className="truncate text-xs font-semibold text-[#171717]">{result.operating_mode ?? "Dashboard answer"}</p>
+        </div>
+        {typeof result.confidence_score === "number" && (
+          <span className="ml-auto rounded-full border border-[#E3D7BC] bg-white px-2 py-1 text-[10px] font-semibold text-[#6B6254]">
+            {Math.round(result.confidence_score * 100)}%
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-4 p-4">
+        <div className="max-w-3xl rounded-lg rounded-tl-sm bg-[#F7F3EA] px-4 py-3">
+          {result.executive_summary && (
+            <p className="mb-2 text-sm font-semibold leading-relaxed text-[#171717]">{result.executive_summary}</p>
+          )}
+          {firstAction?.title ? (
+            <div className="rounded-md border border-[#E8DEC7] bg-white px-3 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">First move</p>
+              <p className="mt-1 text-sm font-semibold leading-snug text-[#171717]">{firstAction.title}</p>
+              {firstAction.why && <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{firstAction.why}</p>}
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed text-[#3F3A32]">
+              {result.recommendation ?? "No recommendation returned."}
+            </p>
+          )}
+        </div>
+
+        {actionStack.length > 0 && (
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Priority Stack</h3>
-            <div className="mt-2 grid gap-2">
-              {priorityStack.map((item, index) => (
-                <div key={`${item.lane ?? "lane"}-${index}`} className="rounded-md border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">{item.lane ?? "Lane"}</p>
-                  {item.title && <p className="mt-1 text-xs font-semibold leading-snug text-[#171717]">{item.title}</p>}
-                  {item.why && <p className="mt-1 text-[10px] leading-relaxed text-[#5F5A51]">{item.why}</p>}
+            <div className="mb-2 flex items-center gap-2">
+              <CheckCircle2 className="h-3.5 w-3.5 text-[#8A610F]" strokeWidth={1.75} />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Next sequence</h3>
+            </div>
+            <div className="space-y-2">
+              {actionStack.map((item, index) => (
+                <div key={`${item.lane ?? "lane"}-${index}`} className="flex gap-3 rounded-md border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-2">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#171717] text-[10px] font-bold text-white">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">{item.lane ?? "Move"}</p>
+                    {item.title && <p className="mt-0.5 text-xs font-semibold leading-snug text-[#171717]">{item.title}</p>}
+                    {item.why && <p className="mt-1 text-[10px] leading-relaxed text-[#5F5A51]">{item.why}</p>}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
-        {result.reasoning_summary && (
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Why</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{result.reasoning_summary}</p>
+
+        {decisionText && (
+          <div className="rounded-md border border-[#D7B85E] bg-[#FFFCF2] px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">Needs your call</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#3F3A32]">{decisionText}</p>
           </div>
         )}
-        {blockedDecisions.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Blocked Decisions</h3>
-            <ul className="mt-1 space-y-1">
-              {blockedDecisions.map((item) => (
-                <li key={item} className="text-xs leading-relaxed text-[#5F5A51]">{item}</li>
-              ))}
-            </ul>
+
+        <details className="group rounded-md border border-[#E8DEC7] bg-white">
+          <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-[#6B6254] transition hover:text-[#171717]">
+            Show PM details
+          </summary>
+          <div className="space-y-3 border-t border-[#E8DEC7] px-3 py-3">
+            {result.recommendation && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Full PM read</h3>
+                <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{result.recommendation}</p>
+              </div>
+            )}
+            {result.reasoning_summary && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Why</h3>
+                <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{result.reasoning_summary}</p>
+              </div>
+            )}
+            {delegationPlan.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Delegation</h3>
+                <ul className="mt-1 space-y-1">
+                  {delegationPlan.map((item) => (
+                    <li key={item} className="text-xs leading-relaxed text-[#5F5A51]">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {risks.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Risks</h3>
+                <ul className="mt-1 space-y-1">
+                  {risks.map((risk) => (
+                    <li key={risk} className="text-xs leading-relaxed text-[#5F5A51]">{risk}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {proof.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Proof</h3>
+                <ul className="mt-1 space-y-1">
+                  {proof.map((step) => (
+                    <li key={step} className="text-xs leading-relaxed text-[#5F5A51]">{step}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {blocked.length > 0 && (
+              <div className="rounded-md border border-[#E8DEC7] bg-[#FBF7ED] px-3 py-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Boundary</h3>
+                <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{blocked.join(" ")}</p>
+              </div>
+            )}
           </div>
-        )}
-        {delegationPlan.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Delegation Plan</h3>
-            <ul className="mt-1 space-y-1">
-              {delegationPlan.map((item) => (
-                <li key={item} className="text-xs leading-relaxed text-[#5F5A51]">{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {risks.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Risks</h3>
-            <ul className="mt-1 space-y-1">
-              {risks.map((risk) => (
-                <li key={risk} className="text-xs leading-relaxed text-[#5F5A51]">
-                  {risk}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {proof.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Proof Steps</h3>
-            <ul className="mt-1 space-y-1">
-              {proof.map((step) => (
-                <li key={step} className="text-xs leading-relaxed text-[#5F5A51]">
-                  {step}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {kpQuestions.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">KP Decisions Needed</h3>
-            <ul className="mt-1 space-y-1">
-              {kpQuestions.map((question) => (
-                <li key={question} className="text-xs leading-relaxed text-[#5F5A51]">{question}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {blocked.length > 0 && (
-          <div className="rounded-md border border-[#E8DEC7] bg-[#FBF7ED] px-3 py-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Cannot Do Inside Dashboard</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{blocked.join(" ")}</p>
-          </div>
-        )}
-        {typeof result.confidence_score === "number" && (
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">
-            Confidence: {Math.round(result.confidence_score * 100)}%
-          </p>
-        )}
+        </details>
       </div>
     </div>
   )
@@ -410,13 +432,14 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
   const [result, setResult] = useState<AdvisorResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [providerLabel, setProviderLabel] = useState("DeepSeek / deepseek-v4-flash")
+  const [customPrompt, setCustomPrompt] = useState("")
 
   const contextSummary = useMemo(() => JSON.stringify({
     operating_contract: aiPmOperatingContract,
     dashboard_context: context,
   }, null, 2), [context])
 
-  async function runPm(action: (typeof actions)[number]) {
+  async function runPm(action: AiPmAction) {
     setActiveAction(action.id)
     setError(null)
     setResult(buildLocalPmResult(action.id, context))
@@ -447,9 +470,23 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
     }
   }
 
+  async function submitCustomPrompt() {
+    const prompt = customPrompt.trim()
+    if (prompt.length < 8 || activeAction) return
+
+    await runPm({
+      id: "custom-prompt",
+      label: "Ask PM",
+      detail: "Custom dashboard PM prompt.",
+      icon: Send,
+      purpose: "implementation_plan",
+      prompt: `Operate as Keymon's enterprise PM assistant inside My Dashboard. Answer this like a Codex-style task PM flow: ${prompt}`,
+    })
+  }
+
   return (
     <section className="overflow-hidden rounded-lg border border-[#D7B85E] bg-white shadow-sm">
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)] lg:p-5">
+      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)] lg:p-5">
         <div className="min-w-0">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-md border border-[#D7B85E] bg-[#FBF7ED]">
@@ -465,9 +502,31 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
             </div>
           </div>
           <p className="max-w-3xl text-sm leading-relaxed text-[#5F5A51]">
-            This PM works inside My Dashboard. It reads the current dashboard signals and returns a plan here without opening LanternAI.
+            Ask it what to do next. It reads your task board, keeps blockers separate, and answers here without opening LanternAI.
           </p>
-          <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="mt-4 rounded-lg border border-[#E8DEC7] bg-[#FCFAF5] p-2">
+            <textarea
+              value={customPrompt}
+              onChange={(event) => setCustomPrompt(event.target.value)}
+              placeholder="Ask your PM what to do next..."
+              rows={3}
+              className="min-h-20 w-full resize-none rounded-md border border-transparent bg-white px-3 py-2 text-sm text-[#171717] outline-none transition placeholder:text-[#9A9388] focus:border-[#D7B85E]"
+            />
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">{providerLabel}</span>
+              <button
+                type="button"
+                onClick={submitCustomPrompt}
+                disabled={activeAction !== null || customPrompt.trim().length < 8}
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#171717] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#2B2925] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {activeAction === "custom-prompt" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                Ask
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
             <div className="rounded-md border border-[#E3D7BC] bg-[#FBF7ED] px-3 py-2">
               <p className="text-[10px] uppercase tracking-wider text-[#6B6254]">Decisions</p>
               <p className="mt-1 text-lg font-condensed font-bold text-[#171717]">{context.decisionCount}</p>
@@ -494,7 +553,7 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="grid content-start grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
           {actions.map((action) => {
             const Icon = action.icon
             const loading = activeAction === action.id
@@ -504,18 +563,16 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
                 type="button"
                 onClick={() => runPm(action)}
                 disabled={activeAction !== null}
-                className="group flex items-center justify-between gap-3 rounded-md border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-3 text-left transition hover:border-[#C8A951] hover:bg-[#FBF7ED] disabled:cursor-wait disabled:opacity-70"
+                className="group flex items-center gap-3 rounded-full border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-2 text-left transition hover:border-[#C8A951] hover:bg-[#FBF7ED] disabled:cursor-wait disabled:opacity-70"
               >
-                <span className="flex min-w-0 items-start gap-2">
-                  {loading ? (
-                    <Loader2 className="mt-0.5 h-3.5 w-3.5 shrink-0 animate-spin text-[#9A6A12]" strokeWidth={1.75} />
-                  ) : (
-                    <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9A6A12]" strokeWidth={1.75} />
-                  )}
-                  <span className="min-w-0">
-                    <span className="block text-xs font-semibold text-[#171717]">{action.label}</span>
-                    <span className="mt-0.5 block text-[10px] leading-relaxed text-[#6B6254]">{action.detail}</span>
-                  </span>
+                {loading ? (
+                  <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[#9A6A12]" strokeWidth={1.75} />
+                ) : (
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-[#9A6A12]" strokeWidth={1.75} />
+                )}
+                <span className="min-w-0">
+                  <span className="block truncate text-xs font-semibold text-[#171717]">{action.label}</span>
+                  <span className="block truncate text-[10px] text-[#6B6254]">{action.detail}</span>
                 </span>
               </button>
             )
@@ -537,9 +594,8 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
       <div className="flex flex-col gap-2 border-t border-[#E8DEC7] bg-[#FBF7ED] px-4 py-3 text-xs text-[#5F5A51] sm:flex-row sm:items-center sm:justify-between">
         <span className="inline-flex items-center gap-2">
           <ShieldCheck className="h-3.5 w-3.5 text-[#8A610F]" strokeWidth={1.75} />
-          AI PM can organize and recommend; task changes still need app/tool confirmation and receipts.
+          PM can plan and route; Codex/app actions still verify and record receipts.
         </span>
-        <span className="font-semibold text-[#8A610F]">{providerLabel}</span>
       </div>
     </section>
   )
