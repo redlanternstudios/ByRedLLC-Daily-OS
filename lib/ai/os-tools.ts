@@ -414,6 +414,78 @@ export function createOsTools(ctx: OsToolsCtx) {
       },
     },
 
+    create_subtask: {
+      description:
+        "Add a subtask under an existing parent task (found by title). Inherits the parent's project and owner unless overridden.",
+      inputSchema: z.object({
+        parent_task_query: z.string().describe("Text from the parent task's title"),
+        title: z.string().describe("Subtask title"),
+        owner_name: z.string().optional().describe("Override owner (defaults to parent's owner)"),
+        due_date: z.string().optional().describe("YYYY-MM-DD"),
+        priority: z.enum(PRIORITY).optional(),
+      }),
+      execute: async (a: { parent_task_query: string; title: string; owner_name?: string; due_date?: string; priority?: (typeof PRIORITY)[number] }) => {
+        const found = await findTask(a.parent_task_query)
+        if (!found.ok) return found.msg
+        const parent = found.task
+        let ownerId: string | null = parent.owner_user_id
+        if (a.owner_name) {
+          const owner = resolveOwner(a.owner_name)
+          if (!owner.ok) return owner.msg
+          ownerId = owner.id
+        }
+        const { data, error } = await supabase
+          .from("byred_tasks")
+          .insert({
+            title: a.title.trim(),
+            parent_task_id: parent.id,
+            tenant_id: parent.tenant_id,
+            owner_user_id: ownerId,
+            status: "not_started",
+            priority: a.priority ?? "medium",
+            ai_mode: "HUMAN_ONLY",
+            due_date: a.due_date ?? null,
+            created_by_user_id: profileId,
+          })
+          .select("id")
+          .single()
+        if (error) return `Create failed: ${error.message}`
+        logActivity({
+          object_type: "task", object_id: data.id, tenant_id: parent.tenant_id,
+          type: "subtask_created", summary: `Lantern AI added subtask "${a.title.trim()}" under "${parent.title}"`,
+        })
+        return `Added subtask "${a.title.trim()}" under "${parent.title}".`
+      },
+    },
+
+    set_task_dependency: {
+      description:
+        "Record that one task depends on (is blocked by) another. Both found by title. e.g. 'launch' depends on 'finish copy'.",
+      inputSchema: z.object({
+        task_query: z.string().describe("The dependent task (the one that's blocked)"),
+        depends_on_query: z.string().describe("The prerequisite task it waits on"),
+      }),
+      execute: async (a: { task_query: string; depends_on_query: string }) => {
+        const t = await findTask(a.task_query)
+        if (!t.ok) return t.msg
+        const dep = await findTask(a.depends_on_query)
+        if (!dep.ok) return dep.msg
+        if (t.task.id === dep.task.id) return "A task can't depend on itself."
+        const { error } = await supabase
+          .from("os_task_dependencies")
+          .insert({ task_id: t.task.id, depends_on_task_id: dep.task.id, tenant_id: t.task.tenant_id })
+        if (error) {
+          if (/duplicate|unique/i.test(error.message)) return `"${t.task.title}" already depends on "${dep.task.title}".`
+          return `Failed: ${error.message}`
+        }
+        logActivity({
+          object_type: "task", object_id: t.task.id, tenant_id: t.task.tenant_id,
+          type: "dependency_added", summary: `Lantern AI: "${t.task.title}" now depends on "${dep.task.title}"`,
+        })
+        return `"${t.task.title}" now depends on "${dep.task.title}".`
+      },
+    },
+
     create_project: {
       description:
         "Create a new project (tenant) and add you as a member. Use only when the user clearly wants a brand-new project, not a task.",
