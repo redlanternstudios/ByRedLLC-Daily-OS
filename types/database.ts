@@ -607,6 +607,106 @@ export type Database = {
           },
         ]
       }
+      os_ai_provider_runs: {
+        Row: {
+          completion_tokens: number | null
+          context_chars: number
+          created_at: string
+          created_by_user_id: string | null
+          estimated_codex_minutes_saved: number
+          estimated_codex_tokens_saved: number
+          failure_reason: string | null
+          id: string
+          lane: string
+          metadata: Json
+          model: string
+          mutation_allowed: boolean
+          outcome_summary: string | null
+          prompt_chars: number
+          prompt_tokens: number | null
+          provider: string
+          purpose: string
+          related_receipt_id: string | null
+          status: string
+          tenant_id: string
+          total_tokens: number | null
+          verification_status: string
+          weakness: string | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          context_chars?: number
+          created_at?: string
+          created_by_user_id?: string | null
+          estimated_codex_minutes_saved?: number
+          estimated_codex_tokens_saved?: number
+          failure_reason?: string | null
+          id?: string
+          lane: string
+          metadata?: Json
+          model: string
+          mutation_allowed?: boolean
+          outcome_summary?: string | null
+          prompt_chars?: number
+          prompt_tokens?: number | null
+          provider: string
+          purpose: string
+          related_receipt_id?: string | null
+          status: string
+          tenant_id: string
+          total_tokens?: number | null
+          verification_status?: string
+          weakness?: string | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          context_chars?: number
+          created_at?: string
+          created_by_user_id?: string | null
+          estimated_codex_minutes_saved?: number
+          estimated_codex_tokens_saved?: number
+          failure_reason?: string | null
+          id?: string
+          lane?: string
+          metadata?: Json
+          model?: string
+          mutation_allowed?: boolean
+          outcome_summary?: string | null
+          prompt_chars?: number
+          prompt_tokens?: number | null
+          provider?: string
+          purpose?: string
+          related_receipt_id?: string | null
+          status?: string
+          tenant_id?: string
+          total_tokens?: number | null
+          verification_status?: string
+          weakness?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "os_ai_provider_runs_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "byred_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_ai_provider_runs_related_receipt_id_fkey"
+            columns: ["related_receipt_id"]
+            isOneToOne: false
+            referencedRelation: "os_agent_receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "os_ai_provider_runs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "byred_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -659,6 +759,10 @@ export type ByredDailyBriefUpdate = Database["public"]["Tables"]["byred_daily_br
 export type OsAgentReceipt = Database["public"]["Tables"]["os_agent_receipts"]["Row"]
 export type OsAgentReceiptInsert = Database["public"]["Tables"]["os_agent_receipts"]["Insert"]
 export type OsAgentReceiptUpdate = Database["public"]["Tables"]["os_agent_receipts"]["Update"]
+
+export type OsAiProviderRun = Database["public"]["Tables"]["os_ai_provider_runs"]["Row"]
+export type OsAiProviderRunInsert = Database["public"]["Tables"]["os_ai_provider_runs"]["Insert"]
+export type OsAiProviderRunUpdate = Database["public"]["Tables"]["os_ai_provider_runs"]["Update"]
 
 // Daily brief summary structure
 export type DailyBriefSummary = {

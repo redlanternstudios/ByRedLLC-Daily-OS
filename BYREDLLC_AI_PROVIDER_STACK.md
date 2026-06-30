@@ -82,6 +82,25 @@ Authenticated read-only advisor endpoint:
 
 This endpoint lets DeepSeek or GLM produce implementation plans, bug hypotheses, test plans, and code-review notes from verified OS receipts. It cannot mutate data, close tasks, deploy, send email, or mark work complete.
 
+Provider efficiency board:
+
+```text
+/os/ai
+/api/os/ai/provider-runs
+```
+
+The board tracks provider runs, failures, estimated Codex tokens saved, estimated Codex minutes saved, and pending verification. The goal is to identify where cheaper providers are saving high-paid model usage and where they are weak enough that Codex still has to redo work.
+
+## Efficiency KPIs
+
+| KPI | Meaning | Action if weak |
+| --- | --- | --- |
+| `estimated_codex_tokens_saved` | Approximate Codex reasoning tokens avoided by letting a complementary provider do first-pass thinking. | Move more upstream planning/review into the cheaper provider if quality is acceptable. |
+| `estimated_codex_minutes_saved` | Approximate operator time saved before Codex execution. | Improve prompts or provider choice if savings stay low. |
+| `failed_runs` | Provider calls that failed, blocked, or were rejected. | Fix key/env/model/routing issues or stop using that provider for the purpose. |
+| `pending_verification` | Successful advisor runs that still need Codex proof before becoming reusable truth. | Codex must verify with tests, browser, API read-back, or a receipt. |
+| `by_provider.failures` | Weakness count by provider. | Re-route that work type to another provider or tighten prompts. |
+
 ## Agent Learning Boundary
 
 Feature agents can use only verified OS receipts as reusable learning context. Do not treat chat-only notes, localhost-only observations, stale Monday.com logic, or typo names such as `Bay Red LLC` as durable truth.
