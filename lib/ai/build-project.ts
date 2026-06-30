@@ -173,8 +173,28 @@ export async function buildProject(
     labels: s.labels ?? [],
   }))
 
-  const { error: tErr } = await admin.from("byred_tasks").insert(rows)
+  const { data: inserted, error: tErr } = await admin
+    .from("byred_tasks").insert(rows).select("id, start_date, order_index")
   if (tErr) throw new Error(`Task create failed: ${tErr.message}`)
+
+  // AI-proposed Sprint 1: a 2-week active sprint seeded with the near-term tasks
+  // (those starting within the window, else the first few by order). Best-effort.
+  void (async () => {
+    try {
+      const start = new Date()
+      const end = new Date(Date.now() + 14 * 86400000)
+      const iso = (d: Date) => d.toISOString().slice(0, 10)
+      const rowsBack = (inserted ?? []) as Array<{ id: string; start_date: string | null; order_index: number }>
+      const windowed = rowsBack.filter((r) => r.start_date && r.start_date <= iso(end))
+      const chosen = (windowed.length ? windowed : rowsBack.slice(0, 5)).map((r) => r.id)
+      if (chosen.length === 0) return
+      const { data: sprint } = await admin
+        .from("os_sprints")
+        .insert({ tenant_id: tenantId, project_id: projectId, name: "Sprint 1", goal: "Initial sprint", status: "active", start_date: iso(start), end_date: iso(end), created_by_user_id: createdByUserId })
+        .select("id").single()
+      if (sprint?.id) await admin.from("byred_tasks").update({ sprint_id: sprint.id }).in("id", chosen)
+    } catch { /* non-blocking */ }
+  })()
 
   const aiQueued = rows.filter((r) => r.ai_mode === "AI_EXECUTE" || r.ai_mode === "AI_DRAFT").length
 

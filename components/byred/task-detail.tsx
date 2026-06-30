@@ -82,6 +82,10 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
     .toUpperCase()
     .slice(0, 2)
 
+  // Enriched issue fields (newer than the generated Task type). Editing lives in
+  // the project Table view; here we surface them on the issue.
+  const ext = task as unknown as { issue_type?: string | null; story_points?: number | null; start_date?: string | null; labels?: string[] | null }
+
   const [title, setTitle] = useState(task.title)
   const [editingTitle, setEditingTitle] = useState(false)
   const [blockerFlag, setBlockerFlag] = useState(task.blocker_flag)
@@ -244,11 +248,33 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               <dl className="space-y-3 text-sm">
 
                 <div className="flex justify-between">
+                  <dt className="text-[#9CA3AF]">Type</dt>
+                  <dd className="text-xs text-[#6B7280] capitalize">{ext.issue_type ?? "task"}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-[#9CA3AF]">Story points</dt>
+                  <dd className="text-xs text-[#6B7280] font-mono">{ext.story_points ?? "—"}</dd>
+                </div>
+                <div className="flex justify-between">
                   <dt className="text-[#9CA3AF]">Estimated</dt>
                   <dd className="text-[#6B7280] font-mono text-xs">
                     {(() => { const em = task.estimated_minutes ?? 0; return em < 60 ? `${em}m` : `${Math.floor(em / 60)}h ${em % 60 > 0 ? `${em % 60}m` : ""}` })()}
                   </dd>
                 </div>
+                {ext.start_date && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#9CA3AF]">Start</dt>
+                    <dd className="text-xs text-[#6B7280] font-mono">{ext.start_date}</dd>
+                  </div>
+                )}
+                {Array.isArray(ext.labels) && ext.labels.length > 0 && (
+                  <div>
+                    <dt className="text-[#9CA3AF] mb-1.5">Labels</dt>
+                    <dd className="flex flex-wrap gap-1">
+                      {ext.labels.map((l) => <span key={l} className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">{l}</span>)}
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-[#9CA3AF] mb-1.5">Revenue impact</dt>
                   <dd>

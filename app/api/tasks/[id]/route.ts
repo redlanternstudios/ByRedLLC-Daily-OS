@@ -79,6 +79,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     story_points: number | null
     start_date: string | null
     labels: string[]
+    sprint_id: string | null
   }>
 
   // Loosely typed — some columns (issue_type, story_points, start_date, labels)
