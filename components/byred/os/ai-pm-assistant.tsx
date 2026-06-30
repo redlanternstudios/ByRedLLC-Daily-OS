@@ -35,11 +35,24 @@ export type AiPmDashboardContext = {
 }
 
 type AdvisorResult = {
+  executive_summary?: string
+  operating_mode?: string
   recommendation?: string
   reasoning_summary?: string
+  priority_stack?: Array<{
+    lane?: string
+    title?: string
+    project?: string
+    status?: string
+    why?: string
+  }>
+  blocked_decisions?: string[]
+  delegation_plan?: string[]
   risks?: string[]
   codex_verification_steps?: string[]
+  questions_for_kp?: string[]
   not_allowed_to_do?: string[]
+  confidence_score?: number
 }
 
 type AdvisorResponse = {
@@ -62,7 +75,7 @@ const actions = [
     detail: "Build a clean monthly execution plan.",
     icon: ClipboardList,
     purpose: "implementation_plan",
-    prompt: "Act as Keymon's embedded AI PM inside My Dashboard. Build a clear monthly execution plan from the dashboard context. Include the top project, the first three moves, owners or routing notes, blockers, and what proof is needed before any work is called complete.",
+    prompt: "Operate as Keymon's enterprise PM assistant inside My Dashboard. Build a monthly execution packet with operating mode, executive summary, top project control lane, priority stack, blocked decisions, delegation plan, KP decisions needed, proof gates, and confidence score.",
   },
   {
     id: "today-priority",
@@ -70,7 +83,7 @@ const actions = [
     detail: "Pick the next move and why.",
     icon: Target,
     purpose: "implementation_plan",
-    prompt: "Act as Keymon's embedded AI PM inside My Dashboard. Prioritize today from the dashboard context. Give one first move, one next move, what to delegate, and what should not be touched yet.",
+    prompt: "Operate as Keymon's enterprise PM assistant inside My Dashboard. Prioritize today by separating executable work from blocked/legal/admin work. Return the first move, second executable move only if clean, blocker lane, delegation lane, verification lane, KP decisions, proof gates, and confidence score.",
   },
   {
     id: "blocker-scan",
@@ -78,7 +91,7 @@ const actions = [
     detail: "Surface risk before it spreads.",
     icon: AlertTriangle,
     purpose: "ux_risk",
-    prompt: "Act as Keymon's embedded AI PM inside My Dashboard. Find blockers, risks, missing decisions, and proof gaps in the dashboard context. Separate what KP should decide from what the team can execute.",
+    prompt: "Operate as Keymon's enterprise PM assistant inside My Dashboard. Run blocker triage. Separate legal/admin blockers, team blockers, missing owner/due-date issues, proof gaps, KP-only decisions, and executable recovery steps. Do not treat blocked work as normal next-action work.",
   },
   {
     id: "task-shape",
@@ -86,7 +99,7 @@ const actions = [
     detail: "Turn direction into board-ready work.",
     icon: Lightbulb,
     purpose: "implementation_plan",
-    prompt: "Act as Keymon's embedded AI PM inside My Dashboard. Convert the dashboard direction into clean board-ready tasks. For each task include project, priority, owner or route, due timing, and definition of done.",
+    prompt: "Operate as Keymon's enterprise PM assistant inside My Dashboard. Convert the dashboard direction into board-ready tasks. For each task specify project lane, owner/routing, priority, due timing, definition of done, proof requirement, blocker dependency, and whether KP approval is required.",
   },
 ] as const
 
@@ -95,6 +108,7 @@ const aiPmOperatingContract = {
   provider: "deepseek",
   model: "deepseek-v4-flash",
   lane: "cost-aware PM reasoning, code-risk critique, task shaping, blocker analysis, and execution planning",
+  operatingStandard: "enterprise-grade PM assistant for SaaS operations",
   authority: [
     "Advise, organize, prioritize, critique, and draft PM plans from dashboard context.",
     "Treat verified receipts and dashboard data as stronger than chat-only assumptions.",
@@ -106,18 +120,25 @@ const aiPmOperatingContract = {
     "Do not mutate tasks, close tasks, deploy, send messages, or edit production data.",
     "Do not treat unverified model output as reusable truth.",
     "Never request, reveal, store, or summarize secrets, tokens, env values, cookies, or private credentials.",
+    "Never place blocked, legal/admin, or waiting-on-human work in the normal next-action lane.",
+    "Never repeat the same task as next move and verification move.",
   ],
   requiredOutput: [
-    "Return one clear recommendation.",
-    "Explain why using current dashboard signals.",
-    "List risks or blockers.",
-    "List Codex verification steps before completion.",
+    "Return one executive summary and one clear recommendation.",
+    "Return an operating mode such as Execution, Blocker Triage, Delegation, Monthly Planning, or Task Design.",
+    "Return a priority stack separated by lane.",
+    "Return blocked decisions separately from executable work.",
+    "Return delegation plan, risks, proof requirements, KP questions, and confidence score.",
     "State what the dashboard PM is not allowed to do.",
   ],
 }
 
 function cleanList(value: string[] | undefined) {
   return value?.filter(Boolean).slice(0, 5) ?? []
+}
+
+function cleanPriorityStack(value: AdvisorResult["priority_stack"]) {
+  return value?.filter((item) => item.title || item.lane || item.why).slice(0, 5) ?? []
 }
 
 function taskLine(task: AiPmTaskSignal | null, fallback: string) {
@@ -149,8 +170,17 @@ function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): Ad
 
   if (actionId === "blocker-scan") {
     return {
+      executive_summary: "Blocked work needs a separate PM lane before normal execution continues.",
+      operating_mode: "Blocker Triage",
       recommendation: `Treat blocked/admin risk as a separate PM lane, not as normal execution work. Review this blocker first: ${blockerMove}`,
       reasoning_summary: `${projectLine} First move: ${firstMove}`,
+      priority_stack: [
+        { lane: "Do", title: firstMove, why: "Highest executable KP-owned move." },
+        { lane: "Blocked Decision", title: blockerMove, why: "Must be cleared outside the normal execution lane." },
+        { lane: "Delegate", title: delegateMove, why: "Move team-owned setup work away from KP's execution queue." },
+      ],
+      blocked_decisions: [blockerMove],
+      delegation_plan: [delegateMove],
       risks: [
         "Blocked work can hide behind normal open-task volume.",
         "Decision items need routing before the team can execute cleanly.",
@@ -162,13 +192,22 @@ function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): Ad
         "Record or attach the proof receipt before closing the loop.",
       ],
       not_allowed_to_do: ["The dashboard PM cannot mutate tasks directly from this readout yet."],
+      confidence_score: 0.82,
     }
   }
 
   if (actionId === "task-shape") {
     return {
+      executive_summary: "Turn the first move into board-ready work with owner, due date, and proof.",
+      operating_mode: "Task Design",
       recommendation: `Shape the next board work from the current first move: ${firstMove}`,
       reasoning_summary: `${projectLine} Keep each task tied to a project, owner, due timing, and definition of done.`,
+      priority_stack: [
+        { lane: "Task Source", title: firstMove, why: "This is the current work signal to convert into clean tasks." },
+        { lane: "Blocked Decision", title: blockerMove, why: "Keep blocked work out of new task creation until the blocker is named." },
+      ],
+      blocked_decisions: [blockerMove],
+      delegation_plan: [delegateMove],
       risks: [
         "Vague task titles will not map cleanly into project panels.",
         "Unowned work will fall back into dashboard noise.",
@@ -179,6 +218,7 @@ function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): Ad
         "Reopen My Dashboard and verify the task appears in the correct project/month lane.",
       ],
       not_allowed_to_do: ["The dashboard PM can draft task structure; task creation still needs the task tool flow."],
+      confidence_score: 0.78,
     }
   }
 
@@ -187,8 +227,19 @@ function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): Ad
     const verifySentence = executableVerifyMove ? `Verify: ${verifyMove}.` : "No non-blocked verification move is currently selected."
 
     return {
+      executive_summary: "Run one executable move, keep blocked work in a PM decision lane, and avoid false verification.",
+      operating_mode: "Execution",
       recommendation: `Do this first: ${firstMove}. ${nextSentence} Keep this blocked/admin item in the PM decision lane: ${blockerMove}. Delegate: ${delegateMove}. ${verifySentence}`,
       reasoning_summary: `The dashboard is showing ${context.visibleTaskRows} visible rows, ${context.decisionCount} decision items, and ${context.blockedCount} blocked items for ${context.todayLabel}.`,
+      priority_stack: [
+        { lane: "Do Now", title: firstMove, why: "Executable, KP-owned, highest priority move." },
+        { lane: "Next", title: nextMove, why: executableNextMove ? "Second executable item after the first move." : "No clean second executable move is available." },
+        { lane: "Blocked Decision", title: blockerMove, why: "Blocked/legal/admin work should not be treated as normal execution." },
+        { lane: "Delegate", title: delegateMove, why: "Move assignable team work out of KP's direct lane." },
+        { lane: "Verify", title: verifyMove, why: executableVerifyMove ? "Non-blocked item needing proof." : "No non-blocked verification target is available." },
+      ],
+      blocked_decisions: [blockerMove],
+      delegation_plan: [delegateMove],
       risks: [
         "Treating blocked or legal/admin work as normal next-action work will create bad sequencing.",
         "Delegation without owner, due date, and proof will create follow-up noise.",
@@ -199,12 +250,23 @@ function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): Ad
         "Add a receipt when the verified move is complete.",
       ],
       not_allowed_to_do: ["The dashboard PM cannot complete or verify tasks by itself."],
+      confidence_score: 0.84,
     }
   }
 
   return {
+    executive_summary: "Monthly work needs a control lane, executable tasks, blocker separation, and proof.",
+    operating_mode: "Monthly Planning",
     recommendation: `Run ${topProject?.title ?? "the top project"} as the monthly control lane, then execute the first move, next move, delegate move, and verification move in order.`,
     reasoning_summary: `${projectLine} First move: ${firstMove} Next move: ${nextMove}`,
+    priority_stack: [
+      { lane: "Top Project", title: topProject?.title ?? "No active project", why: projectLine },
+      { lane: "Do Now", title: firstMove, why: "First executable move." },
+      { lane: "Blocked Decision", title: blockerMove, why: "Must be separated from normal execution." },
+      { lane: "Delegate", title: delegateMove, why: "Routable work should not sit in KP's direct lane." },
+    ],
+    blocked_decisions: [blockerMove],
+    delegation_plan: [delegateMove],
     risks: [
       "The month plan will drift if blocked items are not separated from normal tasks.",
       "AI PM guidance is planning support, not a completion receipt.",
@@ -215,6 +277,7 @@ function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): Ad
       "Record proof once the work is verified.",
     ],
     not_allowed_to_do: ["The dashboard PM cannot mark the monthly plan complete without verified receipts."],
+    confidence_score: 0.8,
   }
 }
 
@@ -222,6 +285,10 @@ function ResultPanel({ result }: { result: AdvisorResult }) {
   const risks = cleanList(result.risks)
   const proof = cleanList(result.codex_verification_steps)
   const blocked = cleanList(result.not_allowed_to_do)
+  const priorityStack = cleanPriorityStack(result.priority_stack)
+  const blockedDecisions = cleanList(result.blocked_decisions)
+  const delegationPlan = cleanList(result.delegation_plan)
+  const kpQuestions = cleanList(result.questions_for_kp)
 
   return (
     <div className="rounded-lg border border-[#D7B85E] bg-white p-4 shadow-sm">
@@ -232,16 +299,60 @@ function ResultPanel({ result }: { result: AdvisorResult }) {
         </p>
       </div>
       <div className="space-y-3">
+        {(result.executive_summary || result.operating_mode) && (
+          <div className="rounded-md border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6B6254]">
+              {result.operating_mode ?? "PM Mode"}
+            </p>
+            {result.executive_summary && (
+              <p className="mt-1 text-sm leading-relaxed text-[#3F3A32]">{result.executive_summary}</p>
+            )}
+          </div>
+        )}
         <div>
           <h3 className="text-sm font-semibold text-[#171717]">Recommendation</h3>
           <p className="mt-1 text-sm leading-relaxed text-[#3F3A32]">
             {result.recommendation ?? "No recommendation returned."}
           </p>
         </div>
+        {priorityStack.length > 0 && (
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Priority Stack</h3>
+            <div className="mt-2 grid gap-2">
+              {priorityStack.map((item, index) => (
+                <div key={`${item.lane ?? "lane"}-${index}`} className="rounded-md border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">{item.lane ?? "Lane"}</p>
+                  {item.title && <p className="mt-1 text-xs font-semibold leading-snug text-[#171717]">{item.title}</p>}
+                  {item.why && <p className="mt-1 text-[10px] leading-relaxed text-[#5F5A51]">{item.why}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {result.reasoning_summary && (
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Why</h3>
             <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{result.reasoning_summary}</p>
+          </div>
+        )}
+        {blockedDecisions.length > 0 && (
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Blocked Decisions</h3>
+            <ul className="mt-1 space-y-1">
+              {blockedDecisions.map((item) => (
+                <li key={item} className="text-xs leading-relaxed text-[#5F5A51]">{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {delegationPlan.length > 0 && (
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Delegation Plan</h3>
+            <ul className="mt-1 space-y-1">
+              {delegationPlan.map((item) => (
+                <li key={item} className="text-xs leading-relaxed text-[#5F5A51]">{item}</li>
+              ))}
+            </ul>
           </div>
         )}
         {risks.length > 0 && (
@@ -268,11 +379,26 @@ function ResultPanel({ result }: { result: AdvisorResult }) {
             </ul>
           </div>
         )}
+        {kpQuestions.length > 0 && (
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">KP Decisions Needed</h3>
+            <ul className="mt-1 space-y-1">
+              {kpQuestions.map((question) => (
+                <li key={question} className="text-xs leading-relaxed text-[#5F5A51]">{question}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         {blocked.length > 0 && (
           <div className="rounded-md border border-[#E8DEC7] bg-[#FBF7ED] px-3 py-2">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6B6254]">Cannot Do Inside Dashboard</h3>
             <p className="mt-1 text-xs leading-relaxed text-[#5F5A51]">{blocked.join(" ")}</p>
           </div>
+        )}
+        {typeof result.confidence_score === "number" && (
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#8A610F]">
+            Confidence: {Math.round(result.confidence_score * 100)}%
+          </p>
         )}
       </div>
     </div>

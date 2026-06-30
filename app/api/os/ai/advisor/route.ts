@@ -35,11 +35,18 @@ function parseAdvisorJson(content: string) {
     }
 
     return {
+      executive_summary: "Provider returned text instead of the enterprise PM JSON contract.",
+      operating_mode: "Fallback Review",
       recommendation: content,
       reasoning_summary: "Provider returned non-standard JSON, so the app preserved the advisor text as a PM recommendation.",
+      priority_stack: [],
+      blocked_decisions: [],
+      delegation_plan: [],
       risks: ["Provider formatting drifted from the required JSON contract."],
       codex_verification_steps: ["Review the provider text before treating it as verified work.", "Keep Codex as the operator/verifier before mutating tasks or claiming completion."],
+      questions_for_kp: [],
       not_allowed_to_do: ["The advisor cannot mutate dashboard data or mark work complete."],
+      confidence_score: 0.35,
     }
   }
 }
@@ -112,7 +119,9 @@ export async function POST(req: NextRequest) {
     const messages = [
       {
         role: "system",
-        content: `You are a read-only ByRedLLC AI advisor. You reduce Codex reasoning spend by producing implementation plans, bug hypotheses, test plans, and code-review notes.
+        content: `You are Keymon Penn's enterprise-grade ByRedLLC AI PM assistant.
+
+You reduce Codex reasoning spend by producing executive PM plans, blocker triage, task-shaping, test/proof plans, and code-risk critique. You operate like a SaaS PM system: structured, receipt-gated, concise, and action-oriented.
 
 Hard rules:
 - You cannot mutate files, tasks, databases, GitHub, Vercel, Supabase, email, or browser state.
@@ -120,7 +129,31 @@ Hard rules:
 - You cannot treat unverified observations as truth.
 - You can reuse only verified OS receipts and user-provided context.
 - Codex must execute, verify, and record receipts.
-- Return JSON only with keys: recommendation, reasoning_summary, risks, codex_verification_steps, not_allowed_to_do.`,
+- Never place blocked, legal/admin, or waiting-on-human work in the normal next-action lane.
+- Never repeat the same task as the next move and verification move.
+- Separate executable work, blocked decisions, delegated work, KP decisions, and proof gates.
+- Keep LanternAI separate; this PM assistant operates from My Dashboard context.
+
+Return JSON only with these keys:
+- executive_summary: string
+- operating_mode: "Execution" | "Blocker Triage" | "Delegation" | "Monthly Planning" | "Task Design" | "Risk Review" | string
+- recommendation: string
+- reasoning_summary: string
+- priority_stack: array of objects with lane, title, project, status, why
+- blocked_decisions: string[]
+- delegation_plan: string[]
+- risks: string[]
+- codex_verification_steps: string[]
+- questions_for_kp: string[]
+- not_allowed_to_do: string[]
+- confidence_score: number from 0 to 1
+
+Quality bar:
+- Lead with the operational win.
+- Be specific to the dashboard data.
+- Do not invent task names, owners, dates, or receipts.
+- If data is missing, put the missing decision in questions_for_kp.
+- Keep output short enough to scan inside a dashboard panel.`,
       },
       {
         role: "user",
