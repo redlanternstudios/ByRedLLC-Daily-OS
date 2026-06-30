@@ -1,0 +1,129 @@
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { createClient } from "@/lib/supabase/server"
+import { runDeepSeekAdvisor } from "@/lib/ai/deepseek-advisor"
+
+const advisorSchema = z.object({
+  purpose: z.enum(["implementation_plan", "code_review", "bug_hypothesis", "test_plan", "ux_risk"]),
+  prompt: z.string().trim().min(20).max(12000),
+  context: z.string().trim().max(8000).optional(),
+})
+
+type ReceiptRow = {
+  summary: string
+  lesson: string
+  proof_url_or_path: string
+  agent_family: string
+  framework_scope: string
+}
+
+async function getCallerScope() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { supabase, profileId: null, tenantIds: [] as string[] }
+
+  const { data: profileRaw } = await supabase
+    .from("byred_users")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle()
+  const profileId = (profileRaw as { id: string } | null)?.id ?? null
+
+  if (!profileId) return { supabase, profileId: null, tenantIds: [] as string[] }
+
+  const { data: memberships } = await supabase
+    .from("byred_user_tenants")
+    .select("tenant_id")
+    .eq("user_id", profileId)
+
+  return {
+    supabase,
+    profileId,
+    tenantIds: (memberships ?? []).map((row: { tenant_id: string }) => row.tenant_id),
+  }
+}
+
+function receiptContext(receipts: ReceiptRow[]) {
+  if (receipts.length === 0) return "No verified receipts available."
+
+  return receipts
+    .map((receipt) =>
+      `${receipt.agent_family}/${receipt.framework_scope}: ${receipt.summary} | Lesson: ${receipt.lesson} | Proof: ${receipt.proof_url_or_path}`
+    )
+    .join("\n")
+}
+
+export async function POST(req: NextRequest) {
+  const { supabase, profileId, tenantIds } = await getCallerScope()
+  if (!profileId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const parsed = advisorSchema.safeParse(await req.json())
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  }
+
+  const { data: receiptRows, error: receiptError } = await supabase
+    .from("os_agent_receipts")
+    .select("summary, lesson, proof_url_or_path, agent_family, framework_scope")
+    .in("tenant_id", tenantIds.length > 0 ? tenantIds : ["__none__"])
+    .eq("verification_status", "verified")
+    .or("agent_family.eq.web_app,framework_scope.eq.mindset_universal")
+    .order("created_at", { ascending: false })
+    .limit(8)
+
+  if (receiptError) return NextResponse.json({ error: receiptError.message }, { status: 500 })
+
+  try {
+    const result = await runDeepSeekAdvisor([
+      {
+        role: "system",
+        content: `You are a read-only ByRedLLC AI advisor. You reduce Codex reasoning spend by producing implementation plans, bug hypotheses, test plans, and code-review notes.
+
+Hard rules:
+- You cannot mutate files, tasks, databases, GitHub, Vercel, Supabase, email, or browser state.
+- You cannot mark work complete.
+- You cannot treat unverified observations as truth.
+- You can reuse only verified OS receipts and user-provided context.
+- Codex must execute, verify, and record receipts.
+- Return JSON only with keys: recommendation, reasoning_summary, risks, codex_verification_steps, not_allowed_to_do.`,
+      },
+      {
+        role: "user",
+        content: `Purpose: ${parsed.data.purpose}
+
+Verified receipts:
+${receiptContext((receiptRows as ReceiptRow[] | null) ?? [])}
+
+User/project context:
+${parsed.data.context ?? "No extra context provided."}
+
+Request:
+${parsed.data.prompt}`,
+      },
+    ])
+
+    const parsedContent = JSON.parse(result.content) as unknown
+
+    return NextResponse.json({
+      provider: result.provider,
+      model: result.model,
+      mode: "read_only_advisor",
+      mutation_allowed: false,
+      codex_role: "execute_verify_record_receipts",
+      result: parsedContent,
+      usage: result.usage,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "AI advisor failed",
+        mode: "read_only_advisor",
+        mutation_allowed: false,
+      },
+      { status: 503 }
+    )
+  }
+}
