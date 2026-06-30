@@ -4,7 +4,7 @@ import { use, useRef, useState } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import ReactMarkdown from "react-markdown"
-import { ArrowLeft, Clock, AlertTriangle, GitMerge, Loader2, AlertCircle, Bot, PencilLine, LayoutGrid, Table2, GanttChartSquare, FileText, Check, X, Rocket, Plus } from "lucide-react"
+import { ArrowLeft, Clock, AlertTriangle, GitMerge, Loader2, AlertCircle, Bot, PencilLine, LayoutGrid, Table2, GanttChartSquare, FileText, Check, X, Rocket, Plus, CalendarDays, BarChart3 } from "lucide-react"
 import { OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { cn } from "@/lib/utils"
@@ -45,6 +45,8 @@ const TABS = [
   { id: "table", label: "Table", icon: Table2 },
   { id: "sprints", label: "Sprints", icon: Rocket },
   { id: "timeline", label: "Timeline", icon: GanttChartSquare },
+  { id: "calendar", label: "Calendar", icon: CalendarDays },
+  { id: "dashboard", label: "Dashboard", icon: BarChart3 },
 ] as const
 type TabId = (typeof TABS)[number]["id"]
 
@@ -94,6 +96,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   const [overviewDraft, setOverviewDraft] = useState("")
   const draggingId = useRef<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
+  const [filters, setFilters] = useState<{ owner: string; status: string; epic: string; type: string; sprint: string; q: string }>({ owner: "", status: "", epic: "", type: "", sprint: "", q: "" })
 
   async function patchTask(taskId: string, fields: Record<string, unknown>) {
     mutate((prev) => prev ? { ...prev, tasks: prev.tasks.map((t) => t.id === taskId ? { ...t, ...fields } : t) } : prev, false)
@@ -137,14 +140,28 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
   const pct = total ? Math.round((done / total) * 100) : 0
   const points = tasks.reduce((s, t) => s + (t.story_points ?? 0), 0)
 
-  // Group by epic (first-seen order)
+  // Apply filters (Board/Table/Timeline/Calendar respect them; Dashboard uses all).
+  const filtered = tasks.filter((t) =>
+    (!filters.owner || t.owner_user_id === filters.owner) &&
+    (!filters.status || t.status === filters.status) &&
+    (!filters.epic || (t.epic ?? "General") === filters.epic) &&
+    (!filters.type || (t.issue_type ?? "task") === filters.type) &&
+    (!filters.sprint || (filters.sprint === "__backlog__" ? !t.sprint_id : t.sprint_id === filters.sprint)) &&
+    (!filters.q || t.title.toLowerCase().includes(filters.q.toLowerCase()))
+  )
+  const allEpics = Array.from(new Set(tasks.map((t) => t.epic ?? "General")))
+  const filtersActive = !!(filters.owner || filters.status || filters.epic || filters.type || filters.sprint || filters.q)
+
+  // Group filtered by epic (first-seen order)
   const epics: string[] = []
   const byEpic = new Map<string, Task[]>()
-  for (const t of tasks) {
+  for (const t of filtered) {
     const e = t.epic ?? "General"
     if (!byEpic.has(e)) { byEpic.set(e, []); epics.push(e) }
     byEpic.get(e)!.push(t)
   }
+  const selCls = "bg-[#111318] border border-[#2A2D35] rounded px-2 py-1 text-[11px] text-[#9CA3AF]"
+  const showFilters = tab === "board" || tab === "table" || tab === "timeline" || tab === "calendar"
 
   return (
     <div className="space-y-5">
@@ -171,6 +188,31 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
           </button>
         ))}
       </div>
+
+      {/* Filter bar */}
+      {showFilters && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={filters.q} onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))} placeholder="Search…" className={selCls + " w-40"} />
+          <select value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))} className={selCls}>
+            <option value="">All status</option>{Object.keys(STATUS_LABEL).map((k) => <option key={k} value={k} className="bg-[#1A1D24]">{STATUS_LABEL[k]}</option>)}
+          </select>
+          <select value={filters.owner} onChange={(e) => setFilters((f) => ({ ...f, owner: e.target.value }))} className={selCls}>
+            <option value="">All owners</option>{members.map((m) => <option key={m.id} value={m.id} className="bg-[#1A1D24]">{m.name}</option>)}
+          </select>
+          <select value={filters.epic} onChange={(e) => setFilters((f) => ({ ...f, epic: e.target.value }))} className={selCls}>
+            <option value="">All epics</option>{allEpics.map((e) => <option key={e} value={e} className="bg-[#1A1D24]">{e}</option>)}
+          </select>
+          <select value={filters.type} onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))} className={selCls}>
+            <option value="">All types</option>{Object.keys(TYPE).map((k) => <option key={k} value={k} className="bg-[#1A1D24]">{TYPE[k].label}</option>)}
+          </select>
+          <select value={filters.sprint} onChange={(e) => setFilters((f) => ({ ...f, sprint: e.target.value }))} className={selCls}>
+            <option value="">All sprints</option><option value="__backlog__" className="bg-[#1A1D24]">Backlog</option>
+            {sprints.map((s) => <option key={s.id} value={s.id} className="bg-[#1A1D24]">{s.name}</option>)}
+          </select>
+          {filtersActive && <button onClick={() => setFilters({ owner: "", status: "", epic: "", type: "", sprint: "", q: "" })} className="text-[11px] text-[#D92532] px-2 py-1">Clear</button>}
+          <span className="text-[10px] text-[#6B7280] font-mono ml-auto">{filtered.length}/{total}</span>
+        </div>
+      )}
 
       {/* OVERVIEW */}
       {tab === "overview" && (
@@ -235,7 +277,7 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2A2D35]">
-              {tasks.map((t) => (
+              {filtered.map((t) => (
                 <tr key={t.id} className="hover:bg-[#111318]/60 [&_td]:px-3 [&_td]:py-1.5 [&_td]:align-middle">
                   <td className="max-w-[260px]"><Link href={`/os/tasks/${t.id}`} className="text-white hover:underline line-clamp-1">{t.title}</Link></td>
                   <td className="text-[#9CA3AF] whitespace-nowrap">{t.epic ?? "—"}</td>
@@ -279,9 +321,15 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* TIMELINE — lightweight bars from start_date → due_date */}
-      {tab === "timeline" && <Timeline tasks={tasks} epics={epics} byEpic={byEpic} />}
+      {tab === "timeline" && <Timeline tasks={filtered} epics={epics} byEpic={byEpic} />}
 
-      {total === 0 && tab !== "overview" && <p className="text-sm text-[#9CA3AF]">No tasks in this project yet.</p>}
+      {/* CALENDAR — month grid by due date */}
+      {tab === "calendar" && <CalendarView tasks={filtered} />}
+
+      {/* DASHBOARD — project KPIs (always whole project, ignores filters) */}
+      {tab === "dashboard" && <Dashboard tasks={tasks} members={members} />}
+
+      {total === 0 && tab !== "overview" && tab !== "dashboard" && <p className="text-sm text-[#9CA3AF]">No tasks in this project yet.</p>}
     </div>
   )
 }
@@ -401,6 +449,142 @@ function Timeline({ tasks, epics, byEpic }: { tasks: Task[]; epics: string[]; by
           </div>
         )
       })}
+    </div>
+  )
+}
+
+const STATUS_DOT: Record<string, string> = { done: "#22C55E", blocked: "#EF4444", in_progress: "#FBBF24", not_started: "#6B7280" }
+
+function CalendarView({ tasks }: { tasks: Task[] }) {
+  const [offset, setOffset] = useState(0)
+  const base = new Date(); base.setDate(1); base.setMonth(base.getMonth() + offset)
+  const year = base.getFullYear(); const month = base.getMonth()
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const label = base.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+  const byDay = new Map<number, Task[]>()
+  for (const t of tasks) {
+    if (!t.due_date) continue
+    const d = new Date(t.due_date + "T00:00:00")
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const day = d.getDate(); if (!byDay.has(day)) byDay.set(day, []); byDay.get(day)!.push(t)
+    }
+  }
+  const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)]
+  const undated = tasks.filter((t) => !t.due_date).length
+  return (
+    <div className="rounded-xl border border-[#2A2D35] bg-[#0E0F13]/40 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-semibold text-white">{label}</span>
+        <div className="flex items-center gap-2">
+          {undated > 0 && <span className="text-[10px] text-[#6B7280]">{undated} undated</span>}
+          <button onClick={() => setOffset((o) => o - 1)} className="px-2 py-1 rounded bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF]">‹</button>
+          <button onClick={() => setOffset(0)} className="px-2 py-1 rounded bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF]">Today</button>
+          <button onClick={() => setOffset((o) => o + 1)} className="px-2 py-1 rounded bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF]">›</button>
+        </div>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-[10px] text-[#6B7280] mb-1">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => <div key={d} className="px-1">{d}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((day, i) => (
+          <div key={i} className={cn("min-h-[72px] rounded-lg p-1", day ? "bg-[#111318] border border-[#2A2D35]/60" : "")}>
+            {day && <div className="text-[10px] text-[#6B7280] mb-1">{day}</div>}
+            <div className="space-y-0.5">
+              {(byDay.get(day ?? -1) ?? []).slice(0, 4).map((t) => (
+                <Link key={t.id} href={`/os/tasks/${t.id}`} className="flex items-center gap-1 text-[9px] text-[#D1D5DB] truncate hover:underline">
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: STATUS_DOT[t.status] ?? "#6B7280" }} />
+                  <span className="truncate">{t.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Dashboard({ tasks, members }: { tasks: Task[]; members: Member[] }) {
+  const nameOf = (id: string | null) => (id ? members.find((m) => m.id === id)?.name ?? "Unknown" : "Unassigned")
+  const total = tasks.length
+  const done = tasks.filter((t) => t.status === "done").length
+  const inProg = tasks.filter((t) => t.status === "in_progress").length
+  const blocked = tasks.filter((t) => t.blocker_flag).length
+  const pts = tasks.reduce((s, t) => s + (t.story_points ?? 0), 0)
+  const donePts = tasks.filter((t) => t.status === "done").reduce((s, t) => s + (t.story_points ?? 0), 0)
+
+  const owners = new Map<string, { count: number; done: number; pts: number }>()
+  for (const t of tasks) {
+    const k = t.owner_user_id ?? "__none__"
+    const o = owners.get(k) ?? { count: 0, done: 0, pts: 0 }
+    o.count++; if (t.status === "done") o.done++; o.pts += t.story_points ?? 0
+    owners.set(k, o)
+  }
+  const epicRows = Array.from(new Set(tasks.map((t) => t.epic ?? "General"))).map((e) => {
+    const et = tasks.filter((t) => (t.epic ?? "General") === e)
+    return { epic: e, total: et.length, done: et.filter((t) => t.status === "done").length }
+  })
+  const blockers = tasks.filter((t) => t.blocker_flag)
+
+  const Stat = ({ label, value, color }: { label: string; value: string | number; color?: string }) => (
+    <div className="rounded-xl border border-[#2A2D35] bg-[#111318] p-4">
+      <div className="text-2xl font-bold" style={{ color: color ?? "#fff" }}>{value}</div>
+      <div className="text-[11px] text-[#9CA3AF] mt-0.5">{label}</div>
+    </div>
+  )
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Stat label="Total tasks" value={total} />
+        <Stat label="Done" value={`${done}/${total}`} color="#22C55E" />
+        <Stat label="In progress" value={inProg} color="#FBBF24" />
+        <Stat label="Blocked" value={blocked} color={blocked ? "#EF4444" : "#fff"} />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-xl border border-[#2A2D35] bg-[#0E0F13]/40 p-4">
+          <h3 className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest mb-3">Points · {donePts}/{pts} done</h3>
+          <div className="h-2 bg-[#1A1D24] rounded-full overflow-hidden mb-4"><div className="h-full bg-green-500 rounded-full" style={{ width: `${pts ? (donePts / pts) * 100 : 0}%` }} /></div>
+          <h3 className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest mb-2">Team load</h3>
+          <div className="space-y-2">
+            {Array.from(owners.entries()).sort((a, b) => b[1].count - a[1].count).map(([k, o]) => (
+              <div key={k} className="flex items-center gap-2">
+                {k !== "__none__" ? <OSAvatar userId={k} size="xs" /> : <div className="w-5 h-5 rounded-full bg-[#1A1D24] border border-[#2A2D35]" />}
+                <span className="text-xs text-[#D1D5DB] flex-1 truncate">{nameOf(k === "__none__" ? null : k)}</span>
+                <span className="text-[10px] text-[#9CA3AF] font-mono">{o.done}/{o.count} · {o.pts}pt</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-xl border border-[#2A2D35] bg-[#0E0F13]/40 p-4">
+          <h3 className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest mb-3">Epic progress</h3>
+          <div className="space-y-2.5">
+            {epicRows.map((r) => {
+              const p = r.total ? Math.round((r.done / r.total) * 100) : 0
+              return (
+                <div key={r.epic}>
+                  <div className="flex justify-between text-[11px] mb-0.5"><span className="text-[#D1D5DB] truncate">{r.epic}</span><span className="text-[#9CA3AF] font-mono">{r.done}/{r.total}</span></div>
+                  <div className="h-1.5 bg-[#1A1D24] rounded-full overflow-hidden"><div className="h-full bg-[#D92532] rounded-full" style={{ width: `${p}%` }} /></div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+      {blockers.length > 0 && (
+        <div className="rounded-xl border border-red-800/40 bg-red-950/20 p-4">
+          <h3 className="text-xs font-semibold text-red-400 uppercase tracking-widest mb-2">Blockers ({blockers.length})</h3>
+          <div className="space-y-1">
+            {blockers.map((t) => (
+              <Link key={t.id} href={`/os/tasks/${t.id}`} className="flex items-center gap-2 text-xs text-[#D1D5DB] hover:underline">
+                <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" /><span className="truncate">{t.title}</span>
+                {t.owner_user_id && <span className="text-[10px] text-[#6B7280] ml-auto">{nameOf(t.owner_user_id)}</span>}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
