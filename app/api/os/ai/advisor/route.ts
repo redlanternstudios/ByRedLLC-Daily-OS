@@ -3,6 +3,8 @@ import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { runDeepSeekAdvisor } from "@/lib/ai/deepseek-advisor"
 import { runGlmAdvisor } from "@/lib/ai/glm-advisor"
+import { getProviderById } from "@/lib/ai/provider-registry"
+import { recordProviderRun } from "@/lib/ai/provider-run-ledger"
 
 const advisorSchema = z.object({
   provider: z.enum(["deepseek", "glm"]).default("deepseek"),
@@ -78,6 +80,11 @@ export async function POST(req: NextRequest) {
 
   if (receiptError) return NextResponse.json({ error: receiptError.message }, { status: 500 })
 
+  const targetProvider = getProviderById(parsed.data.provider)
+  const tenantId = tenantIds[0] ?? null
+  const promptChars = parsed.data.prompt.length
+  const contextChars = (parsed.data.context ?? "").length
+
   try {
     const messages = [
       {
@@ -112,6 +119,25 @@ ${parsed.data.prompt}`,
       : await runDeepSeekAdvisor([...messages])
 
     const parsedContent = JSON.parse(result.content) as unknown
+    const run = await recordProviderRun({
+      tenantId,
+      userId: profileId,
+      provider: result.provider,
+      model: result.model,
+      lane: targetProvider?.lane ?? "code_review",
+      purpose: parsed.data.purpose,
+      status: "success",
+      promptChars,
+      contextChars,
+      promptTokens: result.usage?.prompt_tokens ?? null,
+      completionTokens: result.usage?.completion_tokens ?? null,
+      totalTokens: result.usage?.total_tokens ?? null,
+      outcomeSummary: `Read-only ${result.provider} advisor completed ${parsed.data.purpose}.`,
+      metadata: {
+        provider_configured: targetProvider?.configured ?? false,
+        receipts_used: receiptRows?.length ?? 0,
+      },
+    })
 
     return NextResponse.json({
       provider: result.provider,
@@ -119,10 +145,29 @@ ${parsed.data.prompt}`,
       mode: "read_only_advisor",
       mutation_allowed: false,
       codex_role: "execute_verify_record_receipts",
+      run_id: run?.id ?? null,
       result: parsedContent,
       usage: result.usage,
     })
   } catch (error) {
+    await recordProviderRun({
+      tenantId,
+      userId: profileId,
+      provider: parsed.data.provider,
+      model: targetProvider?.model ?? parsed.data.provider,
+      lane: targetProvider?.lane ?? "code_review",
+      purpose: parsed.data.purpose,
+      status: "failed",
+      promptChars,
+      contextChars,
+      failureReason: error instanceof Error ? error.message : "AI advisor failed",
+      weakness: `${parsed.data.provider} advisor unavailable or returned invalid output.`,
+      metadata: {
+        provider_configured: targetProvider?.configured ?? false,
+        receipts_used: receiptRows?.length ?? 0,
+      },
+    })
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : "AI advisor failed",
