@@ -70,7 +70,10 @@ Latest verified: 2026-06-29 21:37 PT
 - Supabase SQL read-back in project `endovljmaudnxdzdapmf` returned all 3 rows by ID/title after insert.
 - Authenticated Codex in-app browser proof on `http://127.0.0.1:3000/os/my-dashboard`: `AI Infrastructure Front Desk` appeared in the project sectors, clicking `Authentic Hadith` opened `Authentic Hadith / June 2026`, and both Authentic Hadith bug tasks appeared under `Due In June 2026`.
 - Mobile proof: 390px viewport reported `scrollWidth=390`, `bodyScrollWidth=390`, and no horizontal overflow.
-- Boundary: local authenticated UI and Supabase production project read-back verified; production deployment receipt is separate.
+- Verification checks: `pnpm exec tsc --noEmit --pretty false` passed, `pnpm build` passed, `node learning-loop/scripts/audit-learning-loop.mjs` passed, and `git diff --check` passed.
+- GitHub receipt: pushed `39b9387` to `origin/main`.
+- Production deployment receipt: Vercel deployment `dpl_4kZYaENXaPRj2FBh2ty7JSHHmqnk` reached `READY` and was aliased to `https://byredlanternos.com`.
+- Production smoke checks: `https://byredlanternos.com/api/health` returned HTTP 200 with Supabase/database checks `ok`; unauthenticated `https://byredlanternos.com/os/my-dashboard` returned HTTP 307 to `/login`.
 - RLS enabled: `true`
 - Column count: `14`
 - Required scope columns present: `agent_family`, `framework_scope`, `verification_status`
