@@ -7,7 +7,6 @@ import { FolderKanban, Plus, ArrowRight, Search, Loader2, AlertCircle } from "lu
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSEmpty } from "@/components/byred/os/os-empty"
 import { cn } from "@/lib/utils"
-import { toast } from "sonner"
 
 type Tenant = {
   id: string
@@ -49,6 +48,11 @@ export default function OSProjectsPage() {
 
   const { data: tenantData } = useSWR<{ tenants: Tenant[] }>("/api/os/tenants", fetcher)
 
+  const { data: projData } = useSWR<{
+    projects: Array<{ id: string; name: string; description: string | null; tenant_id: string; task_count: number; done_count: number }>
+  }>("/api/os/projects", fetcher)
+  const builtProjects = projData?.projects ?? []
+
   const tenantMap = new Map<string, Tenant>((tenantData?.tenants ?? []).map((t) => [t.id, t]))
 
   // Group tasks by tenant
@@ -80,8 +84,8 @@ export default function OSProjectsPage() {
   async function handleNewProject() {
     setCreating(true)
     try {
-      await new Promise((r) => setTimeout(r, 400))
-      toast.info("Create projects from the Boards page — click '+ New Board'.")
+      await new Promise((r) => setTimeout(r, 200))
+      window.location.href = "/os/planner"
     } finally {
       setCreating(false)
     }
@@ -123,6 +127,40 @@ export default function OSProjectsPage() {
           className="w-full pl-8 pr-3 py-2 text-sm bg-[#111318] border border-[#2A2D35] rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600"
         />
       </div>
+
+      {/* Built projects (real os_projects from the Planner / Lantern) */}
+      {builtProjects.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">Projects</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {builtProjects
+              .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+              .map((p) => {
+                const tenant = tenantMap.get(p.tenant_id)
+                const color = tenantColor(tenant?.color ?? null)
+                const pct = p.task_count > 0 ? Math.round((p.done_count / p.task_count) * 100) : 0
+                return (
+                  <Link key={p.id} href={`/os/projects/${p.id}`} className="block rounded-xl bg-[#111318] border border-[#2A2D35] hover:border-zinc-600 transition-colors px-5 py-4">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide" style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}>
+                        {tenant?.name ?? "project"}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">{p.name}</h3>
+                    {p.description && <p className="text-xs text-[#9CA3AF] mt-0.5 line-clamp-2">{p.description}</p>}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[10px] text-[#9CA3AF]">{p.done_count}/{p.task_count} tasks · {pct}%</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#6B7280]" />
+                    </div>
+                    <div className="h-1.5 bg-[#1A1D24] rounded-full overflow-hidden mt-1.5">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                  </Link>
+                )
+              })}
+          </div>
+        </div>
+      )}
 
       {isLoading && (
         <div className="flex items-center justify-center h-40">
