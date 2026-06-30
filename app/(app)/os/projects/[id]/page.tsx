@@ -4,7 +4,7 @@ import { use, useRef, useState } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import ReactMarkdown from "react-markdown"
-import { ArrowLeft, Clock, AlertTriangle, GitMerge, Loader2, AlertCircle, Bot, PencilLine, LayoutGrid, Table2, GanttChartSquare, FileText, Check, X, Rocket, Plus, CalendarDays, BarChart3 } from "lucide-react"
+import { ArrowLeft, Clock, AlertTriangle, GitMerge, Loader2, AlertCircle, Bot, PencilLine, LayoutGrid, Table2, GanttChartSquare, FileText, Check, X, Rocket, Plus, CalendarDays, BarChart3, BookOpen } from "lucide-react"
 import { OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { cn } from "@/lib/utils"
@@ -47,6 +47,7 @@ const TABS = [
   { id: "timeline", label: "Timeline", icon: GanttChartSquare },
   { id: "calendar", label: "Calendar", icon: CalendarDays },
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+  { id: "docs", label: "Docs", icon: BookOpen },
 ] as const
 type TabId = (typeof TABS)[number]["id"]
 
@@ -329,6 +330,9 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
       {/* DASHBOARD — project KPIs (always whole project, ignores filters) */}
       {tab === "dashboard" && <Dashboard tasks={tasks} members={members} />}
 
+      {/* DOCS — Confluence-style project wiki */}
+      {tab === "docs" && <DocsView projectId={project.id} tasks={tasks} />}
+
       {total === 0 && tab !== "overview" && tab !== "dashboard" && <p className="text-sm text-[#9CA3AF]">No tasks in this project yet.</p>}
     </div>
   )
@@ -585,6 +589,91 @@ function Dashboard({ tasks, members }: { tasks: Task[]; members: Member[] }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+type Doc = { id: string; title: string; content: string | null; doc_type: string; status: string; linked_task_id: string | null; updated_at: string }
+const DOC_TYPES = ["note", "decision", "spec", "prd", "meeting", "wiki"]
+
+function DocsView({ projectId, tasks }: { projectId: string; tasks: Task[] }) {
+  const { data, mutate } = useSWR<{ docs: Doc[] }>(`/api/os/projects/${projectId}/docs`, (u: string) => fetch(u).then((r) => r.json()))
+  const docs = data?.docs ?? []
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<{ title: string; content: string; doc_type: string; linked_task_id: string | null }>({ title: "", content: "", doc_type: "note", linked_task_id: null })
+
+  const selected = docs.find((d) => d.id === selectedId) ?? null
+
+  async function createDoc() {
+    const res = await fetch(`/api/os/projects/${projectId}/docs`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Untitled doc", content: "", doc_type: "note" }),
+    })
+    const created = await res.json()
+    await mutate()
+    if (created?.id) { setSelectedId(created.id); setDraft({ title: created.title, content: created.content ?? "", doc_type: created.doc_type, linked_task_id: created.linked_task_id }); setEditing(true) }
+  }
+  async function saveDoc() {
+    if (!selected) return
+    await fetch(`/api/os/docs/${selected.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(draft) })
+    setEditing(false)
+    mutate()
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4">
+      {/* Doc list */}
+      <div className="space-y-2">
+        <button onClick={createDoc} className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs text-[#9CA3AF] hover:text-white"><Plus className="w-3.5 h-3.5" /> New doc</button>
+        {docs.length === 0 && <p className="text-[11px] text-[#6B7280] px-1">No docs yet.</p>}
+        {docs.map((d) => (
+          <button key={d.id} onClick={() => { setSelectedId(d.id); setEditing(false) }}
+            className={cn("w-full text-left px-3 py-2 rounded-lg border", selectedId === d.id ? "bg-[#1A1D24] border-[#D92532]/50" : "bg-[#111318] border-[#2A2D35]/60 hover:border-[#2A2D35]")}>
+            <div className="flex items-center gap-1.5"><span className="text-[9px] uppercase tracking-wide text-[#6B7280]">{d.doc_type}</span></div>
+            <div className="text-xs text-white truncate">{d.title}</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Doc viewer / editor */}
+      <div className="rounded-xl border border-[#2A2D35] bg-[#0E0F13]/40 p-5 min-h-[400px]">
+        {!selected ? (
+          <p className="text-sm text-[#6B7280]">Select a doc, or create one. Decisions, specs, PRDs, meeting notes — the project's living knowledge base.</p>
+        ) : editing ? (
+          <div className="space-y-3">
+            <input value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} className="w-full bg-[#0E0F13] border border-[#2A2D35] rounded px-3 py-2 text-sm text-white font-semibold" />
+            <div className="flex gap-2">
+              <select value={draft.doc_type} onChange={(e) => setDraft((d) => ({ ...d, doc_type: e.target.value }))} className="bg-[#0E0F13] border border-[#2A2D35] rounded px-2 py-1 text-[11px] text-[#9CA3AF]">
+                {DOC_TYPES.map((t) => <option key={t} value={t} className="bg-[#1A1D24]">{t}</option>)}
+              </select>
+              <select value={draft.linked_task_id ?? ""} onChange={(e) => setDraft((d) => ({ ...d, linked_task_id: e.target.value || null }))} className="bg-[#0E0F13] border border-[#2A2D35] rounded px-2 py-1 text-[11px] text-[#9CA3AF] max-w-[200px]">
+                <option value="" className="bg-[#1A1D24]">No linked task</option>
+                {tasks.map((t) => <option key={t.id} value={t.id} className="bg-[#1A1D24]">{t.title}</option>)}
+              </select>
+            </div>
+            <textarea value={draft.content} onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))} rows={18} placeholder="Write in markdown…" className="w-full bg-[#0E0F13] border border-[#2A2D35] rounded-lg px-3 py-2.5 text-sm text-white font-mono leading-relaxed" />
+            <div className="flex gap-2">
+              <button onClick={saveDoc} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#D92532] text-white text-xs font-medium"><Check className="w-3.5 h-3.5" /> Save</button>
+              <button onClick={() => setEditing(false)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs text-[#9CA3AF]"><X className="w-3.5 h-3.5" /> Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <span className="text-[9px] uppercase tracking-wide text-[#6B7280]">{selected.doc_type}</span>
+                <h2 className="text-base font-semibold text-white">{selected.title}</h2>
+                {selected.linked_task_id && <Link href={`/os/tasks/${selected.linked_task_id}`} className="text-[10px] text-[#D92532] hover:underline">↳ linked task</Link>}
+              </div>
+              <button onClick={() => { setDraft({ title: selected.title, content: selected.content ?? "", doc_type: selected.doc_type, linked_task_id: selected.linked_task_id }); setEditing(true) }} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF] hover:text-white shrink-0"><PencilLine className="w-3 h-3" /> Edit</button>
+            </div>
+            {selected.content
+              ? <div className="prose prose-invert prose-sm max-w-none text-[#D1D5DB] [&_h2]:text-white [&_h1]:text-white [&_li]:my-0.5"><ReactMarkdown>{selected.content}</ReactMarkdown></div>
+              : <p className="text-sm text-[#6B7280]">Empty doc. Click Edit to write.</p>}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
