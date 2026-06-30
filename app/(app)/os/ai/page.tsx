@@ -153,7 +153,7 @@ export default function OSAIPage() {
   }
 
   return (
-    <div className="grid h-[calc(100vh-52px)] grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1fr)_390px]">
+    <div className="grid h-[calc(100vh-52px)] grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(320px,42vh)] overflow-hidden xl:grid-cols-[minmax(0,1fr)_390px] xl:grid-rows-1">
       <div className="flex min-h-0 flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 px-7 py-5 border-b border-white/[0.07] shrink-0">
@@ -273,7 +273,7 @@ export default function OSAIPage() {
       </div>
       </div>
 
-      <aside className="hidden min-h-0 overflow-y-auto border-l border-white/[0.07] bg-[#09090B] p-5 xl:block">
+      <aside className="min-h-0 overflow-y-auto border-t border-white/[0.07] bg-[#09090B] p-5 xl:border-l xl:border-t-0">
         <div className="mb-5">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[#D7261E]">AI Efficiency Board</p>
           <h2 className="mt-1 text-lg font-extrabold tracking-tight text-white">Provider Savings</h2>
