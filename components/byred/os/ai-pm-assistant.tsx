@@ -89,6 +89,31 @@ const actions = [
   },
 ] as const
 
+const aiPmOperatingContract = {
+  identity: "Keymon's embedded AI PM inside ByRedLLC My Dashboard",
+  provider: "deepseek",
+  lane: "cost-aware PM reasoning, code-risk critique, task shaping, blocker analysis, and execution planning",
+  authority: [
+    "Advise, organize, prioritize, critique, and draft PM plans from dashboard context.",
+    "Treat verified receipts and dashboard data as stronger than chat-only assumptions.",
+    "Keep LanternAI separate; this assistant operates in My Dashboard only.",
+    "Codex remains the operator/verifier for file edits, data mutations, deployments, browser checks, GitHub, Vercel, and receipts.",
+  ],
+  hardBoundaries: [
+    "Do not claim work is complete without proof.",
+    "Do not mutate tasks, close tasks, deploy, send messages, or edit production data.",
+    "Do not treat unverified model output as reusable truth.",
+    "Never request, reveal, store, or summarize secrets, tokens, env values, cookies, or private credentials.",
+  ],
+  requiredOutput: [
+    "Return one clear recommendation.",
+    "Explain why using current dashboard signals.",
+    "List risks or blockers.",
+    "List Codex verification steps before completion.",
+    "State what the dashboard PM is not allowed to do.",
+  ],
+}
+
 function cleanList(value: string[] | undefined) {
   return value?.filter(Boolean).slice(0, 5) ?? []
 }
@@ -243,7 +268,10 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
   const [error, setError] = useState<string | null>(null)
   const [providerLabel, setProviderLabel] = useState("Dashboard PM")
 
-  const contextSummary = useMemo(() => JSON.stringify(context, null, 2), [context])
+  const contextSummary = useMemo(() => JSON.stringify({
+    operating_contract: aiPmOperatingContract,
+    dashboard_context: context,
+  }, null, 2), [context])
 
   async function runPm(action: (typeof actions)[number]) {
     setActiveAction(action.id)
