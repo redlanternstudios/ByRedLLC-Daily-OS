@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
+  UserRoundCheck,
   FolderKanban,
   Trello,
   ListTodo,
@@ -51,6 +52,7 @@ const NAV_GROUPS = [
     items: [
       { label: "Home",     href: "/os/dashboard", icon: LayoutDashboard },
       { label: "Today",    href: "/os/today",     icon: Flame },
+      { label: "My Dashboard", href: "/os/my-dashboard", icon: UserRoundCheck },
       { label: "Tasks",    href: "/os/tasks",     icon: ListTodo },
       { label: "Calendar", href: "/os/calendar",  icon: Calendar },
     ],
@@ -200,6 +202,7 @@ function SidebarContent({
 
   const displayName = currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
   const displayRole = currentUser?.profile?.role ?? "member"
+  const avatarUrl = currentUser?.profile?.avatar_url ?? null
   const initials = getInitials(displayName)
 
   
@@ -307,8 +310,12 @@ function SidebarContent({
               collapsed ? "justify-center p-2" : "gap-2.5 px-2 py-2"
             )}
           >
-            <div className="w-6 h-6 rounded-full bg-[#D7261E]/20 border border-[#D7261E]/30 flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-bold text-[#D7261E]">{initials}</span>
+            <div className="w-6 h-6 rounded-full bg-[#D7261E]/20 border border-[#D7261E]/30 flex items-center justify-center shrink-0 overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[10px] font-bold text-[#D7261E]">{initials}</span>
+              )}
             </div>
             {!collapsed && (
               <div className="min-w-0">

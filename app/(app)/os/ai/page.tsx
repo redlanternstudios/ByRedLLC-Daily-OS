@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import type { ComponentType } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, isTextUIPart } from "ai"
-import { Send } from "lucide-react"
+import { AlertTriangle, Brain, CheckCircle2, Gauge, Send, ShieldCheck, TrendingDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MentionTextarea } from "@/components/byred/mention-textarea"
 import { useTeamMembers } from "@/lib/hooks/use-team-members"
@@ -29,8 +30,76 @@ function LanternIcon() {
 
 const transport = new DefaultChatTransport({ api: "/api/os/lantern-ai" })
 
+type ProviderStatus = {
+  id: string
+  label: string
+  role: string
+  lane: string
+  configured: boolean
+  model: string
+  mutationAllowed: boolean
+  strengths: string[]
+  failureMode: string
+  verificationRule: string
+}
+
+type ProviderRun = {
+  id: string
+  created_at: string
+  provider: string
+  model: string
+  lane: string
+  purpose: string
+  status: string
+  estimated_codex_tokens_saved: number
+  estimated_codex_minutes_saved: number
+  verification_status: string
+  outcome_summary: string | null
+  weakness: string | null
+  failure_reason: string | null
+}
+
+type RunsSummary = {
+  total_runs: number
+  successful_runs: number
+  failed_runs: number
+  estimated_codex_tokens_saved: number
+  estimated_codex_minutes_saved: number
+  verified_codex_tokens_saved: number
+  verified_codex_minutes_saved: number
+  team_handoffs: number
+  pending_verification: number
+  by_provider: Record<string, { runs: number; saved_tokens: number; failures: number }>
+}
+
+function BoardCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  label: string
+  value: string | number
+  detail: string
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>
+}) {
+  return (
+    <div className="rounded-lg border border-white/[0.08] bg-[#111318] p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6B7280]">{label}</p>
+        <Icon className="h-4 w-4 text-[#D7261E]" strokeWidth={1.75} />
+      </div>
+      <p className="text-2xl font-bold leading-none text-white">{value}</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-[#9CA3AF]">{detail}</p>
+    </div>
+  )
+}
+
 export default function OSAIPage() {
   const [input, setInput] = useState("")
+  const [providers, setProviders] = useState<ProviderStatus[]>([])
+  const [runs, setRuns] = useState<ProviderRun[]>([])
+  const [summary, setSummary] = useState<RunsSummary | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const teamMembers = useTeamMembers()
 
@@ -42,6 +111,42 @@ export default function OSAIPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadBoard() {
+      const [providersRes, runsRes] = await Promise.all([
+        fetch("/api/os/ai/providers"),
+        fetch("/api/os/ai/provider-runs"),
+      ])
+
+      if (cancelled) return
+
+      if (providersRes.ok) {
+        const data = await providersRes.json()
+        setProviders(data.providers ?? [])
+      }
+
+      if (runsRes.ok) {
+        const data = await runsRes.json()
+        setRuns(data.runs ?? [])
+        setSummary(data.summary ?? null)
+      }
+    }
+
+    loadBoard().catch(() => {
+      if (!cancelled) {
+        setProviders([])
+        setRuns([])
+        setSummary(null)
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const text = input.trim()
@@ -51,7 +156,8 @@ export default function OSAIPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-52px)]">
+    <div className="grid h-[calc(100vh-52px)] grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(320px,42vh)] overflow-hidden xl:grid-cols-[minmax(0,1fr)_390px] xl:grid-rows-1">
+      <div className="flex min-h-0 flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 px-7 py-5 border-b border-white/[0.07] shrink-0">
         <LanternIcon />
@@ -168,6 +274,104 @@ export default function OSAIPage() {
           </button>
         </form>
       </div>
+      </div>
+
+      <aside className="min-h-0 overflow-y-auto border-t border-white/[0.07] bg-[#09090B] p-5 xl:border-l xl:border-t-0">
+        <div className="mb-5">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#D7261E]">AI Efficiency Board</p>
+          <h2 className="mt-1 text-lg font-extrabold tracking-tight text-white">Provider Savings</h2>
+          <p className="mt-2 text-xs leading-relaxed text-[#9CA3AF]">
+            Tracks where cheaper providers reduce Codex reasoning load, where they fail, and what still needs Codex verification.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <BoardCard
+            label="Runs"
+            value={summary?.total_runs ?? 0}
+            detail="Advisor calls logged."
+            icon={Brain}
+          />
+          <BoardCard
+            label="Failures"
+            value={summary?.failed_runs ?? 0}
+            detail="Weaknesses to fix."
+            icon={AlertTriangle}
+          />
+          <BoardCard
+            label="Verified Save"
+            value={(summary?.verified_codex_tokens_saved ?? 0).toLocaleString()}
+            detail="Codex savings backed by proof."
+            icon={TrendingDown}
+          />
+          <BoardCard
+            label="Handoffs"
+            value={summary?.team_handoffs ?? 0}
+            detail="Provider packets shared."
+            icon={ShieldCheck}
+          />
+        </div>
+
+        <div className="mt-5 rounded-lg border border-white/[0.08] bg-[#111318] p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Gauge className="h-4 w-4 text-[#D7261E]" strokeWidth={1.75} />
+            <h3 className="text-sm font-bold text-white">Provider Status</h3>
+          </div>
+          <div className="space-y-2">
+            {providers.map((provider) => (
+              <div key={provider.id} className="rounded-md border border-white/[0.06] bg-[#0D0D0F] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-white">{provider.label}</p>
+                    <p className="mt-1 truncate text-[10px] text-[#6B7280]">{provider.model} / {provider.lane}</p>
+                  </div>
+                  <span className={cn(
+                    "rounded-full px-2 py-1 text-[9px] font-semibold uppercase",
+                    provider.configured ? "bg-green-500/10 text-green-300" : "bg-white/[0.06] text-[#6B7280]"
+                  )}>
+                    {provider.configured ? "Configured" : "Missing"}
+                  </span>
+                </div>
+                <p className="mt-2 text-[10px] leading-relaxed text-[#9CA3AF] line-clamp-2">{provider.verificationRule}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-lg border border-white/[0.08] bg-[#111318] p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-[#D7261E]" strokeWidth={1.75} />
+            <h3 className="text-sm font-bold text-white">Recent Runs</h3>
+          </div>
+          <div className="space-y-2">
+            {runs.length > 0 ? runs.slice(0, 8).map((run) => (
+              <div key={run.id} className="rounded-md border border-white/[0.06] bg-[#0D0D0F] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold capitalize text-white">{run.provider} / {run.purpose.replaceAll("_", " ")}</p>
+                  <span className={cn(
+                    "rounded-full px-2 py-1 text-[9px] font-semibold uppercase",
+                    run.status === "success" || run.status === "verified" ? "bg-green-500/10 text-green-300" : "bg-red-500/10 text-red-300"
+                  )}>
+                    {run.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-[10px] text-[#9CA3AF]">
+                  Saved ~{run.estimated_codex_tokens_saved.toLocaleString()} Codex tokens / {Number(run.estimated_codex_minutes_saved).toFixed(1)} min
+                </p>
+                {(run.weakness || run.failure_reason || run.outcome_summary) && (
+                  <p className="mt-1 text-[10px] leading-relaxed text-[#6B7280] line-clamp-2">
+                    {run.weakness ?? run.failure_reason ?? run.outcome_summary}
+                  </p>
+                )}
+              </div>
+            )) : (
+              <p className="rounded-md border border-dashed border-white/[0.08] px-3 py-6 text-center text-xs text-[#6B7280]">
+                No provider runs logged yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </aside>
     </div>
   )
 }

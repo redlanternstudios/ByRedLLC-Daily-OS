@@ -2,12 +2,14 @@
   "name": "byredllc-daily-os",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "check:ai-env": "node scripts/check-ai-provider-env.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

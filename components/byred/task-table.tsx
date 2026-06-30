@@ -125,7 +125,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
               {/* Estimated minutes */}
               <td className="px-4 py-2 hidden lg:table-cell">
                 <span className="text-xs text-zinc-400 font-mono">
-                  {formatMinutes(task.estimated_minutes)}
+                  {formatMinutes(task.estimated_minutes ?? 0)}
                 </span>
               </td>
 

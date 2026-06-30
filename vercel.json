@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/team-pulse",
       "schedule": "5 3,15 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-critical-cadence",
+      "schedule": "15 14 * * 1"
     }
   ]
 }

@@ -154,6 +154,14 @@ type TaskRow = {
   updated_at: string | null; created_at: string | null
 }
 type TeamMemberRow = { id: string; name: string; role: string; email: string }
+type AgentReceiptRow = {
+  summary: string
+  lesson: string
+  proof_url_or_path: string
+  agent_family: string
+  framework_scope: string
+  created_at: string
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -181,15 +189,23 @@ export async function POST(req: NextRequest) {
     const today = new Date().toISOString().split('T')[0]
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-    const [tasksRes, teamRes] = await Promise.all([
+    const [tasksRes, teamRes, receiptsRes] = await Promise.all([
       supabase.from('byred_tasks')
         .select('id, title, status, priority, due_date, owner_user_id, tenant_id, blocker_flag, blocker_reason, updated_at, created_at')
         .in('tenant_id', tenantIds.length > 0 ? tenantIds : ['__none__']),
       supabase.from('byred_users').select('id, name, role, email').eq('active', true).order('name'),
+      supabase.from('os_agent_receipts')
+        .select('summary, lesson, proof_url_or_path, agent_family, framework_scope, created_at')
+        .in('tenant_id', tenantIds.length > 0 ? tenantIds : ['__none__'])
+        .eq('verification_status', 'verified')
+        .or('agent_family.eq.web_app,framework_scope.eq.mindset_universal')
+        .order('created_at', { ascending: false })
+        .limit(8),
     ])
 
     const allTasks = (tasksRes.data as TaskRow[] | null) ?? []
     const teamMembers = (teamRes.data as TeamMemberRow[] | null) ?? []
+    const agentReceipts = (receiptsRes.data as AgentReceiptRow[] | null) ?? []
     const userMap = new Map(teamMembers.map(u => [u.id, u]))
 
     const activeTasks = allTasks.filter(t => t.status !== 'done' && t.status !== 'cancelled')
@@ -250,6 +266,14 @@ export async function POST(req: NextRequest) {
     if (overdueTasks.length) lines.push(`Most overdue: ${overdueTasks.slice(0, 6).map(taskLine).join('; ')}`)
     if (byTenant.length) lines.push('', '=== BY PROJECT ===', ...byTenant.map(t => `${t.name}: ${t.active} active, ${t.done} done, ${t.blocked} blocked, ${t.overdue} overdue`))
     if (teamLoad.length) lines.push('', '=== TEAM LOAD ===', ...teamLoad.map(u => `${u.name} (${u.role}): ${u.count} tasks — ${u.status}`))
+    if (agentReceipts.length) {
+      lines.push(
+        '',
+        '=== VERIFIED WEB-APP AGENT LEARNING ===',
+        'Use web_app receipts for web application feature work. Use mindset_universal receipts as cross-agent thinking/proof patterns. Do not use iOS execution receipts for web-app implementation.',
+        ...agentReceipts.map(r => `${r.agent_family}/${r.framework_scope}: ${r.summary} | Lesson: ${r.lesson} | Proof: ${r.proof_url_or_path}`)
+      )
+    }
     lines.push('', '=== TEAM MEMBERS ===', ...teamMembers.map(u => `${u.name} <${u.email}>`))
 
     const contextBlock = lines.filter(Boolean).join('\n')

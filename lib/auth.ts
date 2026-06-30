@@ -45,7 +45,7 @@ export async function getCurrentUser(): Promise<SerializedUser | null> {
     .eq("user_id", profile?.id ?? "") as { data: Array<{ role: string; byred_tenants: { id: string; name: string; type: string; color: string; active: boolean | null; created_at: string | null; updated_at: string | null } | null }> | null; error: unknown }
 
   const tenants = (userTenants ?? [])
-    .filter((ut) => ut.byred_tenants)
+    .filter((ut) => ut.byred_tenants && ut.byred_tenants.active !== false)
     .map((ut) => ({
       ...(ut.byred_tenants as NonNullable<typeof ut.byred_tenants>),
       role: ut.role as string,

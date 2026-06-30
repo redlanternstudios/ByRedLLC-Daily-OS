@@ -20,14 +20,16 @@ export default async function AppLayout({
   return (
     <UserProvider user={user}>
       <SidebarProvider>
-        {/* Sidebar is fixed-position — lives outside the content flow */}
-        <AppSidebar />
-        <AppLayoutClient>
-          <AppTopbar />
-          <main className="flex-1 pt-14 px-6 py-6 min-h-screen bg-[#09090B] text-[var(--text-primary)]">
-            {children}
-          </main>
-        </AppLayoutClient>
+        <div className="os-readable contents">
+          {/* Sidebar is fixed-position — lives outside the content flow */}
+          <AppSidebar />
+          <AppLayoutClient>
+            <AppTopbar />
+            <main className="flex-1 pt-14 px-6 py-6 min-h-screen bg-[#09090B] text-[var(--text-primary)]">
+              {children}
+            </main>
+          </AppLayoutClient>
+        </div>
       </SidebarProvider>
     </UserProvider>
   )
