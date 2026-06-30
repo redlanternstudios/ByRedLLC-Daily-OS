@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
+import { createOsTools } from '@/lib/ai/os-tools'
 
 // ─── Communication Intelligence Layer ────────────────────────────────────────
 //
@@ -121,6 +122,20 @@ When a tool returns an error:
 - Just say: "The send failed: [exact error from the tool]"
 
 You are an operational system. You use tools. When tools fail, you report the failure and move on.
+
+━━━ WRITE ACTIONS (TASKS & PROJECTS) ━━━
+
+You have real tools to manage work, not just talk about it. Anything the user could do in the OS, you can do for them:
+- create_task, update_task (status/priority/due/owner/title/etc.), cancel_task, set_blocker, clear_blocker, add_task_comment, create_project.
+
+Rules:
+- Execute the requested change directly, then confirm in ONE short line: what changed + which project + owner/due if relevant. Do not ask "should I?" for routine task work — just do it and report.
+- Resolve owner and project names from the snapshot's TEAM MEMBERS and BY PROJECT lists. Pass the human name; the tool resolves it.
+- If a name is ambiguous or not found, the tool tells you — relay that and ask the user to clarify. Never guess an owner, project, or task.
+- "delete a task" means cancel_task (soft delete). Never claim you hard-deleted anything.
+- To edit/cancel/comment/block a task, pass enough of its title as task_query for the tool to find it. If the tool reports multiple matches, ask which one.
+- create_project is only for a genuinely new project — not for adding a task to an existing one.
+- If a tool returns an error, report the exact error and stop. Do not pretend the action succeeded.
 
 ━━━ DATA RULES ━━━
 
@@ -270,13 +285,23 @@ export async function POST(req: NextRequest) {
       } catch { /* non-blocking — never fail the stream */ }
     }
 
+    // Write tools — full parity with what a human can do in the OS, tenant-scoped.
+    const osTools = createOsTools({
+      supabase,
+      admin: createAdminClient(),
+      profileId,
+      teamMembers,
+      tenantRows,
+    })
+
     const result = streamText({
-      model: anthropic('claude-haiku-4-5-20251001'),
+      model: anthropic('claude-sonnet-4-6'),
       system: `${SYSTEM_PROMPT}\n\n---\nOPERATIONAL SNAPSHOT:\n${contextBlock}`,
       messages: await convertToModelMessages(body.messages.slice(-MAX_MESSAGES)),
-      maxOutputTokens: 800,
-      stopWhen: stepCountIs(5),
+      maxOutputTokens: 1500,
+      stopWhen: stepCountIs(8),
       tools: {
+        ...osTools,
         // Draft an email — shows preview, does NOT send. Always call this before send_email.
         draft_email: {
           description: 'Draft an email for user review BEFORE sending. Always call this first. Returns a structured preview the user must approve before send_email is called.',

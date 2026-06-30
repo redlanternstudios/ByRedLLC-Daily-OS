@@ -39,6 +39,9 @@ export const SEED_TASKS: Task[] = [
     completed_at: null,
     created_by_user_id: 'u-ro',
     created_at: '2026-04-18T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
     updated_at: '2026-04-18T00:00:00Z',
   },
   {
@@ -60,6 +63,9 @@ export const SEED_TASKS: Task[] = [
     completed_at: null,
     created_by_user_id: 'u-ro',
     created_at: '2026-04-18T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
     updated_at: '2026-04-18T00:00:00Z',
   },
   {
@@ -81,6 +87,9 @@ export const SEED_TASKS: Task[] = [
     completed_at: null,
     created_by_user_id: 'u-ro',
     created_at: '2026-04-10T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
     updated_at: '2026-04-10T00:00:00Z',
   },
   {
@@ -102,6 +111,9 @@ export const SEED_TASKS: Task[] = [
     completed_at: null,
     created_by_user_id: 'u-ro',
     created_at: '2026-04-15T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
     updated_at: '2026-04-15T00:00:00Z',
   },
   {
@@ -123,6 +135,9 @@ export const SEED_TASKS: Task[] = [
     completed_at: null,
     created_by_user_id: 'u-ro',
     created_at: '2026-04-18T00:00:00Z',
+    completed_at: null,
+    created_by_user_id: null,
+    updated_at: new Date().toISOString(),
     updated_at: '2026-04-18T00:00:00Z',
   },
 ];
