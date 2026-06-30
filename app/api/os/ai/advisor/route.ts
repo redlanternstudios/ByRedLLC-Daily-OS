@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { runDeepSeekAdvisor } from "@/lib/ai/deepseek-advisor"
+import { runGlmAdvisor } from "@/lib/ai/glm-advisor"
 
 const advisorSchema = z.object({
+  provider: z.enum(["deepseek", "glm"]).default("deepseek"),
   purpose: z.enum(["implementation_plan", "code_review", "bug_hypothesis", "test_plan", "ux_risk"]),
   prompt: z.string().trim().min(20).max(12000),
   context: z.string().trim().max(8000).optional(),
@@ -77,7 +79,7 @@ export async function POST(req: NextRequest) {
   if (receiptError) return NextResponse.json({ error: receiptError.message }, { status: 500 })
 
   try {
-    const result = await runDeepSeekAdvisor([
+    const messages = [
       {
         role: "system",
         content: `You are a read-only ByRedLLC AI advisor. You reduce Codex reasoning spend by producing implementation plans, bug hypotheses, test plans, and code-review notes.
@@ -103,7 +105,11 @@ ${parsed.data.context ?? "No extra context provided."}
 Request:
 ${parsed.data.prompt}`,
       },
-    ])
+    ] as const
+
+    const result = parsed.data.provider === "glm"
+      ? await runGlmAdvisor([...messages])
+      : await runDeepSeekAdvisor([...messages])
 
     const parsedContent = JSON.parse(result.content) as unknown
 
