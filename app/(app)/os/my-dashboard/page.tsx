@@ -93,6 +93,10 @@ function isOpen(task: ByredTask) {
   return task.status !== "done" && task.status !== "cancelled"
 }
 
+function isBlockedTask(task: ByredTask) {
+  return task.blocker_flag || task.status === "blocked"
+}
+
 function isOverdue(task: ByredTask, today: string) {
   const due = dateOnly(task.due_date)
   return isOpen(task) && !!due && due < today
@@ -106,7 +110,7 @@ function taskScore(task: ByredTask, today: string) {
   let score = 0
   if (task.priority === "critical") score += 80
   if (task.priority === "high") score += 45
-  if (task.blocker_flag || task.status === "blocked") score += 35
+  if (isBlockedTask(task)) score += 35
   if (isOverdue(task, today)) score += 30
   if (isDueToday(task, today)) score += 22
   score += task.revenue_impact_score ?? 0
@@ -464,8 +468,9 @@ export default async function MyDashboardPage() {
   const teamById = new Map(team.map((member) => [member.id, member]))
 
   const myTasks = tasks.filter((task) => task.owner_user_id === profileId).sort(sortForAction(today))
-  const doFirst = myTasks.slice(0, 3)
-  const myBlocked = myTasks.filter((task) => task.blocker_flag || task.status === "blocked")
+  const actionableMyTasks = myTasks.filter((task) => !isBlockedTask(task))
+  const doFirst = actionableMyTasks.slice(0, 3)
+  const myBlocked = myTasks.filter(isBlockedTask)
   const myCritical = myTasks.filter((task) => task.priority === "critical")
   const myHighRevenue = myTasks.filter((task) => (task.revenue_impact_score ?? 0) >= 7)
   const myDueOrOverdue = myTasks.filter((task) => isDueToday(task, today) || isOverdue(task, today))
@@ -473,8 +478,7 @@ export default async function MyDashboardPage() {
   const decisionQueueAll = tasks
     .filter((task) =>
       task.owner_user_id === profileId
-      || task.blocker_flag
-      || task.status === "blocked"
+      || isBlockedTask(task)
       || task.priority === "critical"
     )
     .sort(sortForAction(today))
@@ -484,7 +488,7 @@ export default async function MyDashboardPage() {
     .filter((task) =>
       task.owner_user_id !== profileId
       && !!task.owner_user_id
-      && (task.blocker_flag || task.status === "blocked" || task.priority === "critical" || isOverdue(task, today))
+      && (isBlockedTask(task) || task.priority === "critical" || isOverdue(task, today))
     )
     .sort(sortForAction(today))
   const teamWatchlist = teamWatchlistAll.slice(0, 5)
@@ -496,11 +500,11 @@ export default async function MyDashboardPage() {
 
   const focusProjectCards: DashboardProjectSummary[] = focusProjects.map((project) => {
     const projectTasks = tasks.filter((task) => isFocusProjectTask(task, tenantMap, project)).sort(sortForAction(today))
-    const attentionTasks = projectTasks.filter((task) => isOverdue(task, today) || task.blocker_flag || task.status === "blocked")
+    const attentionTasks = projectTasks.filter((task) => isOverdue(task, today) || isBlockedTask(task))
     const attentionIds = new Set(attentionTasks.map((task) => task.id))
     const monthTasks = projectTasks.filter((task) => !attentionIds.has(task.id) && isDueInRange(task, monthWindow.start, monthWindow.end))
     const unscheduledTasks = projectTasks.filter((task) => !attentionIds.has(task.id) && !dateOnly(task.due_date))
-    const blockedCount = projectTasks.filter((task) => task.blocker_flag || task.status === "blocked").length
+    const blockedCount = projectTasks.filter(isBlockedTask).length
     const monthCount = projectTasks.filter((task) => isDueInRange(task, monthWindow.start, monthWindow.end)).length
 
     return {
@@ -530,8 +534,9 @@ export default async function MyDashboardPage() {
 
   const primaryMove = doFirst[0]
   const nextMove = doFirst[1]
-  const delegateMove = teamWatchlist[0] ?? unassigned[0]
-  const verifyMove = myBlocked[0] ?? decisionQueue[0]
+  const blockerMove = myBlocked[0] ?? teamWatchlistAll.find(isBlockedTask) ?? decisionQueueAll.find(isBlockedTask)
+  const delegateMove = teamWatchlist.find((task) => !isBlockedTask(task)) ?? unassigned[0]
+  const verifyMove = decisionQueue.find((task) => !isBlockedTask(task) && task.id !== primaryMove?.id && task.id !== nextMove?.id) ?? null
   const proofRule = receipts[0]
   const visibleTaskRows = doFirst.length + decisionQueue.length + teamWatchlist.length + unassigned.length + projectLanes.reduce((count, [, laneTasks]) => count + Math.min(laneTasks.length, 2), 0)
   const aiPmContext: AiPmDashboardContext = {
@@ -541,8 +546,9 @@ export default async function MyDashboardPage() {
     nextMove: toAiPmTaskSignal(nextMove, tenantMap),
     delegateMove: toAiPmTaskSignal(delegateMove, tenantMap),
     verifyMove: toAiPmTaskSignal(verifyMove, tenantMap),
+    blockerMove: toAiPmTaskSignal(blockerMove, tenantMap),
     decisionCount: decisionQueueAll.length,
-    blockedCount: myBlocked.length + teamWatchlistAll.filter((task) => task.blocker_flag || task.status === "blocked").length,
+    blockedCount: myBlocked.length + teamWatchlistAll.filter(isBlockedTask).length,
     visibleTaskRows,
     projects: focusProjectCards.map((project) => ({
       title: project.title,

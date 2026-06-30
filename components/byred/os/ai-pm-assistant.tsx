@@ -27,6 +27,7 @@ export type AiPmDashboardContext = {
   nextMove: AiPmTaskSignal | null
   delegateMove: AiPmTaskSignal | null
   verifyMove: AiPmTaskSignal | null
+  blockerMove: AiPmTaskSignal | null
   decisionCount: number
   blockedCount: number
   visibleTaskRows: number
@@ -124,19 +125,31 @@ function taskLine(task: AiPmTaskSignal | null, fallback: string) {
   return `${task.title} (${task.project}, ${task.due}, ${task.priority}, ${task.status})`
 }
 
+function isBlockedSignal(task: AiPmTaskSignal | null) {
+  return task?.status === "blocked"
+}
+
 function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): AdvisorResult {
   const topProject = context.projects.find((project) => project.openCount > 0) ?? context.projects[0]
   const projectLine = topProject
     ? `${topProject.title} is carrying ${topProject.openCount} open items, ${topProject.monthCount} due this month, and ${topProject.blockedCount} blocked.`
     : "No active project pressure is showing in the dashboard context."
   const firstMove = taskLine(context.primaryMove, "No urgent first move is selected.")
-  const nextMove = taskLine(context.nextMove, "No second move is queued.")
-  const delegateMove = taskLine(context.delegateMove, "No delegation move is currently selected.")
-  const verifyMove = taskLine(context.verifyMove, "No verification move is currently selected.")
+  const blockedSignal = context.blockerMove
+    ?? (isBlockedSignal(context.nextMove) ? context.nextMove : null)
+    ?? (isBlockedSignal(context.verifyMove) ? context.verifyMove : null)
+    ?? (isBlockedSignal(context.delegateMove) ? context.delegateMove : null)
+  const executableNextMove = isBlockedSignal(context.nextMove) ? null : context.nextMove
+  const executableDelegateMove = isBlockedSignal(context.delegateMove) ? null : context.delegateMove
+  const executableVerifyMove = isBlockedSignal(context.verifyMove) ? null : context.verifyMove
+  const nextMove = taskLine(executableNextMove, "No second executable move is queued.")
+  const delegateMove = taskLine(executableDelegateMove, "No delegation move is currently selected.")
+  const verifyMove = taskLine(executableVerifyMove, "No non-blocked verification move is currently selected.")
+  const blockerMove = taskLine(blockedSignal, "No blocked/admin risk is currently selected.")
 
   if (actionId === "blocker-scan") {
     return {
-      recommendation: `Treat blockers as the control point first. The dashboard shows ${context.blockedCount} blocked items and ${context.decisionCount} PM decision items, so clear the highest-risk blocker before adding new work.`,
+      recommendation: `Treat blocked/admin risk as a separate PM lane, not as normal execution work. Review this blocker first: ${blockerMove}`,
       reasoning_summary: `${projectLine} First move: ${firstMove}`,
       risks: [
         "Blocked work can hide behind normal open-task volume.",
@@ -170,12 +183,15 @@ function buildLocalPmResult(actionId: string, context: AiPmDashboardContext): Ad
   }
 
   if (actionId === "today-priority") {
+    const nextSentence = executableNextMove ? `Then move to: ${nextMove}.` : "No second executable move is queued."
+    const verifySentence = executableVerifyMove ? `Verify: ${verifyMove}.` : "No non-blocked verification move is currently selected."
+
     return {
-      recommendation: `Do this first: ${firstMove}. Then move to: ${nextMove}. Delegate: ${delegateMove}. Verify: ${verifyMove}.`,
+      recommendation: `Do this first: ${firstMove}. ${nextSentence} Keep this blocked/admin item in the PM decision lane: ${blockerMove}. Delegate: ${delegateMove}. ${verifySentence}`,
       reasoning_summary: `The dashboard is showing ${context.visibleTaskRows} visible rows, ${context.decisionCount} decision items, and ${context.blockedCount} blocked items for ${context.todayLabel}.`,
       risks: [
-        "Starting with lower-priority work will let blocked or critical items age.",
-        "Delegation without proof will create follow-up noise.",
+        "Treating blocked or legal/admin work as normal next-action work will create bad sequencing.",
+        "Delegation without owner, due date, and proof will create follow-up noise.",
       ],
       codex_verification_steps: [
         "Open the first-move task and confirm it is still current.",
