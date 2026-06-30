@@ -31,6 +31,7 @@ const commitSchema = z.object({
   tenantId: z.string(),
   project_name: z.string(),
   project_summary: z.string().optional(),
+  project_overview: z.string().optional(),
   items: z.array(z.object({
     epic_name: z.string(),
     title: z.string(),
@@ -42,6 +43,10 @@ const commitSchema = z.object({
     estimate_minutes: z.number(),
     ai_mode: z.enum(AI_MODES),
     assignee_name: z.string().optional(),
+    issue_type: z.enum(["epic", "story", "task", "subtask", "bug"]).optional(),
+    story_points: z.number().optional(),
+    start_date: z.string().optional(),
+    labels: z.array(z.string()).optional(),
   })).min(1),
 })
 
@@ -130,12 +135,17 @@ ${answers ? `ANSWERS / EXTRA CONTEXT FROM USER:\n${answers}` : ""}`,
         estimate_minutes: s.estimate_minutes,
         ai_mode: s.ai_mode,
         assignee_name: s.assignee_name ?? null,
+        issue_type: s.issue_type,
+        story_points: s.story_points,
+        start_date: s.start_date,
+        labels: s.labels,
       }))
       const result = await buildProject({
         admin: sa,
         tenantId: parsed.tenantId,
         projectName: parsed.project_name,
         projectSummary: parsed.project_summary ?? null,
+        overview: parsed.project_overview ?? null,
         createdByUserId: ctx.profileId,
         teamMembers,
         items,
