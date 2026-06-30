@@ -50,6 +50,19 @@ Reusable solution patterns. Recipes need proof and a clear lane.
 - Proof bundle: `BYREDLLC_OPERATING_RECEIPT.md` 20:32 PT.
 - Reuse when: KP asks to click a project, business lane, or product sector and see month-specific work.
 
+### RECIPE: Monthly Project Task Alignment
+- Problem: KP names the top monthly project and specific tasks that must show under a project's current-month dashboard panel.
+- Minimal pattern:
+  1. Put the named top project into the dashboard's project-sector source list before the other standing projects.
+  2. Store the requested task work in `byred_tasks`; keep each title or description project-specific so dashboard matching is reliable.
+  3. Use the existing project tenant and KP owner IDs when the project is already represented in the OS.
+  4. Use valid task enum values from the database, especially `ai_mode` values: `manual`, `auto`, or `blocked`.
+  5. Read back inserted rows by ID/title before claiming the board is aligned.
+  6. Pull the My Dashboard UI in Codex, click the project card, and verify the task appears in `Due In [Month]` or the correct attention lane.
+  7. Check mobile width for horizontal overflow after the project/card change.
+- Proof bundle: `BYREDLLC_OPERATING_RECEIPT.md` 21:37 PT.
+- Reuse when: KP gives a project plus task list and expects the dashboard/monthly board to reflect it.
+
 ## Provider-Team Recipes
 
 ### RECIPE: Provider Team Before Codex Execution

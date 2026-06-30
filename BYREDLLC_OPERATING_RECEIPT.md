@@ -1,6 +1,6 @@
 # ByRedLLC OS Operating Receipt
 
-Last verified: 2026-06-29 14:11 PT
+Last verified: 2026-06-29 21:37 PT
 
 ## Source Of Truth
 
@@ -58,6 +58,19 @@ Rules:
 Production verification:
 
 - Table exists: `os_agent_receipts`
+
+Latest verified: 2026-06-29 21:37 PT
+
+- `/os/my-dashboard` now puts `AI Infrastructure Front Desk` into the Project Sectors lane as the top monthly project card.
+- Supabase `byred_tasks` now contains the June 2026 dashboard tasks KP requested:
+  - `6baf4665-c249-4344-bf95-ff664d18c3a8` — `AI Infrastructure Front Desk - complete June front desk task alignment`
+  - `96e51277-f563-4053-b50c-1e6daf269342` — `Authentic Hadith - add free mode exit path from subscription paywall`
+  - `7c89ccf2-5570-4198-ac91-6b669bc263c9` — `Authentic Hadith - fix front screen looping issue`
+- The new tasks are due `2026-06-30`, assigned to KP, open as `not_started`, and use the valid `manual` task mode.
+- Supabase SQL read-back in project `endovljmaudnxdzdapmf` returned all 3 rows by ID/title after insert.
+- Authenticated Codex in-app browser proof on `http://127.0.0.1:3000/os/my-dashboard`: `AI Infrastructure Front Desk` appeared in the project sectors, clicking `Authentic Hadith` opened `Authentic Hadith / June 2026`, and both Authentic Hadith bug tasks appeared under `Due In June 2026`.
+- Mobile proof: 390px viewport reported `scrollWidth=390`, `bodyScrollWidth=390`, and no horizontal overflow.
+- Boundary: local authenticated UI and Supabase production project read-back verified; production deployment receipt is separate.
 - RLS enabled: `true`
 - Column count: `14`
 - Required scope columns present: `agent_family`, `framework_scope`, `verification_status`
