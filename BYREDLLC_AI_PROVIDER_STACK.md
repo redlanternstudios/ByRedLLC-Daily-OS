@@ -41,7 +41,7 @@ Core flows that must work without Gemini, DeepSeek, GLM, or Groq:
 | Provider | Env override | Default model | Verification |
 | --- | --- | --- | --- |
 | Groq | `GROQ_MODEL` | `openai/gpt-oss-120b` | Groq deprecation docs recommend it as the replacement for `llama-3.3-70b-versatile`, which shuts down on 2026-08-16. |
-| Gemini | `GEMINI_MODEL` | `gemini-2.5-flash` | Google model docs list `gemini-2.5-flash` for large-scale, low-latency, high-volume agentic use cases. |
+| Gemini | `GEMINI_MODEL` | `gemini-3.5-flash` | Google model docs list `gemini-3.5-flash` as the stable Gemini 3.5 Flash model for fast, multimodal agentic work. |
 | DeepSeek | `DEEPSEEK_MODEL` | `deepseek-v4-flash` | DeepSeek docs list `deepseek-v4-flash` and note `deepseek-chat` retires on 2026-07-24. |
 | GLM / Z.AI | `GLM_MODEL` | `glm-5.2` | Z.AI docs list `glm-5.2` as the latest GLM model, strongest for coding, with 1M context and `reasoning_effort` control. |
 
@@ -55,7 +55,7 @@ Required only when enabling the complementary provider:
 
 ```bash
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.5-flash
 DEEPSEEK_API_KEY=
 DEEPSEEK_MODEL=deepseek-v4-flash
 ZAI_API_KEY=
@@ -91,12 +91,31 @@ Provider efficiency board:
 
 The board tracks provider runs, failures, estimated Codex tokens saved, estimated Codex minutes saved, and pending verification. The goal is to identify where cheaper providers are saving high-paid model usage and where they are weak enough that Codex still has to redo work.
 
+## SaaS Team Communication Rule
+
+For ByRedLLC OS, model collaboration is structured like a SaaS operating team:
+
+1. Groq handles fast triage, short summaries, and daily brief packets.
+2. Gemini handles screenshots, large context, dashboard UX, PDF/spec interpretation, and contradiction finding.
+3. GLM / Z.AI handles long-context engineering plans and agentic implementation strategy.
+4. DeepSeek handles code-risk critique, bug hypotheses, and test-plan review.
+5. Anthropic handles LanternAI and PM/planner reasoning where already configured.
+6. Codex executes, verifies, records receipts, and decides whether the output becomes reusable truth.
+
+Providers communicate through `os_ai_provider_runs` metadata handoff packets, not untracked model chatter. A handoff packet should include the team task id, source run id, source provider, target provider, recommended lane, risk notes, confidence score, quality score, business impact score, and the exact Codex action required.
+
+No provider handoff is allowed to close a task or mutate OS data. Handoffs are recommendations until Codex verifies them.
+
 ## Efficiency KPIs
 
 | KPI | Meaning | Action if weak |
 | --- | --- | --- |
 | `estimated_codex_tokens_saved` | Approximate Codex reasoning tokens avoided by letting a complementary provider do first-pass thinking. | Move more upstream planning/review into the cheaper provider if quality is acceptable. |
 | `estimated_codex_minutes_saved` | Approximate operator time saved before Codex execution. | Improve prompts or provider choice if savings stay low. |
+| `verified_codex_tokens_saved` | Estimated savings from runs Codex has verified. | Treat this as executive-level savings; pending savings are only pipeline value. |
+| `verified_codex_minutes_saved` | Estimated operator minutes saved from verified runs. | Use this for high-level team ROI reporting. |
+| `team_handoffs` | Count of model-to-model packets recorded in metadata. | If low, the models are acting as isolated helpers instead of a coordinated SaaS team. |
+| `handoff_completion_rate` | Share of handoffs that led to accepted/verified downstream work. | Re-route weak task types or tighten handoff packet quality. |
 | `failed_runs` | Provider calls that failed, blocked, or were rejected. | Fix key/env/model/routing issues or stop using that provider for the purpose. |
 | `pending_verification` | Successful advisor runs that still need Codex proof before becoming reusable truth. | Codex must verify with tests, browser, API read-back, or a receipt. |
 | `by_provider.failures` | Weakness count by provider. | Re-route that work type to another provider or tighten prompts. |

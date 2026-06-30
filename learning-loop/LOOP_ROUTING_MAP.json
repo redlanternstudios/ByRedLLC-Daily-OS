@@ -1,0 +1,135 @@
+{
+  "schema_version": "1.0.0",
+  "project": "ByRedLLC Daily OS",
+  "canonical_universal_loop": "/Users/kp/Agents/UNIVERSAL_LEARNING_LOOP.md",
+  "project_receipt_ledger": "/Users/kp/Documents/Keymon & Rory/ByRedLLC/ByRedLLC-Daily-OS/BYREDLLC_OPERATING_RECEIPT.md",
+  "stores": {
+    "motions": "learning-loop/MOTIONS_LIBRARY.md",
+    "lessons": "learning-loop/LEARNING_LEDGER.md",
+    "recipes": "learning-loop/RECIPES.md"
+  },
+  "routing_rules": [
+    {
+      "category": "web_app_feature",
+      "agent_family": "web_app",
+      "capture_when": [
+        "a dashboard/page/component behavior is implemented",
+        "a user-facing feature click path is verified",
+        "a reusable browser QA or rendered-state proof is collected"
+      ],
+      "load_before": [
+        "learning-loop/MOTIONS_LIBRARY.md#web-app-motions",
+        "learning-loop/LEARNING_LEDGER.md#web-app-lessons",
+        "BYREDLLC_OPERATING_RECEIPT.md"
+      ],
+      "write_to": [
+        "BYREDLLC_OPERATING_RECEIPT.md",
+        "learning-loop/MOTIONS_LIBRARY.md",
+        "learning-loop/LEARNING_LEDGER.md"
+      ],
+      "promote_to": "os_agent_receipts when verified and reusable across web-app agents"
+    },
+    {
+      "category": "dashboard_ux",
+      "agent_family": "web_app",
+      "capture_when": [
+        "layout, color, branding, first-screen hierarchy, or responsive behavior changes",
+        "browser screenshots prove visual behavior"
+      ],
+      "load_before": [
+        "learning-loop/RECIPES.md#dashboard-ux-recipes",
+        "learning-loop/LEARNING_LEDGER.md#dashboard-ux-lessons"
+      ],
+      "write_to": [
+        "BYREDLLC_OPERATING_RECEIPT.md",
+        "learning-loop/RECIPES.md",
+        "learning-loop/MOTIONS_LIBRARY.md"
+      ],
+      "promote_to": "os_agent_receipts only after production or signed-in browser proof"
+    },
+    {
+      "category": "provider_team",
+      "agent_family": "provider_team",
+      "capture_when": [
+        "Groq, Gemini, GLM, DeepSeek, or another provider creates a handoff packet",
+        "provider output saves Codex reasoning or catches a defect",
+        "provider failure changes routing"
+      ],
+      "load_before": [
+        "/Users/kp/Agents/operations/AI_PROVIDER_ROUTER.md",
+        "BYREDLLC_AI_PROVIDER_STACK.md",
+        "learning-loop/LEARNING_LEDGER.md#provider-team-lessons"
+      ],
+      "write_to": [
+        "BYREDLLC_OPERATING_RECEIPT.md",
+        "os_ai_provider_runs",
+        "learning-loop/LEARNING_LEDGER.md"
+      ],
+      "promote_to": "verified provider-run metrics plus receipt-backed routing rule"
+    },
+    {
+      "category": "deployment_env",
+      "agent_family": "web_app",
+      "capture_when": [
+        "Vercel env, Supabase env, model defaults, deployment settings, or production configuration changes",
+        "production/preview/development read-back proves the setting exists"
+      ],
+      "load_before": [
+        "BYREDLLC_AI_PROVIDER_STACK.md",
+        "learning-loop/LEARNING_LEDGER.md#deployment-env-lessons"
+      ],
+      "write_to": [
+        "BYREDLLC_OPERATING_RECEIPT.md",
+        "learning-loop/LEARNING_LEDGER.md"
+      ],
+      "promote_to": "project lesson only unless it generalizes to PE provider routing"
+    },
+    {
+      "category": "ios_agent",
+      "agent_family": "ios",
+      "capture_when": [
+        "the lesson belongs to iOS, TestFlight, App Store, EAS, RevenueCat, native signing, or mobile release gates"
+      ],
+      "load_before": [
+        "/Users/kp/Projects/AuthenticHadithApp/authentichadithapp/CODEX_APP_STORE_BUILD_LOG.md",
+        "/Users/kp/Projects/AuthenticHadithApp/authentichadithapp/BUILD_FIX_LOG.md"
+      ],
+      "write_to": [
+        "the iOS/App Store lane, not ByRedLLC web-app stores"
+      ],
+      "promote_to": "iOS/App Store factory learning loop"
+    },
+    {
+      "category": "universal_candidate",
+      "agent_family": "universal",
+      "capture_when": [
+        "a lesson applies across projects, agents, or operating systems",
+        "the lesson changes how Codex/agents should learn or verify"
+      ],
+      "load_before": [
+        "/Users/kp/Agents/UNIVERSAL_LEARNING_LOOP.md",
+        "/Users/kp/Agents/core/CORE_LEARNING_STANDARD.md"
+      ],
+      "write_to": [
+        "learning-loop/LEARNING_LEDGER.md as candidate only",
+        "/Users/kp/Agents/SYSTEM_CHANGELOG.md when a system-level change is made"
+      ],
+      "promote_to": "core/governance only with KP approval"
+    }
+  ],
+  "proof_required": [
+    "file path or diff summary",
+    "test command result",
+    "browser URL and observed DOM/screenshot",
+    "API or Vercel/Supabase read-back",
+    "database row id or receipt id when applicable"
+  ],
+  "never_store": [
+    "API keys",
+    "tokens",
+    "cookies",
+    "passwords",
+    "private env values",
+    "unverified model output as truth"
+  ]
+}

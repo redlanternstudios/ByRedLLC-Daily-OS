@@ -21,7 +21,7 @@ export type OsAiProviderConfig = {
 const DEFAULT_MODELS: Record<OsAiProviderId, string> = {
   anthropic: "claude-sonnet-4-6",
   groq: "openai/gpt-oss-120b",
-  gemini: "gemini-2.5-flash",
+  gemini: "gemini-3.5-flash",
   deepseek: "deepseek-v4-flash",
   glm: "glm-5.2",
 }

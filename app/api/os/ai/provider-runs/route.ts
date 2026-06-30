@@ -15,6 +15,7 @@ type ProviderRun = {
   outcome_summary: string | null
   weakness: string | null
   failure_reason: string | null
+  metadata: Record<string, unknown> | null
 }
 
 async function getCallerScope() {
@@ -53,7 +54,7 @@ export async function GET() {
 
   const { data, error } = await (supabase as any)
     .from("os_ai_provider_runs")
-    .select("id, created_at, provider, model, lane, purpose, status, estimated_codex_tokens_saved, estimated_codex_minutes_saved, verification_status, outcome_summary, weakness, failure_reason")
+    .select("id, created_at, provider, model, lane, purpose, status, estimated_codex_tokens_saved, estimated_codex_minutes_saved, verification_status, outcome_summary, weakness, failure_reason, metadata")
     .in("tenant_id", tenantIds)
     .order("created_at", { ascending: false })
     .limit(50) as { data: ProviderRun[] | null; error: { message: string } | null }
@@ -63,6 +64,11 @@ export async function GET() {
   const runs = data ?? []
   const successful = runs.filter((run) => run.status === "success" || run.status === "verified")
   const failed = runs.filter((run) => run.status === "failed" || run.status === "blocked" || run.status === "rejected")
+  const verified = runs.filter((run) => run.verification_status === "verified" || run.status === "verified")
+  const handoffs = runs.filter((run) => {
+    const metadata = run.metadata ?? {}
+    return Boolean(metadata.handoff_to || metadata.handoff_from || metadata.source_run_id || metadata.team_task_id)
+  })
   const byProvider = runs.reduce<Record<string, { runs: number; saved_tokens: number; failures: number }>>((acc, run) => {
     const current = acc[run.provider] ?? { runs: 0, saved_tokens: 0, failures: 0 }
     current.runs += 1
@@ -79,6 +85,9 @@ export async function GET() {
       failed_runs: failed.length,
       estimated_codex_tokens_saved: runs.reduce((sum, run) => sum + run.estimated_codex_tokens_saved, 0),
       estimated_codex_minutes_saved: Number(runs.reduce((sum, run) => sum + Number(run.estimated_codex_minutes_saved), 0).toFixed(2)),
+      verified_codex_tokens_saved: verified.reduce((sum, run) => sum + run.estimated_codex_tokens_saved, 0),
+      verified_codex_minutes_saved: Number(verified.reduce((sum, run) => sum + Number(run.estimated_codex_minutes_saved), 0).toFixed(2)),
+      team_handoffs: handoffs.length,
       pending_verification: runs.filter((run) => run.verification_status === "pending").length,
       by_provider: byProvider,
     },

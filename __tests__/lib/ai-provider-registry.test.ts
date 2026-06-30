@@ -66,7 +66,7 @@ describe("OS AI provider registry", () => {
     expect(getGroqModel()).toBe("openai/gpt-oss-120b")
     expect(providers.find((provider) => provider.id === "gemini")).toMatchObject({
       lane: "visual_context",
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       mutationAllowed: false,
     })
     expect(providers.find((provider) => provider.id === "deepseek")).toMatchObject({

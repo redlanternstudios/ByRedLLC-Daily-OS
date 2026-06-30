@@ -65,6 +65,9 @@ type RunsSummary = {
   failed_runs: number
   estimated_codex_tokens_saved: number
   estimated_codex_minutes_saved: number
+  verified_codex_tokens_saved: number
+  verified_codex_minutes_saved: number
+  team_handoffs: number
   pending_verification: number
   by_provider: Record<string, { runs: number; saved_tokens: number; failures: number }>
 }
@@ -296,15 +299,15 @@ export default function OSAIPage() {
             icon={AlertTriangle}
           />
           <BoardCard
-            label="Tokens Saved"
-            value={(summary?.estimated_codex_tokens_saved ?? 0).toLocaleString()}
-            detail="Estimated Codex reasoning avoided."
+            label="Verified Save"
+            value={(summary?.verified_codex_tokens_saved ?? 0).toLocaleString()}
+            detail="Codex savings backed by proof."
             icon={TrendingDown}
           />
           <BoardCard
-            label="Pending"
-            value={summary?.pending_verification ?? 0}
-            detail="Need Codex proof."
+            label="Handoffs"
+            value={summary?.team_handoffs ?? 0}
+            detail="Provider packets shared."
             icon={ShieldCheck}
           />
         </div>

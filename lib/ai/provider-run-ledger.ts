@@ -5,6 +5,18 @@ import type { OsAiProviderRunInsert } from "@/types/database"
 
 type ProviderRunStatus = "success" | "failed" | "blocked" | "rejected" | "verified"
 
+type ProviderRunHandoff = {
+  teamTaskId?: string
+  sourceRunId?: string
+  handoffFrom?: string
+  handoffTo?: string
+  recommendedNextLane?: string
+  businessImpactScore?: number
+  confidenceScore?: number
+  qualityScore?: number
+  codexActionRequired?: string
+}
+
 export function estimateCodexSavings(promptChars: number, contextChars: number, totalTokens: number | null) {
   const sourceTokens = Math.ceil((promptChars + contextChars) / 4)
   const advisorTokens = totalTokens ?? 0
@@ -33,6 +45,7 @@ export async function recordProviderRun(input: {
   outcomeSummary?: string | null
   weakness?: string | null
   failureReason?: string | null
+  handoff?: ProviderRunHandoff
   metadata?: Record<string, unknown>
 }) {
   if (!input.tenantId) return null
@@ -61,7 +74,22 @@ export async function recordProviderRun(input: {
       outcome_summary: input.outcomeSummary ?? null,
       weakness: input.weakness ?? null,
       failure_reason: input.failureReason ?? null,
-      metadata: input.metadata ?? {},
+      metadata: {
+        ...(input.metadata ?? {}),
+        ...(input.handoff
+          ? {
+              team_task_id: input.handoff.teamTaskId ?? null,
+              source_run_id: input.handoff.sourceRunId ?? null,
+              handoff_from: input.handoff.handoffFrom ?? input.provider,
+              handoff_to: input.handoff.handoffTo ?? null,
+              recommended_next_lane: input.handoff.recommendedNextLane ?? null,
+              business_impact_score: input.handoff.businessImpactScore ?? null,
+              confidence_score: input.handoff.confidenceScore ?? null,
+              quality_score: input.handoff.qualityScore ?? null,
+              codex_action_required: input.handoff.codexActionRequired ?? null,
+            }
+          : {}),
+      },
     })
     .select("*")
     .single()

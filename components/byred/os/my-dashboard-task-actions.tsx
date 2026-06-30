@@ -85,10 +85,10 @@ export function MyDashboardTaskActions({
             disabled={disabled}
             className={cn(
               "inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-[10px] font-semibold transition-colors",
-              "border-[#2A2D35] bg-[#111318] text-[#9CA3AF] hover:border-[#3A3D46] hover:text-white",
-              action === "clear" && "hover:border-green-700/60 hover:text-green-300",
-              action === "block" && "hover:border-red-800/60 hover:text-red-300",
-              disabled && "cursor-not-allowed opacity-45 hover:border-[#2A2D35] hover:text-[#9CA3AF]"
+              "border-[#E3D7BC] bg-white text-[#5F5A51] hover:border-[#C8A951] hover:text-[#171717]",
+              action === "clear" && "hover:border-green-600/60 hover:text-green-700",
+              action === "block" && "hover:border-red-600/60 hover:text-red-700",
+              disabled && "cursor-not-allowed opacity-45 hover:border-[#E3D7BC] hover:text-[#5F5A51]"
             )}
             aria-label={`${label} task`}
           >
