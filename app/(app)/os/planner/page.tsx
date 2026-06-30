@@ -22,6 +22,12 @@ type Story = {
 type Plan = { project_name: string; project_summary: string; epics: { name: string; goal: string; stories: Story[] }[] }
 type Mode = "HUMAN_ONLY" | "AI_DRAFT" | "AI_EXECUTE"
 type Sel = { on: boolean; mode: Mode }
+type SetupConfig = {
+  supabaseRepo?: string
+  githubRepo?: string
+  selectedIntegrations: string[]
+  apiKeys: Record<string, string>
+}
 
 const card = "rounded-xl bg-[#111318] border border-[#2A2D35] p-5"
 const label = "text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest"
@@ -48,13 +54,14 @@ export default function PlannerPage() {
   const [goal, setGoal] = useState("")
   const [answers, setAnswers] = useState("")
   const [refine, setRefine] = useState("")
-  const [step, setStep] = useState<"input" | "golden" | "plan" | "done">("input")
+  const [step, setStep] = useState<"setup" | "input" | "golden" | "plan" | "done">("setup")
   const [draft, setDraft] = useState<Draft | null>(null)
   const [plan, setPlan] = useState<Plan | null>(null)
   const [sel, setSel] = useState<Record<string, Sel>>({})
   const [created, setCreated] = useState<{ created: number; aiQueued: number; projectId?: string }>({ created: 0, aiQueued: 0 })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState("")
+  const [setup, setSetup] = useState<SetupConfig>({ selectedIntegrations: [], apiKeys: {} })
 
   useEffect(() => {
     fetch("/api/os/tenants").then((r) => r.json()).then((d) => {
@@ -86,7 +93,7 @@ export default function PlannerPage() {
         acceptance_criteria: s.acceptance_criteria, definition_of_done: s.definition_of_done,
         priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name })
     }))
-    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, items })
+    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, setup, items })
     setCreated(j); setStep("done")
   })
 
@@ -119,11 +126,112 @@ export default function PlannerPage() {
 
       {err && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-950/40 border border-red-800/40 text-red-400 text-sm"><AlertTriangle className="w-4 h-4 shrink-0" /> {err}</div>}
 
+      {/* STEP 0 — SETUP */}
+      {step === "setup" && (
+        <div className={card + " space-y-4"}>
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-[#D92532]" strokeWidth={1.75} />
+            <h2 className="text-lg font-bold text-white">Project Setup</h2>
+          </div>
+          
+          <div>
+            <span className={label}>Supabase Repository</span>
+            <p className="text-xs text-[#9CA3AF] mt-0.5">Select a Supabase project for this plan (yours or Keymon&apos;s)</p>
+            <select value={setup.supabaseRepo || ""} onChange={(e) => setSetup({...setup, supabaseRepo: e.target.value})}
+              className="mt-2 w-full rounded-lg bg-[#0E0F13] border border-[#2A2D35] px-3 py-2.5 text-sm text-white">
+              <option value="">— Select or create Supabase repo —</option>
+              <option value="rorysemeah-prod">Rory Semeah (Production)</option>
+              <option value="keymon-prod">Keymon Penn (Production)</option>
+              <option value="shared">Shared Multi-Tenant</option>
+            </select>
+          </div>
+
+          <div>
+            <span className={label}>GitHub Repository</span>
+            <p className="text-xs text-[#9CA3AF] mt-0.5">Pick an existing repo, create new, or import</p>
+            <div className="flex gap-2 mt-2">
+              <input type="text" value={setup.githubRepo || ""} onChange={(e) => setSetup({...setup, githubRepo: e.target.value})}
+                placeholder="e.g. redlanternstudios/project-name"
+                className="flex-1 rounded-lg bg-[#0E0F13] border border-[#2A2D35] px-3 py-2.5 text-sm text-white placeholder:text-[#52525B]" />
+              <button className="px-3 py-2.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-xs font-medium text-[#9CA3AF] hover:text-white">
+                Create New
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <span className={label}>Helpful Integrations</span>
+            <p className="text-xs text-[#9CA3AF] mt-0.5">Select integrations that would help this project</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {[
+                { id: "v0", name: "v0", desc: "AI UI generation" },
+                { id: "claude", name: "Claude", desc: "AI planning & coding" },
+                { id: "github", name: "GitHub", desc: "Version control" },
+                { id: "slack", name: "Slack", desc: "Team notifications" },
+                { id: "n8n", name: "n8n", desc: "Workflow automation" },
+                { id: "vercel", name: "Vercel", desc: "Deployment" },
+                { id: "stripe", name: "Stripe", desc: "Payments" },
+                { id: "mcp-notion", name: "Notion MCP", desc: "Docs & databases" },
+              ].map((int) => (
+                <label key={int.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-[#0E0F13] border border-[#2A2D35] cursor-pointer hover:border-[#D92532]/50">
+                  <input type="checkbox" checked={setup.selectedIntegrations.includes(int.id)} onChange={(e) => {
+                    if (e.target.checked) {
+                      setSetup({...setup, selectedIntegrations: [...setup.selectedIntegrations, int.id]})
+                    } else {
+                      setSetup({...setup, selectedIntegrations: setup.selectedIntegrations.filter(id => id !== int.id)})
+                    }
+                  }} className="w-4 h-4 rounded border-[#2A2D35] bg-[#1A1D24]" />
+                  <div>
+                    <p className="text-xs font-medium text-white">{int.name}</p>
+                    <p className="text-[10px] text-[#6B7280]">{int.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {setup.selectedIntegrations.length > 0 && (
+            <div>
+              <span className={label}>API Keys & Secrets</span>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">AI will prompt for these and store securely</p>
+              <div className="mt-2 space-y-2">
+                {setup.selectedIntegrations.map((int) => (
+                  <div key={int}>
+                    <label className="text-xs font-medium text-[#D1D5DB]">{int.toUpperCase()} API Key</label>
+                    <input type="password" placeholder={`Enter ${int} API key (optional for now)`}
+                      value={setup.apiKeys[int] || ""} onChange={(e) => setSetup({...setup, apiKeys: {...setup.apiKeys, [int]: e.target.value}})}
+                      className="mt-1 w-full rounded-lg bg-[#0E0F13] border border-[#2A2D35] px-3 py-2 text-sm text-white placeholder:text-[#52525B]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button onClick={() => setStep("input")} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium disabled:opacity-40">
+            <ArrowRight className="w-4 h-4" /> Continue to planning
+          </button>
+        </div>
+      )}
+
       {/* STEP 1 — INPUT */}
       {step === "input" && (
-        <div className={card + " space-y-4"}>
-          <div>
-            <span className={label}>Project</span>
+        <div className="space-y-4">
+          {setup.selectedIntegrations.length > 0 && (
+            <div className={card}>
+              <span className={label}>Project Setup</span>
+              <div className="mt-2 space-y-2 text-xs text-[#D1D5DB]">
+                {setup.supabaseRepo && <p><span className="text-[#9CA3AF]">Supabase:</span> {setup.supabaseRepo}</p>}
+                {setup.githubRepo && <p><span className="text-[#9CA3AF]">GitHub:</span> {setup.githubRepo}</p>}
+                {setup.selectedIntegrations.length > 0 && (
+                  <p><span className="text-[#9CA3AF]">Integrations:</span> {setup.selectedIntegrations.map(i => i.toUpperCase()).join(', ')}</p>
+                )}
+                <button onClick={() => setStep("setup")} className="mt-2 text-[#D92532] hover:text-[#F87171] text-[10px] font-medium">Edit setup</button>
+              </div>
+            </div>
+          )}
+          <div className={card + " space-y-4"}>
+            <div>
+              <span className={label}>Project</span>
             <select value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="mt-2 w-full rounded-lg bg-[#0E0F13] border border-[#2A2D35] px-3 py-2.5 text-sm text-white">
               {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
@@ -134,9 +242,10 @@ export default function PlannerPage() {
               placeholder="e.g. Launch a simple booking page for Paradise so customers can request a quote and we get notified."
               className="mt-2 w-full rounded-lg bg-[#0E0F13] border border-[#2A2D35] px-3 py-2.5 text-sm text-white placeholder:text-[#52525B]" />
           </div>
-          <button onClick={doDraft} disabled={loading || !goal.trim() || !tenantId} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium disabled:opacity-40">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />} Draft the golden path
-          </button>
+            <button onClick={doDraft} disabled={loading || !goal.trim() || !tenantId} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium disabled:opacity-40">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />} Draft the golden path
+            </button>
+          </div>
         </div>
       )}
 
@@ -157,7 +266,7 @@ export default function PlannerPage() {
           </div>
           <div className={card}><span className={label}>Proposed epics</span><div className="mt-2 space-y-2">{draft.proposed_epics.map((e, i) => <div key={i} className="flex items-start justify-between gap-3 p-2.5 rounded-lg bg-[#0E0F13] border border-[#2A2D35]/60"><div><p className="text-sm text-white font-medium">{e.name}</p><p className="text-xs text-[#9CA3AF]">{e.summary}</p></div><span className="text-[10px] text-[#6B7280] shrink-0 mt-1">~{e.est_stories} stories</span></div>)}</div></div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setStep("input")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-sm text-[#9CA3AF]"><ArrowLeft className="w-4 h-4" /> Revise</button>
+            <button onClick={() => setStep("setup")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-sm text-[#9CA3AF]"><ArrowLeft className="w-4 h-4" /> Back to setup</button>
             <button onClick={() => doGenerate()} disabled={loading} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium disabled:opacity-40">{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />} Build the menu</button>
           </div>
         </div>
@@ -245,7 +354,7 @@ export default function PlannerPage() {
             {created.projectId
               ? <Link href={`/os/projects/${created.projectId}`} className="px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium">Open project board</Link>
               : <Link href="/os/tasks" className="px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium">View tasks</Link>}
-            <button onClick={() => { setStep("input"); setGoal(""); setAnswers(""); setRefine(""); setDraft(null); setPlan(null); setSel({}) }} className="px-4 py-2.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-sm text-[#9CA3AF]">Plan another</button>
+            <button onClick={() => { setStep("setup"); setGoal(""); setAnswers(""); setRefine(""); setDraft(null); setPlan(null); setSel({}); setSetup({selectedIntegrations: [], apiKeys: {}}) }} className="px-4 py-2.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-sm text-[#9CA3AF]">Plan another</button>
           </div>
         </div>
       )}

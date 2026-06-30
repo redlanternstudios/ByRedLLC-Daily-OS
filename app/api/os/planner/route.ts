@@ -27,10 +27,17 @@ const draftSchema = z.object({
 
 // What the user actually ordered: a flat list of chosen plates with an execution intent.
 const AI_MODES = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"] as const
+const setupConfigSchema = z.object({
+  supabaseRepo: z.string().optional(),
+  githubRepo: z.string().optional(),
+  selectedIntegrations: z.array(z.string()).default([]),
+  apiKeys: z.record(z.string()).optional(),
+})
 const commitSchema = z.object({
   tenantId: z.string(),
   project_name: z.string(),
   project_summary: z.string().optional(),
+  setup: setupConfigSchema.optional(),
   items: z.array(z.object({
     epic_name: z.string(),
     title: z.string(),
@@ -139,6 +146,7 @@ ${answers ? `ANSWERS / EXTRA CONTEXT FROM USER:\n${answers}` : ""}`,
         createdByUserId: ctx.profileId,
         teamMembers,
         items,
+        setupConfig: parsed.setup ?? null,
       })
       return NextResponse.json(result)
     }

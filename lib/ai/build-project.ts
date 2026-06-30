@@ -111,12 +111,18 @@ export type BuildProjectInput = {
   createdByUserId: string | null
   teamMembers: { id: string; name: string }[]
   items: BuildStory[]
+  setupConfig?: {
+    supabaseRepo?: string
+    githubRepo?: string
+    selectedIntegrations?: string[]
+    apiKeys?: Record<string, string>
+  } | null
 }
 
 export async function buildProject(
   input: BuildProjectInput
 ): Promise<{ projectId: string; created: number; aiQueued: number }> {
-  const { admin, tenantId, projectName, projectSummary, createdByUserId, teamMembers, items } = input
+  const { admin, tenantId, projectName, projectSummary, createdByUserId, teamMembers, items, setupConfig } = input
 
   const resolveOwner = (name?: string | null): string | null => {
     if (!name || !name.trim()) return null
@@ -135,6 +141,7 @@ export async function buildProject(
       status: "active",
       owner_user_id: createdByUserId,
       created_by_user_id: createdByUserId,
+      setup_config: setupConfig ? JSON.stringify(setupConfig) : null,
     })
     .select("id")
     .single()
