@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createGroq } from "@ai-sdk/groq"
 import { generateText } from "ai"
 import { createClient } from "@/lib/supabase/server"
+import { getGroqModel } from "@/lib/ai/provider-registry"
 
 const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
 
@@ -41,7 +42,7 @@ Respond with a JSON object ONLY (no markdown, no explanation) with this exact sh
 }`
 
     const { text } = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq(getGroqModel()),
       prompt,
       maxOutputTokens: 500,
     })
