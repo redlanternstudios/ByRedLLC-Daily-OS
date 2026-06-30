@@ -1,6 +1,7 @@
 import "server-only"
 
 import { z } from "zod"
+import { sendSlackMessage, slackConfigured } from "@/lib/slack"
 
 // ─── Lantern AI write tools ───────────────────────────────────────────────────
 //
@@ -15,7 +16,7 @@ import { z } from "zod"
 // project bootstrap uses `admin` because creating a tenant + membership row would
 // otherwise be blocked by RLS.
 
-type TeamMember = { id: string; name: string; role: string; email: string }
+type TeamMember = { id: string; name: string; role: string; email: string; slack_user_id?: string | null }
 type TenantRef = { id: string; name: string }
 
 export type OsToolsCtx = {
@@ -143,6 +144,32 @@ export function createOsTools(ctx: OsToolsCtx) {
     if (rows.length === 1) return { ok: true, channel: rows[0] }
     if (rows.length === 0) return { ok: false, msg: `No channel matches "${query}".` }
     return { ok: false, msg: `Multiple channels match "${query}": ${rows.map((r) => `#${r.slug}`).join(", ")}. Which one?` }
+  }
+
+  // Resolve a Slack send target (channel or teammate DM) to a postable id + label.
+  // Shared by draft_slack_message and send_slack_message so preview and send agree.
+  async function resolveSlackTarget(a: { to_channel?: string; to_member_name?: string }):
+    | Promise<{ ok: true; channel: string; label: string } | { ok: false; msg: string }> {
+    if (!a.to_channel && !a.to_member_name) return { ok: false, msg: "Specify either a channel or a teammate to DM." }
+    if (a.to_channel && a.to_member_name) return { ok: false, msg: "Pick one: a channel OR a teammate, not both." }
+    if (a.to_member_name) {
+      const q = a.to_member_name.trim().toLowerCase()
+      let hits = teamMembers.filter((m) => m.name.toLowerCase() === q)
+      if (hits.length === 0) hits = teamMembers.filter((m) => m.name.toLowerCase().includes(q))
+      if (hits.length === 0) return { ok: false, msg: `No team member matches "${a.to_member_name}".` }
+      if (hits.length > 1) return { ok: false, msg: `"${a.to_member_name}" is ambiguous (${hits.map((h) => h.name).join(", ")}).` }
+      const member = hits[0]
+      // Look up the Slack id on demand so this stays safe before the
+      // byred_users.slack_user_id column/migration lands.
+      const { data: row, error: lookupErr } = await supabase
+        .from("byred_users").select("slack_user_id").eq("id", member.id).maybeSingle()
+      if (lookupErr) return { ok: false, msg: "Slack identity mapping isn't set up yet (byred_users.slack_user_id missing)." }
+      const slackId = (row as { slack_user_id: string | null } | null)?.slack_user_id
+      if (!slackId) return { ok: false, msg: `${member.name} has no Slack ID mapped yet — set their byred_users.slack_user_id first.` }
+      return { ok: true, channel: slackId, label: member.name }
+    }
+    const ch = a.to_channel as string
+    return { ok: true, channel: ch, label: ch.startsWith("#") ? ch : `#${ch}` }
   }
 
   return {
@@ -592,6 +619,48 @@ export function createOsTools(ctx: OsToolsCtx) {
           .insert({ channel_id: ch.id, user_id: profileId, body: a.message })
         if (error) return `Post failed: ${error.message}`
         return `Posted to #${ch.slug}.`
+      },
+    },
+
+    // ─── Slack (external — draft → approve → send gate, like email) ───────────
+    draft_slack_message: {
+      description:
+        "Draft a Slack message for the user to approve BEFORE sending. ALWAYS call this first for Slack. Returns a preview; do not call send_slack_message until the user approves it. Target is a channel ('general'/'#ops') or a teammate DM by name.",
+      inputSchema: z.object({
+        to_channel: z.string().optional().describe("Slack channel name or id"),
+        to_member_name: z.string().optional().describe("Teammate to DM (resolves to their Slack id)"),
+        message: z.string().describe("Message text"),
+      }),
+      execute: async (a: { to_channel?: string; to_member_name?: string; message: string }) => {
+        const target = await resolveSlackTarget(a)
+        if (!target.ok) return target.msg
+        const note = slackConfigured() ? "" : " (note: Slack isn't connected yet — SLACK_BOT_TOKEN must be set before this can actually send)"
+        return JSON.stringify({
+          status: "DRAFT_READY",
+          to: target.label,
+          channel: "slack",
+          preview: a.message.slice(0, 400) + (a.message.length > 400 ? "…" : ""),
+          instruction: `Say "send it" to deliver this Slack message, or tell me what to change.${note}`,
+        })
+      },
+    },
+
+    send_slack_message: {
+      description:
+        "Send a Slack message that the user has ALREADY approved via draft_slack_message. Only call after the user confirmed the draft (e.g. 'send it' / 'looks good'). Target is a channel or a teammate DM by name.",
+      inputSchema: z.object({
+        to_channel: z.string().optional().describe("Slack channel name or id"),
+        to_member_name: z.string().optional().describe("Teammate to DM"),
+        message: z.string().describe("Message text"),
+      }),
+      execute: async (a: { to_channel?: string; to_member_name?: string; message: string }) => {
+        if (!slackConfigured()) {
+          return "Slack isn't connected yet — a Slack bot token (SLACK_BOT_TOKEN) needs to be added to the environment first."
+        }
+        const target = await resolveSlackTarget(a)
+        if (!target.ok) return target.msg
+        const result = await sendSlackMessage({ channel: target.channel, text: a.message })
+        return result.ok ? `Sent on Slack to ${target.label}.` : `Slack send failed: ${result.reason}`
       },
     },
   }
