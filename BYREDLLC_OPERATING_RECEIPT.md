@@ -85,6 +85,17 @@ Latest local verification before merge:
 
 ## AI Provider Router Receipt
 
+Latest verified: 2026-06-29 20:04 PT
+
+- GitHub save receipt: committed dashboard/provider/learning-loop work to `main` with commit `4da8215` (`Add SaaS team dashboard learning loop`) and pushed to `https://github.com/redlanternstudios/ByRedLLC-Daily-OS.git`.
+- Vercel production deploy receipt: `vercel deploy --prod --yes` completed with deployment id `dpl_9UkQsTfrSSJPYp5hGaEE8JQQ8fj2`.
+- Vercel deployment URL: `https://byredllc-daily-5uaw6t5ag-redlantern-studios.vercel.app`.
+- Production alias: `https://byredlanternos.com`.
+- Inspect proof: `vercel inspect https://byredllc-daily-5uaw6t5ag-redlantern-studios.vercel.app --scope redlantern-studios` returned status `Ready`, target `production`, and alias `https://byredlanternos.com`.
+- Production smoke proof: `https://byredlanternos.com/api/health` returned HTTP 200 with Supabase URL, anon key, service role, and database checks all `ok`.
+- Protected route proof: unauthenticated `https://byredlanternos.com/os/my-dashboard` returned HTTP 307 to `/login`, which is the expected auth gate.
+- Boundary: this receipt records deployment and unauthenticated production smoke proof. Signed-in production visual QA still requires an authenticated browser session on the production domain.
+
 Latest verified: 2026-06-29 20:00 PT
 
 - SaaS team task-organization test was run before GitHub/Vercel save.
