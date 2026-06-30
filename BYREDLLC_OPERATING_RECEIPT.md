@@ -85,6 +85,17 @@ Latest local verification before merge:
 
 ## AI Provider Router Receipt
 
+Latest verified: 2026-06-29 20:47 PT
+
+- GitHub save receipt: monthly project drilldown work committed to `main` with commit `3ffdc9d` (`Add monthly project dashboard drilldown`) and pushed to `https://github.com/redlanternstudios/ByRedLLC-Daily-OS.git`.
+- Vercel production deploy receipt: `vercel deploy --prod --yes --scope redlantern-studios` completed with deployment id `dpl_3FfGzDdwp5feLio3BGtB6YTFiRb6`.
+- Vercel deployment URL: `https://byredllc-daily-4tmpikmsf-redlantern-studios.vercel.app`.
+- Production alias: `https://byredlanternos.com`.
+- Inspect proof: `vercel inspect https://byredllc-daily-4tmpikmsf-redlantern-studios.vercel.app --scope redlantern-studios` returned status `Ready`, target `production`, and alias `https://byredlanternos.com`.
+- Production smoke proof: `https://byredlanternos.com/api/health` returned HTTP 200 with Supabase URL, anon key, service role, and database checks all `ok`.
+- Protected route proof: unauthenticated `https://byredlanternos.com/os/my-dashboard` returned HTTP 307 to `/login`, which is the expected auth gate.
+- Boundary: production signed-in dashboard click proof was not repeated after deploy because the authenticated Codex browser session is local. Local signed-in Codex UI proof is recorded in the 20:32 PT receipt below.
+
 Latest verified: 2026-06-29 20:32 PT
 
 - `SAAS TEAM MODE` used for `/os/my-dashboard` monthly project drilldown work.
