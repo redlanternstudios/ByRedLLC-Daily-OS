@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/server"
 import { requireAuth } from "@/lib/auth"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
 import { OSPriorityBadge, OSStatusBadge } from "@/components/byred/os/os-badge"
+import { AiPmAssistant, type AiPmDashboardContext, type AiPmTaskSignal } from "@/components/byred/os/ai-pm-assistant"
 import { MyDashboardTaskActions } from "@/components/byred/os/my-dashboard-task-actions"
 import { ProjectMonthDrilldown, type DashboardProjectSummary, type DashboardProjectTask } from "@/components/byred/os/project-month-drilldown"
 import type { ByredTask, OsAgentReceipt } from "@/types/database"
@@ -183,6 +184,21 @@ function toDashboardProjectTask(
   }
 }
 
+function toAiPmTaskSignal(
+  task: ByredTask | null | undefined,
+  tenants: Map<string, { name: string; color?: string | null }>,
+): AiPmTaskSignal | null {
+  if (!task) return null
+
+  return {
+    title: task.title,
+    project: tenantName(task, tenants),
+    due: formatDue(task.due_date),
+    priority: task.priority,
+    status: task.status,
+  }
+}
+
 function Section({
   title,
   subtitle,
@@ -270,120 +286,6 @@ function CommandCard({
       <p className="text-sm font-semibold leading-snug text-[#171717] line-clamp-2">{value}</p>
       <p className="mt-2 text-[11px] leading-relaxed text-[#5F5A51]">{detail}</p>
     </div>
-  )
-}
-
-function AiPmAssistantCard({
-  primaryMove,
-  decisionCount,
-  blockedCount,
-  monthLabel,
-  visibleTaskRows,
-  tenants,
-}: {
-  primaryMove?: ByredTask | null
-  decisionCount: number
-  blockedCount: number
-  monthLabel: string
-  visibleTaskRows: number
-  tenants: Map<string, { name: string; color?: string | null }>
-}) {
-  const primaryMoveText = primaryMove
-    ? `${primaryMove.title} in ${tenantName(primaryMove, tenants)}`
-    : "No urgent KP-owned task is currently selected."
-
-  const prompts = [
-    {
-      label: "Plan My Month",
-      detail: `Turn the ${monthLabel} dashboard into a PM execution plan.`,
-      icon: ListChecks,
-      prompt: `Act as Keymon's AI PM. Review my ${monthLabel} dashboard context and give me a clear execution plan: top project, top tasks, owners, blockers, and what should be handled first. Primary move: ${primaryMoveText}.`,
-    },
-    {
-      label: "Prioritize Today",
-      detail: "Pick the next move and explain why.",
-      icon: Target,
-      prompt: `Act as my AI PM. Prioritize my day from the dashboard. I have ${visibleTaskRows} visible task rows, ${decisionCount} PM decision items, and ${blockedCount} blocked items. Tell me the one move to do first, the next move, and what to delegate.`,
-    },
-    {
-      label: "Find Blockers",
-      detail: "Surface stuck work before it spreads.",
-      icon: AlertTriangle,
-      prompt: `Act as my AI PM. Find the blockers and risks in my current ByRedLLC OS workload. Separate what I should fix, delegate, and verify before marking anything complete.`,
-    },
-    {
-      label: "Create Tasks",
-      detail: "Convert messy direction into board work.",
-      icon: Lightbulb,
-      prompt: "Act as my AI PM. Help me turn this direction into clean project tasks with project, owner, priority, due date, and definition of done. Ask only for missing details that block task creation.",
-    },
-  ]
-
-  return (
-    <section className="overflow-hidden rounded-lg border border-[#D7B85E] bg-white shadow-sm">
-      <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)] lg:p-5">
-        <div className="min-w-0">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md border border-[#D7B85E] bg-[#FBF7ED]">
-              <Brain className="h-4 w-4 text-[#8A610F]" strokeWidth={1.75} />
-            </div>
-            <div>
-              <p className="text-[10px] font-condensed font-semibold uppercase tracking-widest text-[#8A610F]">
-                Keymon's AI PM
-              </p>
-              <h2 className="text-xl font-condensed font-bold uppercase tracking-tight text-[#171717]">
-                Your personal project manager
-              </h2>
-            </div>
-          </div>
-          <p className="max-w-3xl text-sm leading-relaxed text-[#5F5A51]">
-            Use this assistant to turn dashboard signals into a clean PM plan: what matters this month, what needs a task, what is blocked, and what needs proof before it is called complete.
-          </p>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <div className="rounded-md border border-[#E3D7BC] bg-[#FBF7ED] px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wider text-[#6B6254]">Decisions</p>
-              <p className="mt-1 text-lg font-condensed font-bold text-[#171717]">{decisionCount}</p>
-            </div>
-            <div className="rounded-md border border-[#E3D7BC] bg-[#FBF7ED] px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wider text-[#6B6254]">Blocked</p>
-              <p className="mt-1 text-lg font-condensed font-bold text-[#171717]">{blockedCount}</p>
-            </div>
-            <div className="rounded-md border border-[#E3D7BC] bg-[#FBF7ED] px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wider text-[#6B6254]">Visible</p>
-              <p className="mt-1 text-lg font-condensed font-bold text-[#171717]">{visibleTaskRows}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
-          {prompts.map(({ label, detail, icon: Icon, prompt }) => (
-            <Link
-              key={label}
-              href={`/os/ai?prompt=${encodeURIComponent(prompt)}`}
-              className="group flex items-center justify-between gap-3 rounded-md border border-[#E8DEC7] bg-[#FCFAF5] px-3 py-3 text-left transition hover:border-[#C8A951] hover:bg-[#FBF7ED]"
-            >
-              <span className="flex min-w-0 items-start gap-2">
-                <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9A6A12]" strokeWidth={1.75} />
-                <span className="min-w-0">
-                  <span className="block text-xs font-semibold text-[#171717]">{label}</span>
-                  <span className="mt-0.5 block text-[10px] leading-relaxed text-[#6B6254]">{detail}</span>
-                </span>
-              </span>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#8A610F] transition group-hover:translate-x-0.5" strokeWidth={1.75} />
-            </Link>
-          ))}
-        </div>
-      </div>
-      <div className="flex flex-col gap-2 border-t border-[#E8DEC7] bg-[#FBF7ED] px-4 py-3 text-xs text-[#5F5A51] sm:flex-row sm:items-center sm:justify-between">
-        <span className="inline-flex items-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5 text-[#8A610F]" strokeWidth={1.75} />
-          PM advice can draft and organize; task changes still need app/tool confirmation and receipts.
-        </span>
-        <Link href="/os/ai" className="font-semibold text-[#8A610F] hover:text-[#171717]">
-          Open full AI workspace
-        </Link>
-      </div>
-    </section>
   )
 }
 
@@ -632,6 +534,27 @@ export default async function MyDashboardPage() {
   const verifyMove = myBlocked[0] ?? decisionQueue[0]
   const proofRule = receipts[0]
   const visibleTaskRows = doFirst.length + decisionQueue.length + teamWatchlist.length + unassigned.length + projectLanes.reduce((count, [, laneTasks]) => count + Math.min(laneTasks.length, 2), 0)
+  const aiPmContext: AiPmDashboardContext = {
+    monthLabel: monthWindow.label,
+    todayLabel: today,
+    primaryMove: toAiPmTaskSignal(primaryMove, tenantMap),
+    nextMove: toAiPmTaskSignal(nextMove, tenantMap),
+    delegateMove: toAiPmTaskSignal(delegateMove, tenantMap),
+    verifyMove: toAiPmTaskSignal(verifyMove, tenantMap),
+    decisionCount: decisionQueueAll.length,
+    blockedCount: myBlocked.length + teamWatchlistAll.filter((task) => task.blocker_flag || task.status === "blocked").length,
+    visibleTaskRows,
+    projects: focusProjectCards.map((project) => ({
+      title: project.title,
+      sector: project.sector,
+      openCount: project.openCount,
+      monthCount: project.monthCount,
+      blockedCount: project.blockedCount,
+      topTasks: [...project.attentionTasks, ...project.monthTasks, ...project.unscheduledTasks]
+        .slice(0, 4)
+        .map((task) => `${task.title} (${task.dueLabel}, ${task.priority}, ${task.status})`),
+    })),
+  }
 
   return (
     <div className="-m-6 min-h-[calc(100vh-3.5rem)] bg-[#F7F3EA] px-4 py-5 text-[#171717] sm:px-6 lg:px-8">
@@ -719,14 +642,7 @@ export default async function MyDashboardPage() {
         </div>
       </div>
 
-      <AiPmAssistantCard
-        primaryMove={primaryMove}
-        decisionCount={decisionQueueAll.length}
-        blockedCount={myBlocked.length + teamWatchlistAll.filter((task) => task.blocker_flag || task.status === "blocked").length}
-        monthLabel={monthWindow.label}
-        visibleTaskRows={visibleTaskRows}
-        tenants={tenantMap}
-      />
+      <AiPmAssistant context={aiPmContext} />
 
       <div className="space-y-3">
         <DashboardSectionHeader
