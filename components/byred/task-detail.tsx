@@ -47,17 +47,16 @@ import { TaskComments } from "@/components/byred/task-comments"
 import { useUser } from "@/lib/context/user-context"
 import type { Task, Activity } from "@/types/db"
 
-function ScoreBar({ value }: { value: number | null }) {
-  const score = value ?? 0
+function ScoreBar({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
         <div
           className="h-full bg-byred-red rounded-full transition-all"
-          style={{ width: `${(score / 10) * 100}%` }}
+          style={{ width: `${(value / 10) * 100}%` }}
         />
       </div>
-      <span className="text-xs text-[#9CA3AF] font-mono w-4">{score}</span>
+      <span className="text-xs text-[#9CA3AF] font-mono w-4">{value}</span>
     </div>
   )
 }
@@ -85,12 +84,10 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
 
   const [title, setTitle] = useState(task.title)
   const [editingTitle, setEditingTitle] = useState(false)
-  const [blockerFlag, setBlockerFlag] = useState(task.blocker_flag ?? false)
+  const [blockerFlag, setBlockerFlag] = useState(task.blocker_flag)
   const [aiResult, setAiResult] = useState<AiActionResult | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [status, setStatus] = useState(task.status ?? "not_started")
-  const estimatedMinutes = task.estimated_minutes ?? 0
-  const createdAt = task.created_at ?? new Date().toISOString()
   const [priority, setPriority] = useState(task.priority ?? "medium")
   const [aiMode, setAiMode] = useState<string>(task.ai_mode ?? "HUMAN_ONLY")
   const [blockerReason, setBlockerReason] = useState(task.blocker_reason ?? "")
@@ -245,24 +242,23 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
           <Card className="bg-white border-zinc-200">
             <CardContent className="p-4">
               <dl className="space-y-3 text-sm">
+
                 <div className="flex justify-between">
                   <dt className="text-[#9CA3AF]">Estimated</dt>
                   <dd className="text-[#6B7280] font-mono text-xs">
-                    {estimatedMinutes < 60
-                      ? `${estimatedMinutes}m`
-                      : `${Math.floor(estimatedMinutes / 60)}h ${estimatedMinutes % 60 > 0 ? `${estimatedMinutes % 60}m` : ""}`}
+                    {(() => { const em = task.estimated_minutes ?? 0; return em < 60 ? `${em}m` : `${Math.floor(em / 60)}h ${em % 60 > 0 ? `${em % 60}m` : ""}` })()}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-[#9CA3AF] mb-1.5">Revenue impact</dt>
                   <dd>
-                    <ScoreBar value={task.revenue_impact_score} />
+                    <ScoreBar value={task.revenue_impact_score ?? 0} />
                   </dd>
                 </div>
                 <div>
                   <dt className="text-[#9CA3AF] mb-1.5">Urgency</dt>
                   <dd>
-                    <ScoreBar value={task.urgency_score} />
+                    <ScoreBar value={task.urgency_score ?? 0} />
                   </dd>
                 </div>
                 <div className="flex justify-between">
@@ -288,9 +284,9 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
                   <dt className="text-[#9CA3AF]">Created</dt>
                   <dd
                     className="text-xs text-[#9CA3AF] font-mono"
-                    title={format(parseISO(createdAt), "PPpp")}
+                    title={format(parseISO(task.created_at ?? new Date().toISOString()), "PPpp")}
                   >
-                    {formatDistanceToNow(parseISO(createdAt), {
+                    {formatDistanceToNow(parseISO(task.created_at ?? new Date().toISOString()), {
                       addSuffix: true,
                     })}
                   </dd>
@@ -443,7 +439,7 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
               </Label>
               <Switch
                 id="blocker-toggle"
-                checked={blockerFlag}
+                checked={blockerFlag ?? false}
                 onCheckedChange={setBlockerFlag}
                 className="data-[state=checked]:bg-byred-red"
               />
