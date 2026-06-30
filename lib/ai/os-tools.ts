@@ -1,6 +1,7 @@
 import "server-only"
 
 import { z } from "zod"
+import { sendSlackMessage, slackConfigured } from "@/lib/slack"
 
 // ─── Lantern AI write tools ───────────────────────────────────────────────────
 //
@@ -15,7 +16,7 @@ import { z } from "zod"
 // project bootstrap uses `admin` because creating a tenant + membership row would
 // otherwise be blocked by RLS.
 
-type TeamMember = { id: string; name: string; role: string; email: string }
+type TeamMember = { id: string; name: string; role: string; email: string; slack_user_id?: string | null }
 type TenantRef = { id: string; name: string }
 
 export type OsToolsCtx = {
@@ -592,6 +593,50 @@ export function createOsTools(ctx: OsToolsCtx) {
           .insert({ channel_id: ch.id, user_id: profileId, body: a.message })
         if (error) return `Post failed: ${error.message}`
         return `Posted to #${ch.slug}.`
+      },
+    },
+
+    // ─── Slack (external) ─────────────────────────────────────────────────────
+    send_slack_message: {
+      description:
+        "Send a message on Slack — either to a channel (e.g. 'general' or '#ops') or as a DM to a teammate by name. Use for external Slack reach; use post_channel_message for the in-app OS channels.",
+      inputSchema: z.object({
+        to_channel: z.string().optional().describe("Slack channel name or id (e.g. 'general' or 'C012…')"),
+        to_member_name: z.string().optional().describe("Teammate to DM (resolves to their Slack id)"),
+        message: z.string().describe("Message text"),
+      }),
+      execute: async (a: { to_channel?: string; to_member_name?: string; message: string }) => {
+        if (!slackConfigured()) {
+          return "Slack isn't connected yet — a Slack bot token (SLACK_BOT_TOKEN) needs to be added to the environment first."
+        }
+        if (!a.to_channel && !a.to_member_name) return "Specify either a channel or a teammate to DM."
+        if (a.to_channel && a.to_member_name) return "Pick one: a channel OR a teammate, not both."
+
+        let channel: string
+        let label: string
+        if (a.to_member_name) {
+          const q = a.to_member_name.trim().toLowerCase()
+          let hits = teamMembers.filter((m) => m.name.toLowerCase() === q)
+          if (hits.length === 0) hits = teamMembers.filter((m) => m.name.toLowerCase().includes(q))
+          if (hits.length === 0) return `No team member matches "${a.to_member_name}".`
+          if (hits.length > 1) return `"${a.to_member_name}" is ambiguous (${hits.map((h) => h.name).join(", ")}).`
+          const member = hits[0]
+          // Look up the Slack id on demand so this stays safe before the
+          // byred_users.slack_user_id column/migration lands.
+          const { data: row, error: lookupErr } = await supabase
+            .from("byred_users").select("slack_user_id").eq("id", member.id).maybeSingle()
+          if (lookupErr) return "Slack identity mapping isn't set up yet (byred_users.slack_user_id missing)."
+          const slackId = (row as { slack_user_id: string | null } | null)?.slack_user_id
+          if (!slackId) return `${member.name} has no Slack ID mapped yet — set their byred_users.slack_user_id first.`
+          channel = slackId
+          label = member.name
+        } else {
+          channel = a.to_channel as string
+          label = a.to_channel as string
+        }
+
+        const result = await sendSlackMessage({ channel, text: a.message })
+        return result.ok ? `Sent on Slack to ${label}.` : `Slack send failed: ${result.reason}`
       },
     },
   }
