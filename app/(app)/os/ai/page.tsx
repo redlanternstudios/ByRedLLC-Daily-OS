@@ -108,6 +108,11 @@ export default function OSAIPage() {
   const isActive = status === "submitted" || status === "streaming"
 
   useEffect(() => {
+    const prompt = new URLSearchParams(window.location.search).get("prompt")
+    if (prompt) setInput(prompt)
+  }, [])
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
