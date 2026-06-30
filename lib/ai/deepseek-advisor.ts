@@ -53,7 +53,7 @@ export async function runDeepSeekAdvisor(messages: DeepSeekMessage[]): Promise<D
       model,
       messages,
       temperature: 0.2,
-      max_tokens: 1600,
+      max_tokens: 2600,
       response_format: { type: "json_object" },
     }),
   })

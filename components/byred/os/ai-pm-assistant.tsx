@@ -92,6 +92,7 @@ const actions = [
 const aiPmOperatingContract = {
   identity: "Keymon's embedded AI PM inside ByRedLLC My Dashboard",
   provider: "deepseek",
+  model: "deepseek-v4-flash",
   lane: "cost-aware PM reasoning, code-risk critique, task shaping, blocker analysis, and execution planning",
   authority: [
     "Advise, organize, prioritize, critique, and draft PM plans from dashboard context.",
@@ -266,7 +267,7 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
   const [activeAction, setActiveAction] = useState<string | null>(null)
   const [result, setResult] = useState<AdvisorResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [providerLabel, setProviderLabel] = useState("Dashboard PM")
+  const [providerLabel, setProviderLabel] = useState("DeepSeek / deepseek-v4-flash")
 
   const contextSummary = useMemo(() => JSON.stringify({
     operating_contract: aiPmOperatingContract,
@@ -277,7 +278,7 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
     setActiveAction(action.id)
     setError(null)
     setResult(buildLocalPmResult(action.id, context))
-    setProviderLabel("Dashboard PM draft")
+    setProviderLabel("DeepSeek / deepseek-v4-flash running")
 
     try {
       const response = await fetch("/api/os/ai/advisor", {
@@ -298,6 +299,7 @@ export function AiPmAssistant({ context }: AiPmAssistantProps) {
       setProviderLabel(payload.provider && payload.model ? `${payload.provider} / ${payload.model}` : "Dashboard PM")
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI PM could not produce a readout.")
+      setProviderLabel("DeepSeek / deepseek-v4-flash draft")
     } finally {
       setActiveAction(null)
     }

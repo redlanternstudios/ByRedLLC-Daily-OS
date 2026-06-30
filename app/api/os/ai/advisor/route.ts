@@ -21,6 +21,29 @@ type ReceiptRow = {
   framework_scope: string
 }
 
+function parseAdvisorJson(content: string) {
+  try {
+    return JSON.parse(content) as unknown
+  } catch {
+    const start = content.indexOf("{")
+    const end = content.lastIndexOf("}")
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(content.slice(start, end + 1)) as unknown
+      } catch {
+      }
+    }
+
+    return {
+      recommendation: content,
+      reasoning_summary: "Provider returned non-standard JSON, so the app preserved the advisor text as a PM recommendation.",
+      risks: ["Provider formatting drifted from the required JSON contract."],
+      codex_verification_steps: ["Review the provider text before treating it as verified work.", "Keep Codex as the operator/verifier before mutating tasks or claiming completion."],
+      not_allowed_to_do: ["The advisor cannot mutate dashboard data or mark work complete."],
+    }
+  }
+}
+
 async function getCallerScope() {
   const supabase = await createClient()
   const {
@@ -118,7 +141,7 @@ ${parsed.data.prompt}`,
       ? await runGlmAdvisor([...messages])
       : await runDeepSeekAdvisor([...messages])
 
-    const parsedContent = JSON.parse(result.content) as unknown
+    const parsedContent = parseAdvisorJson(result.content)
     const run = await recordProviderRun({
       tenantId,
       userId: profileId,
