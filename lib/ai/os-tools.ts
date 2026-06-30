@@ -2,6 +2,7 @@ import "server-only"
 
 import { z } from "zod"
 import { sendSlackMessage, slackConfigured } from "@/lib/slack"
+import { autobuildProject } from "@/lib/ai/build-project"
 
 // ─── Lantern AI write tools ───────────────────────────────────────────────────
 //
@@ -691,6 +692,42 @@ export function createOsTools(ctx: OsToolsCtx) {
           .insert({ channel_id: ch.id, user_id: profileId, body: a.message })
         if (error) return `Post failed: ${error.message}`
         return `Posted to #${ch.slug}.`
+      },
+    },
+
+    // ─── Planner handoff ──────────────────────────────────────────────────────
+    push_to_planner: {
+      description:
+        "Hand a project the user has shaped in this chat to the AI Project Planner. It auto-builds the full project — epics, tasks with acceptance criteria, AI-assigned owners — and returns a board link. Use when the user says 'push to planner', 'build this project', or similar. Synthesize a clear, self-contained goal paragraph from the conversation.",
+      inputSchema: z.object({
+        project_name: z.string().describe("The project/tenant this belongs to"),
+        goal: z.string().describe("A clear, self-contained description of the project goal distilled from the chat"),
+        context: z.string().optional().describe("Any extra constraints or details gathered in the chat"),
+      }),
+      execute: async (a: { project_name: string; goal: string; context?: string }) => {
+        const proj = resolveProject(a.project_name)
+        if (!proj.ok) return proj.msg
+        const rosterText = teamMembers.map((m) => `- ${m.name} (${m.role})`).join("\n")
+        try {
+          const result = await autobuildProject({
+            admin,
+            tenantId: proj.id,
+            tenantName: proj.name,
+            goal: a.goal,
+            context: a.context ?? "",
+            createdByUserId: profileId,
+            teamMembers: teamMembers.map((m) => ({ id: m.id, name: m.name })),
+            rosterText,
+          })
+          logActivity({
+            object_type: "project", object_id: result.projectId, tenant_id: proj.id,
+            type: "project_built", summary: `Lantern AI built project "${result.projectName}" (${result.created} tasks)`,
+          })
+          const ai = result.aiQueued ? `, ${result.aiQueued} queued for the AI` : ""
+          return `Built project "${result.projectName}" on ${proj.name}: ${result.created} tasks${ai}. Review the board at /os/projects/${result.projectId}`
+        } catch (e) {
+          return `Planner build failed: ${e instanceof Error ? e.message : String(e)}`
+        }
       },
     },
 

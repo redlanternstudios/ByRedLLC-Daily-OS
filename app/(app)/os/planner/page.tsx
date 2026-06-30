@@ -17,9 +17,9 @@ type Story = {
   title: string; user_story: string; description: string
   acceptance_criteria: string[]; definition_of_done: string[]
   priority: "critical" | "high" | "medium" | "low"; estimate_minutes: number
-  capability: Capability; capability_reason: string
+  capability: Capability; capability_reason: string; assignee_name?: string
 }
-type Plan = { epics: { name: string; goal: string; stories: Story[] }[] }
+type Plan = { project_name: string; project_summary: string; epics: { name: string; goal: string; stories: Story[] }[] }
 type Mode = "HUMAN_ONLY" | "AI_DRAFT" | "AI_EXECUTE"
 type Sel = { on: boolean; mode: Mode }
 
@@ -52,7 +52,7 @@ export default function PlannerPage() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [plan, setPlan] = useState<Plan | null>(null)
   const [sel, setSel] = useState<Record<string, Sel>>({})
-  const [created, setCreated] = useState<{ created: number; aiQueued: number }>({ created: 0, aiQueued: 0 })
+  const [created, setCreated] = useState<{ created: number; aiQueued: number; projectId?: string }>({ created: 0, aiQueued: 0 })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState("")
 
@@ -84,9 +84,10 @@ export default function PlannerPage() {
       const k = sel[keyOf(ei, si)]; if (!k || !k.on) return
       items.push({ epic_name: e.name, title: s.title, user_story: s.user_story, description: s.description,
         acceptance_criteria: s.acceptance_criteria, definition_of_done: s.definition_of_done,
-        priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode })
+        priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name })
     }))
-    const j = await call({ mode: "commit", tenantId, items }); setCreated(j); setStep("done")
+    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, items })
+    setCreated(j); setStep("done")
   })
 
   const setMode = (k: string, mode: Mode) => setSel((p) => ({ ...p, [k]: { on: p[k]?.on ?? true, mode } }))
@@ -200,6 +201,7 @@ export default function PlannerPage() {
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-[10px] font-semibold" style={{ color: prio[s.priority] }}>{s.priority}</span>
                               <span className="text-[10px] text-[#6B7280]">{s.estimate_minutes}m</span>
+                              {s.assignee_name && <span className="text-[10px] text-[#9CA3AF]">· {s.assignee_name}</span>}
                             </div>
                           </div>
                           <p className="text-xs text-[#9CA3AF] italic mt-1">{s.user_story}</p>
@@ -233,14 +235,16 @@ export default function PlannerPage() {
       {step === "done" && (
         <div className={card + " flex flex-col items-center text-center gap-3 py-10"}>
           <CheckCircle2 className="w-10 h-10 text-[#4ADE80]" strokeWidth={1.5} />
-          <p className="text-lg font-semibold text-white">{created.created} tasks created</p>
+          <p className="text-lg font-semibold text-white">Project built · {created.created} tasks</p>
           <p className="text-sm text-[#9CA3AF] max-w-md">
             {created.aiQueued > 0
-              ? `${created.aiQueued} are marked for the AI partner. They are queued with their ai_mode — live execution (the kitchen) wires next, so for now they sit as flagged tasks for review.`
-              : "All plates are owned by the team. Owners and dates can be set on the board."}
+              ? `${created.aiQueued} are marked for the AI partner — the executor picks them up and posts the work for review. Owners were auto-assigned and can be changed on the board.`
+              : "Tasks are owned by the team and grouped by epic on the project board."}
           </p>
           <div className="flex gap-3 mt-2">
-            <Link href="/os/tasks" className="px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium">View tasks</Link>
+            {created.projectId
+              ? <Link href={`/os/projects/${created.projectId}`} className="px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium">Open project board</Link>
+              : <Link href="/os/tasks" className="px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium">View tasks</Link>}
             <button onClick={() => { setStep("input"); setGoal(""); setAnswers(""); setRefine(""); setDraft(null); setPlan(null); setSel({}) }} className="px-4 py-2.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-sm text-[#9CA3AF]">Plan another</button>
           </div>
         </div>
