@@ -2,6 +2,7 @@
 
 import { use, useState, useRef } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import {
   ArrowLeft, AlertTriangle, CheckCircle2, Clock,
@@ -400,6 +401,7 @@ function SubtasksSection({ taskId }: { taskId: string }) {
 
 export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId: string }> }) {
   const { taskId } = use(params)
+  const router = useRouter()
   const currentUser = useUser()
 
   const { data: taskData, mutate: mutateTask, isLoading: taskLoading } = useSWR<TaskFull>(
@@ -463,6 +465,18 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
       toast.error(err instanceof Error ? err.message : "Failed to update task.")
     } finally {
       setSavingField(null)
+    }
+  }
+
+  async function archiveTask() {
+    if (!task) return
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Archive failed")
+      toast.success("Task archived.")
+      router.push("/os/tasks")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to archive task.")
     }
   }
 
@@ -934,6 +948,22 @@ export default function OSTaskDetailPage({ params }: { params: Promise<{ taskId:
                 month: "long", day: "numeric", year: "numeric",
               })}
             </p>
+          </div>
+
+          {/* Archive */}
+          <div className="rounded-xl bg-[#111318] border border-red-900/30 p-4">
+            <p className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest mb-3 flex items-center gap-1.5">
+              <Trash2 className="w-3 h-3" strokeWidth={1.75} />
+              Danger zone
+            </p>
+            <button
+              type="button"
+              onClick={() => { if (window.confirm("Archive this task? It will be marked cancelled and removed from active views.")) void archiveTask() }}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-red-900/50 text-red-400 hover:bg-red-950/40 text-xs transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+              Archive task
+            </button>
           </div>
         </div>
       </div>

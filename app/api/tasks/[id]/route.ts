@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { notifyUser } from "@/lib/notifications"
+import { dispatchTaskEvent } from "@/lib/automations/dispatcher"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -56,9 +57,9 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   // Verify this task belongs to one of the caller's tenants
   const { data: existing } = await (supabase as any)
     .from("byred_tasks")
-    .select("id, tenant_id")
+    .select("id, tenant_id, status")
     .eq("id", id)
-    .maybeSingle() as { data: { id: string; tenant_id: string } | null }
+    .maybeSingle() as { data: { id: string; tenant_id: string; status: string } | null }
 
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (!caller.tenantIds.includes(existing.tenant_id)) {
@@ -106,6 +107,36 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     void notifyUser({ userId: (data as { owner_user_id?: string | null }).owner_user_id ?? null, actorId: caller.id, type: "blocker", body: `A task you own was flagged blocked: "${(data as { title?: string }).title ?? ""}"`, contextUrl: `/os/tasks/${id}` })
   }
 
+  // Automation event dispatch (best-effort).
+  const sa = supabase as any
+  if (body.status && body.status !== existing.status) {
+    void dispatchTaskEvent(sa, {
+      type: "task.status_changed",
+      taskId: id,
+      tenantId: existing.tenant_id,
+      actorId: caller.id,
+      payload: { status: body.status, prev_status: existing.status },
+    })
+  }
+  if (body.blocker_flag === true) {
+    void dispatchTaskEvent(sa, {
+      type: "task.blocker_set",
+      taskId: id,
+      tenantId: existing.tenant_id,
+      actorId: caller.id,
+      payload: { blocker_reason: body.blocker_reason ?? null },
+    })
+  }
+  if (body.owner_user_id) {
+    void dispatchTaskEvent(sa, {
+      type: "task.assigned",
+      taskId: id,
+      tenantId: existing.tenant_id,
+      actorId: caller.id,
+      payload: { owner_user_id: body.owner_user_id },
+    })
+  }
+
   return NextResponse.json(data)
 }
 
@@ -128,7 +159,10 @@ export async function DELETE(_req: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { error } = await (supabase as any).from("byred_tasks").delete().eq("id", id) as { error: { message: string } | null }
+  const { error } = await (supabase as any)
+    .from("byred_tasks")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", id) as { error: { message: string } | null }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
