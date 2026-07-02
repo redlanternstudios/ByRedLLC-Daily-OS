@@ -18,7 +18,7 @@ type Story = {
   acceptance_criteria: string[]; definition_of_done: string[]
   priority: "critical" | "high" | "medium" | "low"; estimate_minutes: number
   capability: Capability; capability_reason: string; assignee_name?: string
-  issue_type?: string; story_points?: number; start_date?: string; labels?: string[]
+  issue_type?: string; story_points?: number; start_date?: string; labels?: string[]; depends_on?: string[]
 }
 type Plan = { project_name: string; project_summary: string; project_overview?: string; epics: { name: string; goal: string; stories: Story[] }[] }
 type Mode = "HUMAN_ONLY" | "AI_DRAFT" | "AI_EXECUTE"
@@ -56,11 +56,15 @@ export default function PlannerPage() {
   const [created, setCreated] = useState<{ created: number; aiQueued: number; projectId?: string }>({ created: 0, aiQueued: 0 })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState("")
+  const [templates, setTemplates] = useState<{ id: string; name: string; description: string | null; guidance: string }[]>([])
+  const [templateId, setTemplateId] = useState("")
+  const templateGuidance = templates.find((t) => t.id === templateId)?.guidance ?? ""
 
   useEffect(() => {
     fetch("/api/os/tenants").then((r) => r.json()).then((d) => {
       const t = d.tenants ?? []; setTenants(t); if (t[0]) setTenantId(t[0].id)
     }).catch(() => {})
+    fetch("/api/os/templates").then((r) => r.json()).then((d) => setTemplates(d.templates ?? [])).catch(() => {})
   }, [])
 
   // Initialise the menu selection whenever a new plan arrives.
@@ -78,7 +82,7 @@ export default function PlannerPage() {
     try { await fn() } catch (e) { setErr(e instanceof Error ? e.message : "Something went wrong") } finally { setLoading(false) }
   }
   const doDraft = () => run(async () => { const j = await call({ mode: "draft", tenantId, goal, answers }); setDraft(j.draft); setStep("golden") })
-  const doGenerate = (rev?: string) => run(async () => { const j = await call({ mode: "generate", tenantId, goal, answers, golden: draft, refine: rev ?? "" }); setPlan(j.plan); setRefine(""); setStep("plan") })
+  const doGenerate = (rev?: string) => run(async () => { const j = await call({ mode: "generate", tenantId, goal, answers, golden: draft, refine: rev ?? "", templateGuidance }); setPlan(j.plan); setRefine(""); setStep("plan") })
   const doCommit = () => run(async () => {
     const items: unknown[] = []
     plan!.epics.forEach((e, ei) => e.stories.forEach((s, si) => {
@@ -86,7 +90,7 @@ export default function PlannerPage() {
       items.push({ epic_name: e.name, title: s.title, user_story: s.user_story, description: s.description,
         acceptance_criteria: s.acceptance_criteria, definition_of_done: s.definition_of_done,
         priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name,
-        issue_type: s.issue_type, story_points: s.story_points, start_date: s.start_date, labels: s.labels })
+        issue_type: s.issue_type, story_points: s.story_points, start_date: s.start_date, labels: s.labels, depends_on: s.depends_on })
     }))
     const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, project_overview: plan!.project_overview, items })
     setCreated(j); setStep("done")
@@ -130,6 +134,16 @@ export default function PlannerPage() {
               {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
+          {templates.length > 0 && (
+            <div>
+              <span className={label}>Start from a playbook <span className="text-[#52525B] normal-case tracking-normal">(optional)</span></span>
+              <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className="mt-2 w-full rounded-lg bg-[#0E0F13] border border-[#2A2D35] px-3 py-2.5 text-sm text-white">
+                <option value="">Blank — describe it yourself</option>
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              {templateId && <p className="text-xs text-[#9CA3AF] mt-1.5">{templates.find((t) => t.id === templateId)?.description}</p>}
+            </div>
+          )}
           <div>
             <span className={label}>What do you want to achieve?</span>
             <textarea value={goal} onChange={(e) => setGoal(e.target.value)} rows={5}
