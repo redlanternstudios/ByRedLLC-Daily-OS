@@ -38,6 +38,7 @@ const commitSchema = z.object({
   project_name: z.string(),
   project_summary: z.string().optional(),
   setup: setupConfigSchema.optional(),
+  project_overview: z.string().optional(),
   items: z.array(z.object({
     epic_name: z.string(),
     title: z.string(),
@@ -49,6 +50,11 @@ const commitSchema = z.object({
     estimate_minutes: z.number(),
     ai_mode: z.enum(AI_MODES),
     assignee_name: z.string().optional(),
+    issue_type: z.enum(["epic", "story", "task", "subtask", "bug"]).optional(),
+    story_points: z.number().optional(),
+    start_date: z.string().optional(),
+    labels: z.array(z.string()).optional(),
+    depends_on: z.array(z.string()).optional(),
   })).min(1),
 })
 
@@ -119,7 +125,8 @@ ${answers ? `ANSWERS / EXTRA CONTEXT FROM USER:\n${answers}` : ""}`,
       const golden = JSON.stringify(body.golden ?? {}).slice(0, 8000)
       const answers = String(body.answers ?? "").slice(0, 4000)
       const refine = String(body.refine ?? "").slice(0, 3000)
-      const object = await generatePlan({ tenantName, goal, golden, answers, refine, rosterText })
+      const templateGuidance = String(body.templateGuidance ?? "").slice(0, 4000)
+      const object = await generatePlan({ tenantName, goal, golden, answers, refine, rosterText, templateGuidance })
       return NextResponse.json({ plan: object })
     }
 
@@ -137,12 +144,18 @@ ${answers ? `ANSWERS / EXTRA CONTEXT FROM USER:\n${answers}` : ""}`,
         estimate_minutes: s.estimate_minutes,
         ai_mode: s.ai_mode,
         assignee_name: s.assignee_name ?? null,
+        issue_type: s.issue_type,
+        story_points: s.story_points,
+        start_date: s.start_date,
+        labels: s.labels,
+        depends_on: s.depends_on,
       }))
       const result = await buildProject({
         admin: sa,
         tenantId: parsed.tenantId,
         projectName: parsed.project_name,
         projectSummary: parsed.project_summary ?? null,
+        overview: parsed.project_overview ?? null,
         createdByUserId: ctx.profileId,
         teamMembers,
         items,

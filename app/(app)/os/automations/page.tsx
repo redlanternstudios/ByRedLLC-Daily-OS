@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Zap, Radio, ToggleLeft, ToggleRight, ChevronRight } from "lucide-react"
+import { Plus, Zap, Radio, ToggleLeft, ToggleRight, ChevronRight, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,6 +68,33 @@ export default function OSAutomationsPage() {
       .catch(() => toast.error("Failed to load automations"))
       .finally(() => setLoading(false))
   }, [])
+
+  async function toggleEntity(id: string, entity: "workflow" | "trigger") {
+    try {
+      const res = await fetch(`/api/os/automations?id=${id}&entity=${entity}`, { method: "PATCH" })
+      if (!res.ok) { toast.error("Failed to update"); return }
+      const updated = await res.json() as { is_active: boolean }
+      if (entity === "workflow") {
+        setWorkflows(prev => prev.map(w => w.id === id ? { ...w, is_active: updated.is_active } : w))
+      } else {
+        setTriggers(prev => prev.map(t => t.id === id ? { ...t, is_active: updated.is_active } : t))
+      }
+      toast.success(updated.is_active ? "Enabled" : "Disabled")
+    } catch { toast.error("Failed to update") }
+  }
+
+  async function deleteEntity(id: string, entity: "workflow" | "trigger") {
+    try {
+      const res = await fetch(`/api/os/automations?id=${id}&entity=${entity}`, { method: "DELETE" })
+      if (!res.ok) { toast.error("Failed to delete"); return }
+      if (entity === "workflow") {
+        setWorkflows(prev => prev.filter(w => w.id !== id))
+      } else {
+        setTriggers(prev => prev.filter(t => t.id !== id))
+      }
+      toast.success("Deleted")
+    } catch { toast.error("Failed to delete") }
+  }
 
   async function createWorkflow(e: React.FormEvent) {
     e.preventDefault()
@@ -200,10 +227,25 @@ export default function OSAutomationsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-[#6B7280]">{formatDate(wf.created_at)}</span>
-                {wf.is_active
-                  ? <ToggleRight className="w-4 h-4 text-green-500" />
-                  : <ToggleLeft className="w-4 h-4 text-[#6B7280]" />
-                }
+                <button
+                  type="button"
+                  onClick={() => toggleEntity(wf.id, "workflow")}
+                  title={wf.is_active ? "Disable workflow" : "Enable workflow"}
+                  className="transition-opacity hover:opacity-70"
+                >
+                  {wf.is_active
+                    ? <ToggleRight className="w-4 h-4 text-green-500" />
+                    : <ToggleLeft className="w-4 h-4 text-[#6B7280]" />
+                  }
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteEntity(wf.id, "workflow")}
+                  title="Delete workflow"
+                  className="text-[#6B7280] hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           ))}
@@ -235,10 +277,25 @@ export default function OSAutomationsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-[#6B7280]">{formatDate(tr.created_at)}</span>
-                {tr.is_active
-                  ? <ToggleRight className="w-4 h-4 text-green-500" />
-                  : <ToggleLeft className="w-4 h-4 text-[#6B7280]" />
-                }
+                <button
+                  type="button"
+                  onClick={() => toggleEntity(tr.id, "trigger")}
+                  title={tr.is_active ? "Disable trigger" : "Enable trigger"}
+                  className="transition-opacity hover:opacity-70"
+                >
+                  {tr.is_active
+                    ? <ToggleRight className="w-4 h-4 text-green-500" />
+                    : <ToggleLeft className="w-4 h-4 text-[#6B7280]" />
+                  }
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteEntity(tr.id, "trigger")}
+                  title="Delete trigger"
+                  className="text-[#6B7280] hover:text-red-400 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           ))}

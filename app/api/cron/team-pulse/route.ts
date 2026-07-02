@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { mapTaskFromDb } from "@/types/db"
 import { createGroq } from "@ai-sdk/groq"
 import { generateText } from "ai"
+import { recordProviderRun } from "@/lib/ai/provider-run-ledger"
+import { getGroqModel } from "@/lib/ai/provider-registry"
 
 // Vercel Cron: runs at 7:05am and 7:05pm PST daily (03:05 + 15:05 UTC)
 // vercel.json schedule: "5 3,15 * * *"
@@ -56,10 +58,27 @@ BLOCKERS: ${blockers.length}${blockers.length > 0 ? "\n" + blockers.map((b) => `
 
 Write 3-4 sentences as a spoken team update. Be direct and actionable. Flag blockers urgently. End with the single most important next action.`
 
-    const { text } = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+    const groqModel = getGroqModel()
+    const { text, usage } = await generateText({
+      model: groq(groqModel),
       prompt,
       maxOutputTokens: 300,
+    })
+
+    // Log the run so the AI Efficiency Board reflects real savings from routing
+    // this brief to Groq instead of the primary (Anthropic) provider.
+    void recordProviderRun({
+      tenantId: tasks[0]?.tenant_id ?? null,
+      userId: null,
+      provider: "groq",
+      model: groqModel,
+      lane: "fast_brief",
+      purpose: "brief",
+      status: "success",
+      promptChars: prompt.length,
+      contextChars: prompt.length,
+      totalTokens: usage?.totalTokens ?? null,
+      outcomeSummary: "Team pulse generated on Groq (fast lane)",
     })
 
     // Store the generated pulse in byred_daily_briefs

@@ -23,10 +23,19 @@ export const storySchema = z.object({
   capability: z.enum(["ai_can_complete", "ai_can_draft", "human_only"]),
   capability_reason: z.string(),
   assignee_name: z.string(),
+  // Jira-style issue fields.
+  issue_type: z.enum(["epic", "story", "task", "subtask", "bug"]),
+  story_points: z.number(),
+  start_date: z.string().optional(),
+  labels: z.array(z.string()),
+  // Dependency inference: exact titles of other stories this one is blocked by.
+  depends_on: z.array(z.string()),
 })
 export const planSchema = z.object({
   project_name: z.string(),
   project_summary: z.string(),
+  // Confluence-style living brief (markdown): goal, scope, milestones, risks, success metrics.
+  project_overview: z.string(),
   epics: z.array(z.object({ name: z.string(), goal: z.string(), stories: z.array(storySchema) })),
 })
 export type Plan = z.infer<typeof planSchema>
@@ -42,6 +51,11 @@ export type BuildStory = {
   estimate_minutes: number
   ai_mode: "HUMAN_ONLY" | "AI_ASSIST" | "AI_DRAFT" | "AI_EXECUTE"
   assignee_name?: string | null
+  issue_type?: "epic" | "story" | "task" | "subtask" | "bug"
+  story_points?: number | null
+  start_date?: string | null
+  labels?: string[]
+  depends_on?: string[]
 }
 
 // Assignment guidance shared by every generation path.
@@ -59,14 +73,17 @@ export async function generatePlan(opts: {
   answers?: string
   refine?: string
   rosterText: string
+  templateGuidance?: string
 }): Promise<Plan> {
-  const { tenantName, goal, golden = "", answers = "", refine = "", rosterText } = opts
+  const { tenantName, goal, golden = "", answers = "", refine = "", rosterText, templateGuidance = "" } = opts
   const { object } = await generateObject({
     model: anthropic(MODEL),
     schema: planSchema,
     prompt: `You are a senior agile project manager. Build a complete, ready to execute plan for "${tenantName}" based on the goal${golden ? " and the confirmed golden path" : ""}.
-Give the project a short "project_name" and a one sentence "project_summary".
-Keep the plan SMALL and fast to produce. Hard limits: at most 4 epics, at most 3 stories per epic, and 10 to 12 stories total maximum. Pick only the most essential path to launch and do not pad. Keep every text field concise. Every story MUST include: a clear title, a one line user story "As a X, I want Y, so that Z", a one sentence description, exactly 2 to 3 short testable acceptance criteria, a definition of done checklist of 2 to 3 short items, a priority, a realistic estimate in minutes, an honest capability rating with a one line reason, and an assignee_name.
+Give the project a short "project_name", a one sentence "project_summary", and a "project_overview" — a concise markdown brief (## Goal, ## Scope, ## Milestones, ## Risks, ## Success metrics) a stakeholder could read to understand the whole project.
+Keep the plan SMALL and fast to produce. Hard limits: at most 4 epics, at most 3 stories per epic, and 10 to 12 stories total maximum. Pick only the most essential path to launch and do not pad. Keep every text field concise. Every story MUST include: a clear title, a one line user story "As a X, I want Y, so that Z", a one sentence description, exactly 2 to 3 short testable acceptance criteria, a definition of done checklist of 2 to 3 short items, a priority, a realistic estimate in minutes, an honest capability rating with a one line reason, an assignee_name, an issue_type (epic|story|task|subtask|bug — most are "story" or "task"), story_points (Fibonacci: 1,2,3,5,8,13 — relative effort), a start_date (YYYY-MM-DD, sequence stories sensibly starting from today so dependencies come first), 1-3 short labels, and depends_on (the EXACT titles of any other stories in this plan that must finish first — empty array if none). Sequence start_dates to respect those dependencies.
+
+${templateGuidance ? `PLAYBOOK TO FOLLOW (adapt to the goal):\n${templateGuidance}\n` : ""}
 
 CAPABILITY RATING (be strict and truthful):
 - "ai_can_complete": an AI assistant could fully finish this from inside a project tool with no human action needed (writing copy, drafting a template, producing a spec, structuring a schema, generating checklists).
@@ -108,6 +125,7 @@ export type BuildProjectInput = {
   tenantId: string
   projectName: string
   projectSummary?: string | null
+  overview?: string | null
   createdByUserId: string | null
   teamMembers: { id: string; name: string }[]
   items: BuildStory[]
@@ -122,7 +140,7 @@ export type BuildProjectInput = {
 export async function buildProject(
   input: BuildProjectInput
 ): Promise<{ projectId: string; created: number; aiQueued: number }> {
-  const { admin, tenantId, projectName, projectSummary, createdByUserId, teamMembers, items, setupConfig } = input
+  const { admin, tenantId, projectName, projectSummary, overview, createdByUserId, teamMembers, items, setupConfig } = input
 
   const resolveOwner = (name?: string | null): string | null => {
     if (!name || !name.trim()) return null
@@ -138,6 +156,7 @@ export async function buildProject(
       tenant_id: tenantId,
       name: projectName.trim().slice(0, 200) || "New project",
       description: projectSummary ?? null,
+      overview: overview ?? null,
       status: "active",
       owner_user_id: createdByUserId,
       created_by_user_id: createdByUserId,
@@ -161,10 +180,53 @@ export async function buildProject(
     owner_user_id: resolveOwner(s.assignee_name),
     created_by_user_id: createdByUserId,
     order_index: i,
+    issue_type: s.issue_type ?? "task",
+    story_points: s.story_points ?? null,
+    start_date: s.start_date ?? null,
+    labels: s.labels ?? [],
   }))
 
-  const { error: tErr } = await admin.from("byred_tasks").insert(rows)
+  const { data: inserted, error: tErr } = await admin
+    .from("byred_tasks").insert(rows).select("id, title, start_date, order_index")
   if (tErr) throw new Error(`Task create failed: ${tErr.message}`)
+
+  // Dependency graph: resolve each story's depends_on titles to the inserted task
+  // ids and record edges in os_task_dependencies. Best-effort, non-blocking.
+  void (async () => {
+    try {
+      const insertedRows = (inserted ?? []) as Array<{ id: string; title: string }>
+      const idByTitle = new Map(insertedRows.map((r) => [r.title.trim().toLowerCase(), r.id]))
+      const edges: Array<{ task_id: string; depends_on_task_id: string; tenant_id: string }> = []
+      items.forEach((s, i) => {
+        const taskId = insertedRows[i]?.id
+        if (!taskId || !s.depends_on?.length) return
+        for (const dep of s.depends_on) {
+          const depId = idByTitle.get(dep.trim().toLowerCase())
+          if (depId && depId !== taskId) edges.push({ task_id: taskId, depends_on_task_id: depId, tenant_id: tenantId })
+        }
+      })
+      if (edges.length) await admin.from("os_task_dependencies").insert(edges)
+    } catch { /* non-blocking */ }
+  })()
+
+  // AI-proposed Sprint 1: a 2-week active sprint seeded with the near-term tasks
+  // (those starting within the window, else the first few by order). Best-effort.
+  void (async () => {
+    try {
+      const start = new Date()
+      const end = new Date(Date.now() + 14 * 86400000)
+      const iso = (d: Date) => d.toISOString().slice(0, 10)
+      const rowsBack = (inserted ?? []) as Array<{ id: string; start_date: string | null; order_index: number }>
+      const windowed = rowsBack.filter((r) => r.start_date && r.start_date <= iso(end))
+      const chosen = (windowed.length ? windowed : rowsBack.slice(0, 5)).map((r) => r.id)
+      if (chosen.length === 0) return
+      const { data: sprint } = await admin
+        .from("os_sprints")
+        .insert({ tenant_id: tenantId, project_id: projectId, name: "Sprint 1", goal: "Initial sprint", status: "active", start_date: iso(start), end_date: iso(end), created_by_user_id: createdByUserId })
+        .select("id").single()
+      if (sprint?.id) await admin.from("byred_tasks").update({ sprint_id: sprint.id }).in("id", chosen)
+    } catch { /* non-blocking */ }
+  })()
 
   const aiQueued = rows.filter((r) => r.ai_mode === "AI_EXECUTE" || r.ai_mode === "AI_DRAFT").length
 
@@ -222,6 +284,11 @@ export async function autobuildProject(opts: {
       estimate_minutes: s.estimate_minutes,
       ai_mode: modeFromCapability(s.capability),
       assignee_name: s.assignee_name,
+      issue_type: s.issue_type,
+      story_points: s.story_points,
+      start_date: s.start_date,
+      labels: s.labels,
+      depends_on: s.depends_on,
     }))
   )
   if (items.length === 0) throw new Error("Plan produced no tasks")
@@ -230,6 +297,7 @@ export async function autobuildProject(opts: {
     tenantId: opts.tenantId,
     projectName: plan.project_name,
     projectSummary: plan.project_summary,
+    overview: plan.project_overview,
     createdByUserId: opts.createdByUserId,
     teamMembers: opts.teamMembers,
     items,

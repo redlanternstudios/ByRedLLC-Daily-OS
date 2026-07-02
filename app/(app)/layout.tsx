@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/lib/context/sidebar-context"
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { AppLayoutClient } from "./layout-client"
+import { LanternDock } from "@/components/byred/lantern-dock"
 
 export default async function AppLayout({
   children,
@@ -25,10 +26,12 @@ export default async function AppLayout({
           <AppSidebar />
           <AppLayoutClient>
             <AppTopbar />
-            <main className="flex-1 pt-14 px-6 py-6 min-h-screen bg-[#09090B] text-[var(--text-primary)]">
+            <main className="flex-1 pt-14 px-6 pb-24 py-6 min-h-screen bg-[#09090B] text-[var(--text-primary)]">
               {children}
             </main>
           </AppLayoutClient>
+          {/* Global collapsible Lantern chat dock (bottom bar) */}
+          <LanternDock />
         </div>
       </SidebarProvider>
     </UserProvider>

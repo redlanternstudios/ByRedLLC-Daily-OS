@@ -6,6 +6,7 @@ import { Send } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { MentionTextarea, renderMentions } from "@/components/byred/mention-textarea"
+import { CopyShare } from "@/components/byred/copy-share"
 import { useUser } from "@/lib/context/user-context"
 import { useTeamMembers } from "@/lib/hooks/use-team-members"
 
@@ -149,6 +150,7 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
               <p className="text-xs text-[#6B7280] leading-relaxed whitespace-pre-wrap break-words">
                 {renderMentions(c.comment)}
               </p>
+              <CopyShare text={c.comment} shareUrl={`/os/tasks/${taskId}`} shareTitle="Comment" className="mt-1.5" />
             </div>
           </div>
         ))}

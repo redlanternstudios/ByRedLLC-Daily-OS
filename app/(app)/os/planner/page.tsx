@@ -18,8 +18,9 @@ type Story = {
   acceptance_criteria: string[]; definition_of_done: string[]
   priority: "critical" | "high" | "medium" | "low"; estimate_minutes: number
   capability: Capability; capability_reason: string; assignee_name?: string
+  issue_type?: string; story_points?: number; start_date?: string; labels?: string[]; depends_on?: string[]
 }
-type Plan = { project_name: string; project_summary: string; epics: { name: string; goal: string; stories: Story[] }[] }
+type Plan = { project_name: string; project_summary: string; project_overview?: string; epics: { name: string; goal: string; stories: Story[] }[] }
 type Mode = "HUMAN_ONLY" | "AI_DRAFT" | "AI_EXECUTE"
 type Sel = { on: boolean; mode: Mode }
 type SetupConfig = {
@@ -27,6 +28,15 @@ type SetupConfig = {
   githubRepo?: string
   selectedIntegrations: string[]
   apiKeys: Record<string, string>
+}
+
+const PLANNER_DRAFT_KEY = "planner_session_v1"
+
+function saveDraft(state: Record<string, unknown>) {
+  try { localStorage.setItem(PLANNER_DRAFT_KEY, JSON.stringify(state)) } catch { /* quota */ }
+}
+function clearDraft() {
+  try { localStorage.removeItem(PLANNER_DRAFT_KEY) } catch { /* noop */ }
 }
 
 const card = "rounded-xl bg-[#111318] border border-[#2A2D35] p-5"
@@ -62,12 +72,46 @@ export default function PlannerPage() {
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState("")
   const [setup, setSetup] = useState<SetupConfig>({ selectedIntegrations: [], apiKeys: {} })
+  const [templates, setTemplates] = useState<{ id: string; name: string; description: string | null; guidance: string }[]>([])
+  const [templateId, setTemplateId] = useState("")
+  const templateGuidance = templates.find((t) => t.id === templateId)?.guidance ?? ""
 
   useEffect(() => {
+    // Restore draft session from localStorage before loading tenants
+    try {
+      const raw = localStorage.getItem(PLANNER_DRAFT_KEY)
+      if (raw) {
+        const s = JSON.parse(raw) as {
+          step?: string; goal?: string; answers?: string; tenantId?: string
+          draft?: Draft; plan?: Plan; sel?: Record<string, Sel>; templateId?: string
+        }
+        if (s.step && s.step !== "input") {
+          if (s.step === "golden" || s.step === "plan" || s.step === "done") setStep(s.step as "golden" | "plan" | "done")
+          if (s.goal) setGoal(s.goal)
+          if (s.answers) setAnswers(s.answers)
+          if (s.tenantId) setTenantId(s.tenantId)
+          if (s.draft) setDraft(s.draft)
+          if (s.plan) setPlan(s.plan)
+          if (s.sel) setSel(s.sel)
+          if (s.templateId) setTemplateId(s.templateId)
+        }
+      }
+    } catch { /* corrupt storage */ }
+
     fetch("/api/os/tenants").then((r) => r.json()).then((d) => {
-      const t = d.tenants ?? []; setTenants(t); if (t[0]) setTenantId(t[0].id)
+      const t = d.tenants ?? []; setTenants(t)
+      // Only auto-select first tenant if no draft restored a tenantId
+      setTenantId((prev) => prev || (t[0]?.id ?? ""))
     }).catch(() => {})
+    fetch("/api/os/templates").then((r) => r.json()).then((d) => setTemplates(d.templates ?? [])).catch(() => {})
   }, [])
+
+  // Persist draft state so a refresh doesn't lose work.
+  useEffect(() => {
+    if (step === "input") return // nothing worth saving yet
+    if (step === "done") { clearDraft(); return }
+    saveDraft({ step, goal, tenantId, answers, draft, plan, sel, templateId })
+  }, [step, goal, tenantId, answers, draft, plan, sel, templateId])
 
   // Initialise the menu selection whenever a new plan arrives.
   useEffect(() => {
@@ -84,18 +128,30 @@ export default function PlannerPage() {
     try { await fn() } catch (e) { setErr(e instanceof Error ? e.message : "Something went wrong") } finally { setLoading(false) }
   }
   const doDraft = () => run(async () => { const j = await call({ mode: "draft", tenantId, goal, answers }); setDraft(j.draft); setStep("golden") })
-  const doGenerate = (rev?: string) => run(async () => { const j = await call({ mode: "generate", tenantId, goal, answers, golden: draft, refine: rev ?? "" }); setPlan(j.plan); setRefine(""); setStep("plan") })
+  const doGenerate = (rev?: string) => run(async () => { const j = await call({ mode: "generate", tenantId, goal, answers, golden: draft, refine: rev ?? "", templateGuidance }); setPlan(j.plan); setRefine(""); setStep("plan") })
   const doCommit = () => run(async () => {
     const items: unknown[] = []
     plan!.epics.forEach((e, ei) => e.stories.forEach((s, si) => {
       const k = sel[keyOf(ei, si)]; if (!k || !k.on) return
       items.push({ epic_name: e.name, title: s.title, user_story: s.user_story, description: s.description,
         acceptance_criteria: s.acceptance_criteria, definition_of_done: s.definition_of_done,
-        priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name })
+        priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name,
+        issue_type: s.issue_type, story_points: s.story_points, start_date: s.start_date, labels: s.labels, depends_on: s.depends_on })
     }))
+<<<<<<< HEAD
     const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, setup, items })
+=======
+    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, project_overview: plan!.project_overview, items })
+    clearDraft()
+>>>>>>> c2d135663b16a64103b788fa5844a5065291b766
     setCreated(j); setStep("done")
   })
+
+  function startFresh() {
+    clearDraft()
+    setStep("input"); setGoal(""); setAnswers(""); setDraft(null); setPlan(null); setSel({})
+    setTemplateId(""); setErr("")
+  }
 
   const setMode = (k: string, mode: Mode) => setSel((p) => ({ ...p, [k]: { on: p[k]?.on ?? true, mode } }))
   const toggle = (k: string) => setSel((p) => ({ ...p, [k]: { on: !(p[k]?.on ?? true), mode: p[k]?.mode ?? "HUMAN_ONLY" } }))
@@ -116,12 +172,23 @@ export default function PlannerPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-2.5">
-        <Sparkles className="w-5 h-5 text-[#D92532]" strokeWidth={1.75} />
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">AI Project Partner</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5">Shape the plan, then check the plates you want. You decide who cooks each one.</p>
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="w-5 h-5 text-[#D92532]" strokeWidth={1.75} />
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">AI Project Partner</h1>
+            <p className="text-sm text-[#9CA3AF] mt-0.5">Shape the plan, then check the plates you want. You decide who cooks each one.</p>
+          </div>
         </div>
+        {step !== "input" && (
+          <button
+            type="button"
+            onClick={startFresh}
+            className="text-[11px] text-[#6B7280] hover:text-[#9CA3AF] border border-[#2A2D35] px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Start fresh
+          </button>
+        )}
       </div>
 
       {err && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-950/40 border border-red-800/40 text-red-400 text-sm"><AlertTriangle className="w-4 h-4 shrink-0" /> {err}</div>}
@@ -236,6 +303,16 @@ export default function PlannerPage() {
               {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
+          {templates.length > 0 && (
+            <div>
+              <span className={label}>Start from a playbook <span className="text-[#52525B] normal-case tracking-normal">(optional)</span></span>
+              <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className="mt-2 w-full rounded-lg bg-[#0E0F13] border border-[#2A2D35] px-3 py-2.5 text-sm text-white">
+                <option value="">Blank — describe it yourself</option>
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              {templateId && <p className="text-xs text-[#9CA3AF] mt-1.5">{templates.find((t) => t.id === templateId)?.description}</p>}
+            </div>
+          )}
           <div>
             <span className={label}>What do you want to achieve?</span>
             <textarea value={goal} onChange={(e) => setGoal(e.target.value)} rows={5}
@@ -308,7 +385,9 @@ export default function PlannerPage() {
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-sm text-white font-medium">{s.title}</p>
                             <div className="flex items-center gap-2 shrink-0">
+                              {s.issue_type && <span className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">{s.issue_type}</span>}
                               <span className="text-[10px] font-semibold" style={{ color: prio[s.priority] }}>{s.priority}</span>
+                              {s.story_points != null && <span className="text-[10px] text-[#D1D5DB] font-mono">{s.story_points}pt</span>}
                               <span className="text-[10px] text-[#6B7280]">{s.estimate_minutes}m</span>
                               {s.assignee_name && <span className="text-[10px] text-[#9CA3AF]">· {s.assignee_name}</span>}
                             </div>

@@ -76,3 +76,71 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 }
+
+// PATCH /api/os/crm/companies?id=<id>
+export async function PATCH(req: NextRequest) {
+  try {
+    const scope = await requireTenantScope()
+    const supabase = await createClient()
+    const sa = supabase as any
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
+
+    const { data: existing } = await sa
+      .from("os_companies")
+      .select("id, tenant_id")
+      .eq("id", id)
+      .maybeSingle() as { data: { id: string; tenant_id: string } | null }
+    if (!existing || !scope.tenantIds.includes(existing.tenant_id)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const body = (await req.json()) as Partial<{ name: string; industry: string; website: string; status: string; notes: string }>
+    const updates: Record<string, unknown> = { ...body, updated_at: new Date().toISOString() }
+
+    const { data, error } = await sa
+      .from("os_companies")
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single() as { data: Record<string, unknown> | null; error: { message: string } | null }
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+}
+
+// DELETE /api/os/crm/companies?id=<id> — soft delete (status=archived)
+export async function DELETE(req: NextRequest) {
+  try {
+    const scope = await requireTenantScope()
+    const supabase = await createClient()
+    const sa = supabase as any
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
+
+    const { data: existing } = await sa
+      .from("os_companies")
+      .select("id, tenant_id")
+      .eq("id", id)
+      .maybeSingle() as { data: { id: string; tenant_id: string } | null }
+    if (!existing || !scope.tenantIds.includes(existing.tenant_id)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const { error } = await sa
+      .from("os_companies")
+      .update({ status: "archived", updated_at: new Date().toISOString() })
+      .eq("id", id) as { error: { message: string } | null }
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+}
