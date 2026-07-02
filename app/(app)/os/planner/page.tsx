@@ -24,6 +24,15 @@ type Plan = { project_name: string; project_summary: string; project_overview?: 
 type Mode = "HUMAN_ONLY" | "AI_DRAFT" | "AI_EXECUTE"
 type Sel = { on: boolean; mode: Mode }
 
+const PLANNER_DRAFT_KEY = "planner_session_v1"
+
+function saveDraft(state: Record<string, unknown>) {
+  try { localStorage.setItem(PLANNER_DRAFT_KEY, JSON.stringify(state)) } catch { /* quota */ }
+}
+function clearDraft() {
+  try { localStorage.removeItem(PLANNER_DRAFT_KEY) } catch { /* noop */ }
+}
+
 const card = "rounded-xl bg-[#111318] border border-[#2A2D35] p-5"
 const label = "text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest"
 const prio: Record<string, string> = { critical: "#F87171", high: "#FB923C", medium: "#FACC15", low: "#4ADE80" }
@@ -61,11 +70,41 @@ export default function PlannerPage() {
   const templateGuidance = templates.find((t) => t.id === templateId)?.guidance ?? ""
 
   useEffect(() => {
+    // Restore draft session from localStorage before loading tenants
+    try {
+      const raw = localStorage.getItem(PLANNER_DRAFT_KEY)
+      if (raw) {
+        const s = JSON.parse(raw) as {
+          step?: string; goal?: string; answers?: string; tenantId?: string
+          draft?: Draft; plan?: Plan; sel?: Record<string, Sel>; templateId?: string
+        }
+        if (s.step && s.step !== "input") {
+          if (s.step === "golden" || s.step === "plan" || s.step === "done") setStep(s.step as "golden" | "plan" | "done")
+          if (s.goal) setGoal(s.goal)
+          if (s.answers) setAnswers(s.answers)
+          if (s.tenantId) setTenantId(s.tenantId)
+          if (s.draft) setDraft(s.draft)
+          if (s.plan) setPlan(s.plan)
+          if (s.sel) setSel(s.sel)
+          if (s.templateId) setTemplateId(s.templateId)
+        }
+      }
+    } catch { /* corrupt storage */ }
+
     fetch("/api/os/tenants").then((r) => r.json()).then((d) => {
-      const t = d.tenants ?? []; setTenants(t); if (t[0]) setTenantId(t[0].id)
+      const t = d.tenants ?? []; setTenants(t)
+      // Only auto-select first tenant if no draft restored a tenantId
+      setTenantId((prev) => prev || (t[0]?.id ?? ""))
     }).catch(() => {})
     fetch("/api/os/templates").then((r) => r.json()).then((d) => setTemplates(d.templates ?? [])).catch(() => {})
   }, [])
+
+  // Persist draft state so a refresh doesn't lose work.
+  useEffect(() => {
+    if (step === "input") return // nothing worth saving yet
+    if (step === "done") { clearDraft(); return }
+    saveDraft({ step, goal, tenantId, answers, draft, plan, sel, templateId })
+  }, [step, goal, tenantId, answers, draft, plan, sel, templateId])
 
   // Initialise the menu selection whenever a new plan arrives.
   useEffect(() => {
@@ -93,8 +132,15 @@ export default function PlannerPage() {
         issue_type: s.issue_type, story_points: s.story_points, start_date: s.start_date, labels: s.labels, depends_on: s.depends_on })
     }))
     const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, project_overview: plan!.project_overview, items })
+    clearDraft()
     setCreated(j); setStep("done")
   })
+
+  function startFresh() {
+    clearDraft()
+    setStep("input"); setGoal(""); setAnswers(""); setDraft(null); setPlan(null); setSel({})
+    setTemplateId(""); setErr("")
+  }
 
   const setMode = (k: string, mode: Mode) => setSel((p) => ({ ...p, [k]: { on: p[k]?.on ?? true, mode } }))
   const toggle = (k: string) => setSel((p) => ({ ...p, [k]: { on: !(p[k]?.on ?? true), mode: p[k]?.mode ?? "HUMAN_ONLY" } }))
@@ -115,12 +161,23 @@ export default function PlannerPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-2.5">
-        <Sparkles className="w-5 h-5 text-[#D92532]" strokeWidth={1.75} />
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">AI Project Partner</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5">Shape the plan, then check the plates you want. You decide who cooks each one.</p>
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="w-5 h-5 text-[#D92532]" strokeWidth={1.75} />
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">AI Project Partner</h1>
+            <p className="text-sm text-[#9CA3AF] mt-0.5">Shape the plan, then check the plates you want. You decide who cooks each one.</p>
+          </div>
         </div>
+        {step !== "input" && (
+          <button
+            type="button"
+            onClick={startFresh}
+            className="text-[11px] text-[#6B7280] hover:text-[#9CA3AF] border border-[#2A2D35] px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Start fresh
+          </button>
+        )}
       </div>
 
       {err && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-950/40 border border-red-800/40 text-red-400 text-sm"><AlertTriangle className="w-4 h-4 shrink-0" /> {err}</div>}
