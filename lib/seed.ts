@@ -15,6 +15,8 @@ export const SEED_USER: User = {
   active: true,
   auth_user_id: null,
   avatar_url: null,
+  default_ai_mode: 'HUMAN_ONLY',
+  slack_user_id: null,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: new Date().toISOString(),
 };

@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useTransition } from "react"
+import { useRef, useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -18,11 +18,14 @@ import { cn } from "@/lib/utils"
 
 const AI_MODES = ["HUMAN_ONLY", "AI_ASSIST", "AI_DRAFT", "AI_EXECUTE"] as const
 
-const INTEGRATIONS = [
-  { name: "Claude (AI layer)", connected: true },
-  { name: "Supabase", connected: true },
-  { name: "Notion", connected: true },
-  { name: "Google Drive", connected: false },
+const CORE_INTEGRATIONS = [
+  { name: "Claude (AI layer)", key: "ANTHROPIC_API_KEY" },
+  { name: "Supabase", key: "SUPABASE_SERVICE_ROLE_KEY" },
+  { name: "Groq (team pulse)", key: "GROQ_API_KEY" },
+  { name: "Slack", key: "SLACK_BOT_TOKEN" },
+  { name: "Google Drive", key: "GOOGLE_CLIENT_ID" },
+  { name: "Gemini", key: "GEMINI_API_KEY" },
+  { name: "DeepSeek", key: "DEEPSEEK_API_KEY" },
 ]
 
 const TENANT_COLORS = [
@@ -68,7 +71,16 @@ export default function OSSettingsPage() {
 
   const [fullName, setFullName] = useState(currentUser?.profile?.name ?? "")
   const [avatarUrl, setAvatarUrl] = useState(currentUser?.profile?.avatar_url ?? null)
-  const [aiMode, setAiMode] = useState<string>("HUMAN_ONLY")
+  const [aiMode, setAiMode] = useState<string>(currentUser?.profile?.default_ai_mode ?? "HUMAN_ONLY")
+  const [aiModeSaving, setAiModeSaving] = useState(false)
+  const [storedSecretNames, setStoredSecretNames] = useState<string[]>([])
+
+  useEffect(() => {
+    fetch("/api/os/integrations/secrets")
+      .then(r => r.json())
+      .then((d: { secrets?: Array<{ name: string }> }) => setStoredSecretNames((d.secrets ?? []).map(s => s.name)))
+      .catch(() => {})
+  }, [])
   const [saving, setSaving] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [photoPending, startPhotoTransition] = useTransition()
@@ -129,6 +141,20 @@ export default function OSSettingsPage() {
       toast.success("Profile picture removed.")
       router.refresh()
     })
+  }
+
+  async function handleSaveAiMode() {
+    setAiModeSaving(true)
+    try {
+      const res = await fetch("/api/os/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ default_ai_mode: aiMode }),
+      })
+      if (!res.ok) { toast.error("Failed to save AI mode"); return }
+      toast.success("AI defaults saved.")
+      router.refresh()
+    } catch { toast.error("Failed to save") } finally { setAiModeSaving(false) }
   }
 
   async function handleSignOut() {
@@ -303,32 +329,41 @@ export default function OSSettingsPage() {
             </label>
           ))}
           <button
-            onClick={() => toast.success("Defaults saved.")}
-            className="mt-2 px-3 py-1.5 rounded-lg bg-[#D7261E] hover:bg-red-600 text-white text-xs font-medium transition-colors"
+            onClick={handleSaveAiMode}
+            disabled={aiModeSaving}
+            className="mt-2 px-3 py-1.5 rounded-lg bg-[#D7261E] hover:bg-red-600 text-white text-xs font-medium transition-colors disabled:opacity-50"
           >
-            Save defaults
+            {aiModeSaving ? "Saving…" : "Save defaults"}
           </button>
         </div>
       </Section>
 
       {/* Integrations */}
       <Section icon={Plug} title="Integrations">
-        {INTEGRATIONS.map((int) => (
-          <Row key={int.name} label={int.name}>
-            <span className={cn(
-              "flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-md border",
-              int.connected
-                ? "bg-emerald-950/40 text-emerald-400 border-emerald-900/40"
-                : "bg-[#1A1D24] text-[#6B7280] border-[#2A2D35]"
-            )}>
-              {int.connected
-                ? <CheckCircle className="w-3 h-3" strokeWidth={1.75} />
-                : <XCircle className="w-3 h-3" strokeWidth={1.75} />
-              }
-              {int.connected ? "Connected" : "Not connected"}
-            </span>
-          </Row>
-        ))}
+        {CORE_INTEGRATIONS.map((int) => {
+          const connected = storedSecretNames.includes(int.key) ||
+            (int.key === "ANTHROPIC_API_KEY") || // always wired via env
+            (int.key === "SUPABASE_SERVICE_ROLE_KEY") // always wired via env
+          return (
+            <Row key={int.name} label={int.name}>
+              <span className={cn(
+                "flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded-md border",
+                connected
+                  ? "bg-emerald-950/40 text-emerald-400 border-emerald-900/40"
+                  : "bg-[#1A1D24] text-[#6B7280] border-[#2A2D35]"
+              )}>
+                {connected
+                  ? <CheckCircle className="w-3 h-3" strokeWidth={1.75} />
+                  : <XCircle className="w-3 h-3" strokeWidth={1.75} />
+                }
+                {connected ? "Connected" : "Add key"}
+              </span>
+            </Row>
+          )
+        })}
+        <div className="px-5 py-2 text-[10px] text-[#6B7280]">
+          Keys stored in encrypted vault · managed via Vercel environment or secrets API
+        </div>
       </Section>
 
       {/* Sign out */}

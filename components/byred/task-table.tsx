@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { MoreHorizontal, ExternalLink, Copy, Archive, Edit } from "lucide-react"
 import {
@@ -10,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { TenantPill } from "./tenant-pill"
 import { StatusBadge } from "./status-badge"
 import { PriorityFlag } from "./priority-flag"
@@ -31,6 +33,22 @@ interface TaskTableProps {
 
 export function TaskTable({ tasks }: TaskTableProps) {
   const currentUser = useUser()
+  const router = useRouter()
+
+  async function archiveTask(taskId: string) {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      })
+      if (!res.ok) { toast.error("Failed to archive task"); return }
+      toast.success("Task archived")
+      router.refresh()
+    } catch {
+      toast.error("Failed to archive task")
+    }
+  }
   const displayName =
     currentUser?.profile?.name ?? currentUser?.authUser?.email ?? "User"
   const initials = displayName
@@ -209,7 +227,10 @@ export function TaskTable({ tasks }: TaskTableProps) {
                       <Copy className="w-3.5 h-3.5" strokeWidth={1.75} />
                       Copy link
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-[#6B7280] focus:text-[#9CA3AF] focus:bg-[#1A1D24] gap-2 text-xs cursor-pointer">
+                    <DropdownMenuItem
+                      className="text-[#6B7280] focus:text-red-400 focus:bg-[#1A1D24] gap-2 text-xs cursor-pointer"
+                      onClick={() => archiveTask(task.id)}
+                    >
                       <Archive className="w-3.5 h-3.5" strokeWidth={1.75} />
                       Archive
                     </DropdownMenuItem>
