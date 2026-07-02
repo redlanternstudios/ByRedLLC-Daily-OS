@@ -78,6 +78,7 @@ const NAV_GROUPS = [
       { label: "Lantern AI", href: "/os/ai",   icon: Cpu },
       { label: "KPIs",       href: "/os/kpis", icon: BarChart },
       { label: "Planner",    href: "/os/planner", icon: Sparkles },
+      { label: "AI Efficiency Board", href: "/os/ai-efficiency", icon: Gauge },
     ],
   },
   {

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import type { ComponentType } from "react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, isTextUIPart } from "ai"
-import { AlertTriangle, Brain, CheckCircle2, Gauge, Send, ShieldCheck, TrendingDown } from "lucide-react"
+import { Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MentionTextarea } from "@/components/byred/mention-textarea"
 import { useTeamMembers } from "@/lib/hooks/use-team-members"
@@ -30,70 +30,6 @@ function LanternIcon() {
 
 const transport = new DefaultChatTransport({ api: "/api/os/lantern-ai" })
 
-type ProviderStatus = {
-  id: string
-  label: string
-  role: string
-  lane: string
-  configured: boolean
-  model: string
-  mutationAllowed: boolean
-  strengths: string[]
-  failureMode: string
-  verificationRule: string
-}
-
-type ProviderRun = {
-  id: string
-  created_at: string
-  provider: string
-  model: string
-  lane: string
-  purpose: string
-  status: string
-  estimated_codex_tokens_saved: number
-  estimated_codex_minutes_saved: number
-  verification_status: string
-  outcome_summary: string | null
-  weakness: string | null
-  failure_reason: string | null
-}
-
-type RunsSummary = {
-  total_runs: number
-  successful_runs: number
-  failed_runs: number
-  estimated_codex_tokens_saved: number
-  estimated_codex_minutes_saved: number
-  verified_codex_tokens_saved: number
-  verified_codex_minutes_saved: number
-  team_handoffs: number
-  pending_verification: number
-  by_provider: Record<string, { runs: number; saved_tokens: number; failures: number }>
-}
-
-function BoardCard({
-  label,
-  value,
-  detail,
-  icon: Icon,
-}: {
-  label: string
-  value: string | number
-  detail: string
-  icon: ComponentType<{ className?: string; strokeWidth?: number }>
-}) {
-  return (
-    <div className="rounded-lg border border-white/[0.08] bg-[#111318] p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6B7280]">{label}</p>
-        <Icon className="h-4 w-4 text-[#D7261E]" strokeWidth={1.75} />
-      </div>
-      <p className="text-2xl font-bold leading-none text-white">{value}</p>
-      <p className="mt-2 text-[11px] leading-relaxed text-[#9CA3AF]">{detail}</p>
-    </div>
-  )
-}
 
 export default function OSAIPage() {
   const [input, setInput] = useState("")
@@ -111,42 +47,6 @@ export default function OSAIPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadBoard() {
-      const [providersRes, runsRes] = await Promise.all([
-        fetch("/api/os/ai/providers"),
-        fetch("/api/os/ai/provider-runs"),
-      ])
-
-      if (cancelled) return
-
-      if (providersRes.ok) {
-        const data = await providersRes.json()
-        setProviders(data.providers ?? [])
-      }
-
-      if (runsRes.ok) {
-        const data = await runsRes.json()
-        setRuns(data.runs ?? [])
-        setSummary(data.summary ?? null)
-      }
-    }
-
-    loadBoard().catch(() => {
-      if (!cancelled) {
-        setProviders([])
-        setRuns([])
-        setSummary(null)
-      }
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const text = input.trim()
@@ -156,8 +56,8 @@ export default function OSAIPage() {
   }
 
   return (
-    <div className="grid h-[calc(100vh-52px)] grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(320px,42vh)] overflow-hidden xl:grid-cols-[minmax(0,1fr)_390px] xl:grid-rows-1">
-      <div className="flex min-h-0 flex-col">
+    <div className="flex flex-col h-[calc(100vh-52px)]">
+      <div className="flex min-h-0 flex-col flex-1">
       {/* Header */}
       <div className="flex items-center gap-3 px-7 py-5 border-b border-white/[0.07] shrink-0">
         <LanternIcon />
@@ -234,8 +134,11 @@ export default function OSAIPage() {
         )}
 
         {error && (
-          <div className="text-center py-2 text-xs text-red-500">
-            Something went wrong. Try again.
+          <div className="flex items-start gap-3 px-3.5 py-2.5 bg-red-950/40 border border-red-900/50 rounded-lg text-xs text-red-400 mb-3">
+            <div className="flex-1">
+              <p className="font-semibold mb-1">Error sending message</p>
+              <p className="text-red-300/80 text-[11px]">The request failed. This might be due to a network issue, API error, or an unsupported command. Try rephrasing or clearing the message.</p>
+            </div>
           </div>
         )}
 
@@ -275,15 +178,7 @@ export default function OSAIPage() {
         </form>
       </div>
       </div>
-
-      <aside className="min-h-0 overflow-y-auto border-t border-white/[0.07] bg-[#09090B] p-5 xl:border-l xl:border-t-0">
-        <div className="mb-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#D7261E]">AI Efficiency Board</p>
-          <h2 className="mt-1 text-lg font-extrabold tracking-tight text-white">Provider Savings</h2>
-          <p className="mt-2 text-xs leading-relaxed text-[#9CA3AF]">
-            Tracks where cheaper providers reduce Codex reasoning load, where they fail, and what still needs Codex verification.
-          </p>
-        </div>
+    </div>
 
         <div className="grid grid-cols-2 gap-3">
           <BoardCard
