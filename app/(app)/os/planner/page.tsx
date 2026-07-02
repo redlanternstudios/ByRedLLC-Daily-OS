@@ -138,12 +138,8 @@ export default function PlannerPage() {
         priority: s.priority, estimate_minutes: s.estimate_minutes, ai_mode: k.mode, assignee_name: s.assignee_name,
         issue_type: s.issue_type, story_points: s.story_points, start_date: s.start_date, labels: s.labels, depends_on: s.depends_on })
     }))
-<<<<<<< HEAD
-    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, setup, items })
-=======
-    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, project_overview: plan!.project_overview, items })
+    const j = await call({ mode: "commit", tenantId, project_name: plan!.project_name, project_summary: plan!.project_summary, project_overview: plan!.project_overview, setup, items })
     clearDraft()
->>>>>>> c2d135663b16a64103b788fa5844a5065291b766
     setCreated(j); setStep("done")
   })
 
