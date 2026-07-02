@@ -47,6 +47,7 @@ const commitSchema = z.object({
     story_points: z.number().optional(),
     start_date: z.string().optional(),
     labels: z.array(z.string()).optional(),
+    depends_on: z.array(z.string()).optional(),
   })).min(1),
 })
 
@@ -117,7 +118,8 @@ ${answers ? `ANSWERS / EXTRA CONTEXT FROM USER:\n${answers}` : ""}`,
       const golden = JSON.stringify(body.golden ?? {}).slice(0, 8000)
       const answers = String(body.answers ?? "").slice(0, 4000)
       const refine = String(body.refine ?? "").slice(0, 3000)
-      const object = await generatePlan({ tenantName, goal, golden, answers, refine, rosterText })
+      const templateGuidance = String(body.templateGuidance ?? "").slice(0, 4000)
+      const object = await generatePlan({ tenantName, goal, golden, answers, refine, rosterText, templateGuidance })
       return NextResponse.json({ plan: object })
     }
 
@@ -139,6 +141,7 @@ ${answers ? `ANSWERS / EXTRA CONTEXT FROM USER:\n${answers}` : ""}`,
         story_points: s.story_points,
         start_date: s.start_date,
         labels: s.labels,
+        depends_on: s.depends_on,
       }))
       const result = await buildProject({
         admin: sa,
