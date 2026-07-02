@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "@/lib/supabase/admin"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAuth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const admin = await getSupabaseAdmin()
+    const admin = createAdminClient()
 
     // Encrypt API keys (in production, use proper encryption)
     // For now, storing with a marker that they're sensitive

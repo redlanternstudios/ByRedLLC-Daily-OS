@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
-import { getSupabaseAdmin } from "@/lib/supabase/admin"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
 
 /**
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create auth user via Supabase admin
-    const admin = await getSupabaseAdmin()
+    const admin = createAdminClient()
     
     const { data: authUser, error: authError } = await admin.auth.admin.createUser({
       email,
