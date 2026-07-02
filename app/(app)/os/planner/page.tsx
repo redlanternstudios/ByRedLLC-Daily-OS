@@ -270,8 +270,42 @@ export default function PlannerPage() {
             </div>
           )}
 
-          <button onClick={() => setStep("input")} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium disabled:opacity-40">
-            <ArrowRight className="w-4 h-4" /> Continue to planning
+          <button onClick={async () => {
+            setLoading(true)
+            try {
+              // Validate integrations if any selected
+              if (setup.selectedIntegrations.length > 0 || setup.supabaseRepo || setup.githubRepo) {
+                const validRes = await fetch("/api/os/integrations/validate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(setup),
+                })
+                const validResult = await validRes.json()
+                if (!validResult.valid) {
+                  setErr("Invalid integration configuration. Please check your selections.")
+                  setLoading(false)
+                  return
+                }
+              }
+              // Save integration config if selected
+              if (setup.selectedIntegrations.length > 0 || setup.supabaseRepo || setup.githubRepo) {
+                const saveRes = await fetch("/api/os/integrations/save", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ tenantId, ...setup }),
+                })
+                if (!saveRes.ok) {
+                  throw new Error("Failed to save integration configuration")
+                }
+              }
+              setStep("input")
+            } catch (e) {
+              setErr(String(e))
+            } finally {
+              setLoading(false)
+            }
+          }} disabled={loading} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#D92532] text-white text-sm font-medium disabled:opacity-40">
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />} Continue to planning
           </button>
         </div>
       )}
