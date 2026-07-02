@@ -26,6 +26,7 @@ import {
   BarChart,
   Radio,
   ShieldAlert,
+  Gauge,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser, useActiveTenant } from "@/lib/context/user-context"
