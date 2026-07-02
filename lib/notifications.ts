@@ -62,3 +62,31 @@ export async function notifyMentions({ body, actorId, contextUrl }: NotifyMentio
     )
   )
 }
+
+/**
+ * Create a single in-app notification for a user. Best-effort — never throws.
+ * Used for assignment/blocker/approval events. Does not email (in-app only).
+ */
+export async function notifyUser(args: {
+  userId: string | null
+  actorId: string | null
+  type: string
+  body: string
+  contextUrl?: string | null
+}) {
+  if (!args.userId || args.userId === args.actorId) return
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sa = (await createAdminClient()) as any
+    await sa.from("os_notifications").insert({
+      user_id: args.userId,
+      actor_id: args.actorId,
+      type: args.type,
+      body: args.body,
+      context_url: args.contextUrl ?? null,
+      read: false,
+    })
+  } catch {
+    /* non-blocking */
+  }
+}
