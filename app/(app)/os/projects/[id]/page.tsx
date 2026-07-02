@@ -1,9 +1,10 @@
 "use client"
 
-import { use, useRef, useState } from "react"
+import { use, useRef, useState, useEffect } from "react"
 import Link from "next/link"
 import useSWR from "swr"
 import ReactMarkdown from "react-markdown"
+import { createClient } from "@/lib/supabase/client"
 import { ArrowLeft, Clock, AlertTriangle, GitMerge, Loader2, AlertCircle, Bot, PencilLine, LayoutGrid, Table2, GanttChartSquare, FileText, Check, X, Rocket, Plus, CalendarDays, BarChart3, BookOpen } from "lucide-react"
 import { OSPriorityBadge } from "@/components/byred/os/os-badge"
 import { OSAvatar } from "@/components/byred/os/os-avatar"
@@ -136,6 +137,24 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
     const res = await fetch("/api/os/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ from_project_id: id }) })
     if (res.ok) { setSavedTemplate(true); setTimeout(() => setSavedTemplate(false), 2500) }
   }
+  const [statusGen, setStatusGen] = useState<"idle" | "loading" | "done">("idle")
+  async function generateStatus() {
+    setStatusGen("loading")
+    const res = await fetch(`/api/os/projects/${id}/status`, { method: "POST" })
+    setStatusGen(res.ok ? "done" : "idle")
+    if (res.ok) { mutate(); setTab("docs"); setTimeout(() => setStatusGen("idle"), 2500) }
+  }
+
+  // Live board — refetch when anyone changes a task in this project.
+  useEffect(() => {
+    const supabase = createClient()
+    const ch = supabase
+      .channel(`project:${id}`)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on("postgres_changes" as any, { event: "*", schema: "public", table: "byred_tasks", filter: `project_id=eq.${id}` }, () => mutate())
+      .subscribe()
+    return () => { void supabase.removeChannel(ch) }
+  }, [id, mutate])
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" /></div>
   if (error || !data?.project) return <div className="flex items-center gap-2.5 px-4 py-3 rounded-lg bg-red-950/40 border border-red-800/40 text-red-400 text-sm"><AlertCircle className="w-4 h-4 shrink-0" /> Failed to load this project.</div>
@@ -182,9 +201,14 @@ export default function ProjectBoardPage({ params }: { params: Promise<{ id: str
             <span className="text-[11px] text-[#9CA3AF] font-mono">{done}/{total} done · {pct}% · {points} pts</span>
           </div>
         </div>
-        <button onClick={saveAsTemplate} className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF] hover:text-white">
-          {savedTemplate ? <><Check className="w-3.5 h-3.5 text-green-400" /> Saved</> : <><BookOpen className="w-3.5 h-3.5" /> Save as template</>}
-        </button>
+        <div className="shrink-0 flex items-center gap-2">
+          <button onClick={generateStatus} disabled={statusGen === "loading"} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF] hover:text-white disabled:opacity-50">
+            {statusGen === "loading" ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating…</> : statusGen === "done" ? <><Check className="w-3.5 h-3.5 text-green-400" /> Added to Docs</> : <><FileText className="w-3.5 h-3.5" /> Status update</>}
+          </button>
+          <button onClick={saveAsTemplate} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1A1D24] border border-[#2A2D35] text-[11px] text-[#9CA3AF] hover:text-white">
+            {savedTemplate ? <><Check className="w-3.5 h-3.5 text-green-400" /> Saved</> : <><BookOpen className="w-3.5 h-3.5" /> Save as template</>}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { notifyUser } from "@/lib/notifications"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -96,6 +97,15 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+  // Collaboration notifications (best-effort, in-app).
+  if (body.owner_user_id) {
+    void notifyUser({ userId: body.owner_user_id, actorId: caller.id, type: "assignment", body: `You were assigned "${(data as { title?: string }).title ?? "a task"}"`, contextUrl: `/os/tasks/${id}` })
+  }
+  if (body.blocker_flag === true) {
+    void notifyUser({ userId: (data as { owner_user_id?: string | null }).owner_user_id ?? null, actorId: caller.id, type: "blocker", body: `A task you own was flagged blocked: "${(data as { title?: string }).title ?? ""}"`, contextUrl: `/os/tasks/${id}` })
+  }
+
   return NextResponse.json(data)
 }
 
