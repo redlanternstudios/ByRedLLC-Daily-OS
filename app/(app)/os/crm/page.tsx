@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Building2, User, Phone, Mail, ChevronRight } from "lucide-react"
+import { Plus, Building2, User, Phone, Mail, ChevronRight, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -99,6 +99,25 @@ export default function OSCRMPage() {
       setShowAddCompany(false)
       toast.success("Company added")
     } catch { toast.error("Failed") } finally { setCSaving(false) }
+  }
+
+  async function archiveCompany(id: string) {
+    try {
+      const res = await fetch(`/api/os/crm/companies?id=${id}`, { method: "DELETE" })
+      if (!res.ok) { toast.error("Failed to archive"); return }
+      setCompanies(prev => prev.filter(c => c.id !== id))
+      if (selectedCompany?.id === id) setSelectedCompany(null)
+      toast.success("Company archived")
+    } catch { toast.error("Failed") }
+  }
+
+  async function archiveContact(id: string) {
+    try {
+      const res = await fetch(`/api/os/crm/contacts?id=${id}`, { method: "DELETE" })
+      if (!res.ok) { toast.error("Failed to archive"); return }
+      setContacts(prev => prev.filter(c => c.id !== id))
+      toast.success("Contact archived")
+    } catch { toast.error("Failed") }
   }
 
   async function addContact(e: React.FormEvent) {
@@ -284,8 +303,16 @@ export default function OSCRMPage() {
                 <p className="text-sm font-medium text-white truncate">{co.name}</p>
                 <p className="text-xs text-[#6B7280] truncate">{co.industry ?? "—"}{co.website ? ` · ${co.website}` : ""}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                 {statusBadge(co.status)}
+                <button
+                  type="button"
+                  onClick={() => archiveCompany(co.id)}
+                  title="Archive company"
+                  className="text-[#6B7280] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
                 <ChevronRight className="w-3.5 h-3.5 text-[#6B7280] group-hover:text-[#9CA3AF] transition-colors" />
               </div>
             </div>
@@ -302,7 +329,7 @@ export default function OSCRMPage() {
             </p>
           )}
           {visibleContacts.map(ct => (
-            <div key={ct.id} className="bg-[#111318] border border-[#2A2D35] rounded-lg px-4 py-3 flex items-center gap-3 hover:border-[#2A2D35] transition-colors">
+            <div key={ct.id} className="bg-[#111318] border border-[#2A2D35] rounded-lg px-4 py-3 flex items-center gap-3 hover:border-[#2A2D35] transition-colors group">
               <div className="w-7 h-7 rounded-full bg-[#D7261E]/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-[#D7261E]">
                 {ct.name.charAt(0).toUpperCase()}
               </div>
@@ -329,7 +356,17 @@ export default function OSCRMPage() {
                   )}
                 </div>
               </div>
-              {statusBadge(ct.status)}
+              <div className="flex items-center gap-2">
+                {statusBadge(ct.status)}
+                <button
+                  type="button"
+                  onClick={() => archiveContact(ct.id)}
+                  title="Archive contact"
+                  className="text-[#6B7280] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>

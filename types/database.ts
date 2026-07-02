@@ -377,10 +377,12 @@ export type Database = {
           auth_user_id: string | null
           avatar_url: string | null
           created_at: string | null
+          default_ai_mode: string
           email: string
           id: string
           name: string
           role: string
+          slack_user_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -388,10 +390,12 @@ export type Database = {
           auth_user_id?: string | null
           avatar_url?: string | null
           created_at?: string | null
+          default_ai_mode?: string
           email: string
           id?: string
           name: string
           role?: string
+          slack_user_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -399,10 +403,12 @@ export type Database = {
           auth_user_id?: string | null
           avatar_url?: string | null
           created_at?: string | null
+          default_ai_mode?: string
           email?: string
           id?: string
           name?: string
           role?: string
+          slack_user_id?: string | null
           updated_at?: string | null
         }
         Relationships: []

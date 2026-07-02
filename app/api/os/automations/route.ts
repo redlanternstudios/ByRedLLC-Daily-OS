@@ -95,3 +95,74 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 }
+
+// PATCH /api/os/automations?id=<id>&entity=workflow|trigger
+// Toggles is_active for a workflow or trigger the caller owns.
+export async function PATCH(req: NextRequest) {
+  try {
+    const scope = await requireTenantScope()
+    const supabase = await createClient()
+    const sa = supabase as any
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+    const entity = searchParams.get("entity") ?? "workflow"
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
+
+    const table = entity === "trigger" ? "os_triggers" : "os_workflows"
+
+    const { data: existing } = await sa
+      .from(table)
+      .select("id, tenant_id, is_active")
+      .eq("id", id)
+      .maybeSingle() as { data: { id: string; tenant_id: string; is_active: boolean } | null }
+
+    if (!existing || !scope.tenantIds.includes(existing.tenant_id)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const { data, error } = await sa
+      .from(table)
+      .update({ is_active: !existing.is_active })
+      .eq("id", id)
+      .select()
+      .single() as { data: Record<string, unknown> | null; error: { message: string } | null }
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data)
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+}
+
+// DELETE /api/os/automations?id=<id>&entity=workflow|trigger
+export async function DELETE(req: NextRequest) {
+  try {
+    const scope = await requireTenantScope()
+    const supabase = await createClient()
+    const sa = supabase as any
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+    const entity = searchParams.get("entity") ?? "workflow"
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
+
+    const table = entity === "trigger" ? "os_triggers" : "os_workflows"
+
+    const { data: existing } = await sa
+      .from(table)
+      .select("id, tenant_id")
+      .eq("id", id)
+      .maybeSingle() as { data: { id: string; tenant_id: string } | null }
+
+    if (!existing || !scope.tenantIds.includes(existing.tenant_id)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const { error } = await sa.from(table).delete().eq("id", id) as { error: { message: string } | null }
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: true })
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+}
