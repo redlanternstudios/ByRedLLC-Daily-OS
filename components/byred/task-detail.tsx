@@ -44,6 +44,7 @@ import { AiModeChip } from "@/components/byred/ai-mode-chip"
 import { BlockerBanner } from "@/components/byred/blocker-banner"
 import { ActivityItem } from "@/components/byred/activity-item"
 import { TaskComments } from "@/components/byred/task-comments"
+import { CopyShare } from "@/components/byred/copy-share"
 import { useUser } from "@/lib/context/user-context"
 import type { Task, Activity } from "@/types/db"
 
@@ -197,6 +198,12 @@ export function TaskDetail({ task, activities }: TaskDetailProps) {
             <PriorityFlag priority={task.priority} showLabel />
             <StatusBadge status={task.status} taskId={task.id} onStatusChange={setStatus} />
             <AiModeChip mode={task.ai_mode} />
+            <CopyShare
+              text={`${task.title}${task.description ? `\n\n${task.description}` : ""}`}
+              shareUrl={`/os/tasks/${task.id}`}
+              shareTitle={task.title}
+              className="ml-auto"
+            />
           </div>
         </div>
 
