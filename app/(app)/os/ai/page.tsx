@@ -33,9 +33,6 @@ const transport = new DefaultChatTransport({ api: "/api/os/lantern-ai" })
 
 export default function OSAIPage() {
   const [input, setInput] = useState("")
-  const [providers, setProviders] = useState<ProviderStatus[]>([])
-  const [runs, setRuns] = useState<ProviderRun[]>([])
-  const [summary, setSummary] = useState<RunsSummary | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const teamMembers = useTeamMembers()
 
