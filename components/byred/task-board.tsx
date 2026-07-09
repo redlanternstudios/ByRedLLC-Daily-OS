@@ -3,31 +3,20 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { Project, Task, TaskStatus } from "@/lib/task-registry"
-import { initialTasks, projects, statusLabels } from "@/lib/task-registry"
+import { projects, statusLabels } from "@/lib/task-registry"
 
-const STORAGE_KEY = "byred-os-tasks-v1"
-
-function loadTasks(): Task[] {
-  if (typeof window === "undefined") return initialTasks
-  const raw = window.localStorage.getItem(STORAGE_KEY)
-  if (!raw) return initialTasks
-  try {
-    return JSON.parse(raw) as Task[]
-  } catch {
-    return initialTasks
-  }
+async function fetchTasks(): Promise<Task[]> {
+  const res = await fetch("/api/tasks", { cache: "no-store" })
+  const data = (await res.json()) as { tasks?: Task[] }
+  return data.tasks ?? []
 }
 
 export function TaskBoard() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [tasks, setTasks] = useState<Task[]>([])
 
   useEffect(() => {
-    setTasks(loadTasks())
+    void fetchTasks().then(setTasks)
   }, [])
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
-  }, [tasks])
 
   const grouped = useMemo(() => {
     return projects.map((project) => ({
@@ -37,18 +26,16 @@ export function TaskBoard() {
   }, [tasks])
 
   const updateTask = (id: string, status: TaskStatus) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              status,
-              updatedAt: new Date().toISOString(),
-              completedAt: status === "complete" ? new Date().toISOString() : task.completedAt,
-            }
-          : task,
-      ),
-    )
+    void fetch(`/api/tasks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.task) return
+        setTasks((current) => current.map((task) => (task.id === id ? data.task : task)))
+      })
   }
 
   const openCount = tasks.filter((task) => task.status !== "complete" && task.status !== "archived").length
@@ -66,6 +53,9 @@ export function TaskBoard() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
+              <Link href="/projects/sourcing" className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-zinc-200">
+                Sourcing map
+              </Link>
               <Link href="/projects/plan" className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-zinc-200">
                 Project plan
               </Link>
@@ -153,31 +143,25 @@ export function TaskBoard() {
 }
 
 export function ProjectBoard({ project }: { project: Project }) {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [tasks, setTasks] = useState<Task[]>([])
 
   useEffect(() => {
-    setTasks(loadTasks())
+    void fetchTasks().then(setTasks)
   }, [])
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
-  }, [tasks])
 
   const projectTasks = tasks.filter((task) => task.projectSlug === project.slug)
 
   const setTaskStatus = (id: string, status: TaskStatus) => {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              status,
-              updatedAt: new Date().toISOString(),
-              completedAt: status === "complete" ? new Date().toISOString() : task.completedAt,
-            }
-          : task,
-      ),
-    )
+    void fetch(`/api/tasks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.task) return
+        setTasks((current) => current.map((task) => (task.id === id ? data.task : task)))
+      })
   }
 
   return (
